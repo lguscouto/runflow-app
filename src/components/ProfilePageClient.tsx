@@ -15,6 +15,7 @@ import {
   Archive,
   RotateCcw,
   Award,
+  Database,
 } from "lucide-react";
 import {
   getUserProfile,
@@ -27,12 +28,13 @@ import { listGearWithUsage, setDefaultGear, type GearWithUsage } from "@/lib/gea
 import { putGear, removeGear, getAllStoredActivities } from "@/lib/storage";
 import { calculateAchievements, type Achievement } from "@/lib/achievements";
 import { v4 as uuidv4 } from "uuid";
+import { exportBackup, importBackup } from "@/lib/backup";
 
 export function ProfilePageClient() {
   const { t, language } = useI18n();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"profile" | "gear" | "achievements">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "gear" | "achievements" | "backup">("profile");
 
   // Profile Form States
   const [name, setName] = useState("");
@@ -49,6 +51,7 @@ export function ProfilePageClient() {
   // Common UI States
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<{
     type: "ok" | "err";
     text: string;
@@ -127,6 +130,58 @@ export function ProfilePageClient() {
     setLangSelect(val);
     await changeLanguage(val);
     await refreshData();
+  };
+
+  const handleExportBackup = async () => {
+    setActionLoading(true);
+    setMessage(null);
+    try {
+      await exportBackup();
+    } catch (err) {
+      console.error("Backup export failed", err);
+      setMessage({ type: "err", text: t("common.error") });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const confirmImport = window.confirm(t("backup.import_confirm"));
+    if (!confirmImport) {
+      e.target.value = "";
+      return;
+    }
+
+    setActionLoading(true);
+    setMessage(null);
+
+    try {
+      const text = await file.text();
+      const res = await importBackup(text);
+      
+      setMessage({
+        type: "ok",
+        text: t("backup.import_success", {
+          activities: res.activitiesCount,
+          gear: res.gearCount,
+        }),
+      });
+
+      await refreshData();
+    } catch (err: any) {
+      console.error("Backup import failed", err);
+      if (err.message === "invalid_json" || err.message === "invalid_backup_format") {
+        setMessage({ type: "err", text: t("backup.import_invalid") });
+      } else {
+        setMessage({ type: "err", text: t("backup.import_error") });
+      }
+    } finally {
+      setActionLoading(false);
+      e.target.value = "";
+    }
   };
 
   async function handleSubmitProfile(e: React.FormEvent) {
@@ -270,7 +325,7 @@ export function ProfilePageClient() {
   }
 
   return (
-    <div className={`space-y-8 transition-all duration-300 w-full ${activeTab === "profile" ? "max-w-lg" : "max-w-2xl"}`}>
+    <div className={`space-y-8 transition-all duration-300 w-full ${activeTab === "profile" || activeTab === "backup" ? "max-w-lg" : "max-w-2xl"}`}>
       <Link
         href="/"
         className="text-sm text-[var(--muted)] hover:text-[var(--text)] inline-flex items-center gap-1"
@@ -284,17 +339,20 @@ export function ProfilePageClient() {
           {activeTab === "profile" && <User size={24} className="text-[var(--accent)]" />}
           {activeTab === "gear" && <Award size={24} className="text-[var(--accent)]" />}
           {activeTab === "achievements" && <Trophy size={24} className="text-[var(--accent)]" />}
+          {activeTab === "backup" && <Database size={24} className="text-[var(--accent)]" />}
         </span>
         <div>
           <h1 className="text-2xl font-bold">
             {activeTab === "profile" && t("profile.title")}
             {activeTab === "gear" && t("gear.title")}
             {activeTab === "achievements" && t("achievements.title")}
+            {activeTab === "backup" && t("backup.title")}
           </h1>
           <p className="text-[var(--muted)] text-sm">
             {activeTab === "profile" && t("profile.subtitle")}
             {activeTab === "gear" && t("gear.subtitle")}
             {activeTab === "achievements" && t("achievements.subtitle")}
+            {activeTab === "backup" && t("backup.subtitle")}
           </p>
         </div>
       </div>
@@ -339,6 +397,19 @@ export function ProfilePageClient() {
           }`}
         >
           {t("profile.tab_achievements")}
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("backup");
+            setMessage(null);
+          }}
+          className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all whitespace-nowrap ${
+            activeTab === "backup"
+              ? "border-[var(--accent)] text-[var(--accent)]"
+              : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
+          }`}
+        >
+          {t("profile.tab_backup")}
         </button>
       </div>
 
@@ -826,6 +897,55 @@ export function ProfilePageClient() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "backup" && (
+            <div className="space-y-6">
+              {/* Card Exportar */}
+              <div className="stat-card space-y-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-base">{t("backup.export_title")}</h3>
+                </div>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  {t("backup.export_text")}
+                </p>
+                <button
+                  onClick={handleExportBackup}
+                  className="btn-primary w-full justify-center py-2.5"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? t("common.loading") : t("backup.export_btn")}
+                </button>
+              </div>
+
+              {/* Card Importar */}
+              <div className="stat-card space-y-4 border-dashed border-[var(--border)]">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-base">{t("backup.import_title")}</h3>
+                </div>
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  {t("backup.import_text")}
+                </p>
+                
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportFile}
+                    className="hidden"
+                    id="backup-file-input"
+                    disabled={actionLoading}
+                  />
+                  <button
+                    onClick={() => document.getElementById("backup-file-input")?.click()}
+                    className="btn-ghost border border-[var(--border)] hover:border-[var(--accent)]/50 w-full justify-center py-2.5 text-sm"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? t("common.loading") : t("backup.import_btn")}
+                  </button>
+                </div>
               </div>
             </div>
           )}
