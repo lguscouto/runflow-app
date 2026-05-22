@@ -11,8 +11,11 @@ import {
   Square,
   MapPin,
   Loader2,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { useWorkoutRecorder } from "@/hooks/useWorkoutRecorder";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { estimateActivityCalories } from "@/lib/calories";
 import { getUserProfile } from "@/lib/profile";
 import {
@@ -47,6 +50,8 @@ export function RecordWorkoutClient() {
   const { t, language } = useI18n();
   const [confirmStop, setConfirmStop] = useState(false);
   const [liveCalories, setLiveCalories] = useState<number | null>(null);
+  const [trainingMode, setTrainingMode] = useState(false);
+
   const {
     status,
     sport,
@@ -62,6 +67,16 @@ export function RecordWorkoutClient() {
     reset,
     isActive,
   } = useWorkoutRecorder();
+
+  // Keep screen awake while recording
+  useWakeLock(status === "recording");
+
+  // Exit training mode when workout ends/pauses
+  useEffect(() => {
+    if (!isActive) {
+      setTrainingMode(false);
+    }
+  }, [isActive]);
 
   useEffect(() => {
     if (!isActive) {
@@ -96,6 +111,7 @@ export function RecordWorkoutClient() {
       setConfirmStop(true);
       return;
     }
+    setTrainingMode(false);
     const id = await stop();
     if (id) {
       router.push(`/atividades/ver/?id=${id}`);
@@ -105,16 +121,193 @@ export function RecordWorkoutClient() {
   function handleCancelActive() {
     if (
       isActive &&
-      !confirm(
-        t("record.discard_confirm")
-      )
+      !confirm(t("record.discard_confirm"))
     ) {
       return;
     }
+    setTrainingMode(false);
     reset();
     setConfirmStop(false);
   }
 
+  // ─── TRAINING MODE (fullscreen dark overlay) ───────────────────────────────
+  if (trainingMode && isActive) {
+    const isPaused = status === "paused";
+    return (
+      <div
+        className="fixed inset-0 z-50 flex flex-col"
+        style={{ background: "#050810" }}
+      >
+        {/* Top status bar */}
+        <div className="flex items-center justify-between px-5 pt-5 pb-2">
+          <div className="flex items-center gap-2 text-xs text-[var(--muted)]">
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isPaused ? "bg-amber-400" : "bg-emerald-400 animate-pulse"
+              }`}
+            />
+            <span>
+              {sportLabel(sport, language)} · {t("record.points_count", { count: points.length })}
+              {isPaused && ` · ${t("record.paused")}`}
+            </span>
+          </div>
+          {/* Exit training mode */}
+          <button
+            onClick={() => setTrainingMode(false)}
+            className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-1 rounded-lg border border-[var(--border)] bg-white/5"
+          >
+            <Minimize2 size={12} />
+            {t("record.mode_full")}
+          </button>
+        </div>
+
+        {/* Main metrics — vertically centered */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
+          {/* Time */}
+          <div className="text-center">
+            <p className="text-xs uppercase tracking-widest text-[var(--muted)] mb-2 font-semibold">
+              {t("record.elapsed")}
+            </p>
+            <p
+              className="font-bold tabular-nums leading-none"
+              style={{
+                fontSize: "clamp(3.5rem, 18vw, 6.5rem)",
+                color: isPaused ? "#f59e0b" : "#ffffff",
+                textShadow: isPaused ? "0 0 40px #f59e0b40" : "0 0 60px #ffffff20",
+              }}
+            >
+              {formatDuration(stats.elapsedSec)}
+            </p>
+          </div>
+
+          {/* Distance */}
+          <div className="text-center">
+            <p className="text-xs uppercase tracking-widest text-[var(--muted)] mb-2 font-semibold">
+              {t("detail.distance")}
+            </p>
+            <p
+              className="font-bold tabular-nums leading-none"
+              style={{
+                fontSize: "clamp(2.8rem, 14vw, 5rem)",
+                color: "var(--accent)",
+                textShadow: "0 0 50px var(--accent)40",
+              }}
+            >
+              {formatDistance(stats.distanceM)}
+            </p>
+          </div>
+
+          {/* Pace row: current + average */}
+          <div className="flex gap-8 justify-center">
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
+                {t("record.current_pace")}
+              </p>
+              <p
+                className="font-bold tabular-nums"
+                style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: "#f0f4f8" }}
+              >
+                {formatPace(stats.currentPaceSecKm)}
+              </p>
+            </div>
+            <div
+              className="w-px self-stretch"
+              style={{ background: "var(--border)" }}
+            />
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
+                {t("detail.avg_pace")}
+              </p>
+              <p
+                className="font-bold tabular-nums"
+                style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: "#8b9bb4" }}
+              >
+                {formatPace(stats.avgPaceSecKm)}
+              </p>
+            </div>
+          </div>
+
+          {/* Calories */}
+          {liveCalories != null && (
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
+                {t("detail.calories")}
+              </p>
+              <p
+                className="font-semibold tabular-nums text-orange-400"
+                style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)" }}
+              >
+                {formatCalories(liveCalories)}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom action buttons */}
+        <div className="px-5 pb-8 pt-4 flex flex-col gap-3">
+          {status === "recording" && (
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={pause}
+                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base border border-[var(--border)] bg-white/5 text-[var(--text)] active:scale-95 transition-transform"
+              >
+                <Pause size={20} />
+                {t("record.pause_btn")}
+              </button>
+              <button
+                type="button"
+                onClick={handleStop}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base active:scale-95 transition-transform ${
+                  confirmStop
+                    ? "bg-red-600 text-white"
+                    : "border border-[var(--border)] bg-white/5 text-[var(--text)]"
+                }`}
+              >
+                <Square size={18} fill="currentColor" />
+                {confirmStop ? t("record.confirm_stop_btn") : t("record.stop_btn")}
+              </button>
+            </div>
+          )}
+
+          {status === "paused" && (
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={resume}
+                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base bg-[var(--accent)] text-white active:scale-95 transition-transform"
+              >
+                <Play size={20} fill="currentColor" />
+                {t("record.resume_btn")}
+              </button>
+              <button
+                type="button"
+                onClick={handleStop}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base active:scale-95 transition-transform ${
+                  confirmStop
+                    ? "bg-red-600 text-white"
+                    : "border border-[var(--border)] bg-white/5 text-[var(--text)]"
+                }`}
+              >
+                <Square size={18} />
+                {confirmStop ? t("common.confirm") : t("record.stop_btn")}
+              </button>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleCancelActive}
+            className="text-sm text-[var(--muted)] hover:text-red-400 py-1 transition-colors"
+          >
+            {t("record.discard_btn")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── FULL VIEW (layout normal) ──────────────────────────────────────────────
   return (
     <div className="space-y-6 -mt-2">
       {!isActive && (
@@ -127,15 +320,27 @@ export function RecordWorkoutClient() {
         </Link>
       )}
 
-      <div>
-        <h1 className="text-2xl font-bold">
-          {isActive ? t("record.active_title") : t("record.title")}
-        </h1>
-        <p className="text-[var(--muted)] text-sm mt-1">
-          {isActive
-            ? t("record.active_sub")
-            : t("record.inactive_sub")}
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">
+            {isActive ? t("record.active_title") : t("record.title")}
+          </h1>
+          <p className="text-[var(--muted)] text-sm mt-1">
+            {isActive ? t("record.active_sub") : t("record.inactive_sub")}
+          </p>
+        </div>
+
+        {/* Training Mode toggle button — only when active */}
+        {isActive && status !== "saving" && (
+          <button
+            onClick={() => setTrainingMode(true)}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold hover:bg-[var(--accent)]/20 transition-colors"
+            title={t("record.mode_training")}
+          >
+            <Maximize2 size={13} />
+            {t("record.mode_training")}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -251,7 +456,9 @@ export function RecordWorkoutClient() {
             onClick={handleStart}
           >
             <Play size={22} fill="currentColor" />
-            {language === "en" ? `Start ${sportLabel(sport, language).toLowerCase()}` : `Iniciar ${sportLabel(sport, language).toLowerCase()}`}
+            {language === "en"
+              ? `Start ${sportLabel(sport, language).toLowerCase()}`
+              : `Iniciar ${sportLabel(sport, language).toLowerCase()}`}
           </button>
         )}
 

@@ -190,6 +190,9 @@ export const translations = {
     "record.current_pace": "Ritmo atual",
     "record.time": "Tempo",
     "record.close": "Fechar",
+    "record.mode_training": "Modo Treino",
+    "record.mode_full": "Modo Completo",
+    "record.elapsed": "Decorrido",
 
     // Import Form
     "import.drag_gpx_fit": "Arraste arquivos GPX ou FIT aqui",
@@ -487,6 +490,9 @@ export const translations = {
     "record.current_pace": "Current pace",
     "record.time": "Time",
     "record.close": "Close",
+    "record.mode_training": "Training Mode",
+    "record.mode_full": "Full View",
+    "record.elapsed": "Elapsed",
 
     // Import Form
     "import.drag_gpx_fit": "Drag GPX or FIT files here",

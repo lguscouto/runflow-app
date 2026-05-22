@@ -20,6 +20,7 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - **Histórico e estatísticas avançadas** (filtros temporais/esporte, acumulado anual e gráficos de volume semanal/mensal)
 - **Controle de Tênis / Equipamentos**: cadastro com barra de desgaste, km acumulado e associação automática a novos treinos
 - **Conquistas Pessoais**: 10 insígnias desbloqueadas dinamicamente com base no histórico de treinos (consistência, distância, horário, elevação e mais)
+- **Modo Treino**: tela imersiva fullscreen com métricas em fonte gigante e tela sempre ativa (`Screen Wake Lock API`) durante a gravação
 
 ## Requisitos
 
@@ -169,7 +170,7 @@ Resumo do status das features:
 5. ~~Splits por km / voltas~~ ✅  
 * ~~Suporte Multilíngue (Português & Inglês)~~ ✅  
 6. ~~Histórico e estatísticas avançadas~~ ✅  
-7. Tela escura durante gravação (modo treino)  
+7. ~~Tela escura durante gravação (modo treino)~~ ✅  
 8. Backup e restauração de dados  
 9. Integração com frequência cardíaca em tempo real (BLE)  
 10. Publicação na Play Store (release assinado)  

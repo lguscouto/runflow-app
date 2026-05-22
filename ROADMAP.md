@@ -94,15 +94,18 @@ Painel além do resumo atual da home.
 
 ---
 
-## 7. Tela escura durante gravação (modo treino)
+## 7. Tela escura durante gravação (modo treino) ✅
 
-**Esforço:** S · **Prioridade:** Média
+**Esforço:** S · **Prioridade:** Média · **Status:** Concluído
 
-Experiência focada enquanto corre.
+Experiência focada e imersiva enquanto corre.
 
-- UI simplificada: tempo, distância, ritmo em fonte grande
-- Manter tela ligada (`Keep Awake`) no Android
-- Bloqueio de toques acidentais (opcional)
+- [x] UI fullscreen com tempo, distância e ritmo em fonte gigante
+- [x] Manter tela ligada (`Screen Wake Lock API`) no Android e Chrome
+- [x] Botão toggle entre Modo Treino e Modo Completo (com mapa)
+- [x] Indicador de status GPS/pausa minimalista no topo
+- [x] Botões Pausar / Finalizar grandes e bem espaçados no rodapé
+- [x] Fallback silencioso para browsers sem suporte à Wake Lock (Firefox etc.)
 
 ---
 
@@ -267,10 +270,11 @@ flowchart LR
 | **v0.4** | 11, 6, 7, 8 | Polimento, onboarding e confiança nos dados |
 | **v0.5** | 9, 10 | Hardware e distribuição |
 | **v0.6** | 12 | Gamificação e controle de equipamentos ✅ |
-| **v0.7+** | 13, 14 | Ghost Runner e Enriquecimento de dados |
+| **v0.6.1** | 7 | Modo Treino fullscreen + Wake Lock ✅ |
+| **v0.7+** | 8, 13, 14 | Backup, Ghost Runner e Enriquecimento de dados |
 | **v0.8+** | 15, 16, 17 | Sincronização avançada e recursos 3D/offline |
 
 ---
 
-*Última atualização: maio 2026 — Feature 12 (Conquistas e Equipamentos) concluída*
+*Última atualização: maio 2026 — Feature 7 (Modo Treino) concluída*
 
