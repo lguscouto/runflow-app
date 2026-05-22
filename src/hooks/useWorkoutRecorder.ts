@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { saveActivity } from "@/lib/activities";
+import { saveActivity, getActivity } from "@/lib/activities";
 import { distanceFromPoints, haversineM } from "@/lib/geo";
 import {
   acceptGpsReading,
@@ -14,9 +14,10 @@ import {
   requestLocationPermission,
   startWatchingPosition,
 } from "@/lib/location";
-import type { Sport, TrackPoint } from "@/lib/types";
+import type { Sport, TrackPoint, GhostConfig, GhostStats } from "@/lib/types";
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { Capacitor } from "@capacitor/core";
+import { useI18n } from "@/lib/i18n";
 
 const HEART_RATE_SERVICE = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_MEASUREMENT_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
@@ -32,6 +33,8 @@ export interface RecorderStats {
 }
 
 export function useWorkoutRecorder() {
+  const { t, language } = useI18n();
+
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [sport, setSport] = useState<Sport>("running");
   const [points, setPoints] = useState<TrackPoint[]>([]);
@@ -42,6 +45,10 @@ export function useWorkoutRecorder() {
     avgPaceSecKm: null,
   });
   const [error, setError] = useState<string | null>(null);
+
+  // Ghost Runner States
+  const [ghostConfig, setGhostConfig] = useState<GhostConfig | null>(null);
+  const [ghostStats, setGhostStats] = useState<GhostStats | null>(null);
 
   // Bluetooth HR States
   const [hrStatus, setHrStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
@@ -60,6 +67,23 @@ export function useWorkoutRecorder() {
   // Bluetooth HR Refs
   const currentHrRef = useRef<number | null>(null);
   const hrDeviceIdRef = useRef<string | null>(null);
+
+  // Status and Config refs to avoid re-triggering hooks/callbacks unnecessarily
+  const statusRef = useRef<RecorderStatus>("idle");
+  const ghostConfigRef = useRef<GhostConfig | null>(null);
+
+  // Ghost Runner Refs
+  const lastSpokenKmRef = useRef<number>(0);
+  const lastSpokenMinRef = useRef<number>(0);
+  const ghostRefPointsRef = useRef<{ elapsedSec: number; cumDistanceM: number }[]>([]);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  useEffect(() => {
+    ghostConfigRef.current = ghostConfig;
+  }, [ghostConfig]);
 
   // Check Bluetooth support on mount
   useEffect(() => {
@@ -88,6 +112,18 @@ export function useWorkoutRecorder() {
   }, []);
 
 
+  const speak = useCallback((text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language === "pt" ? "pt-BR" : "en-US";
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error("TTS failed:", e);
+    }
+  }, [language]);
+
   const recomputeStats = useCallback((pts: TrackPoint[], elapsedSec: number) => {
     const distanceM = distanceMRef.current;
     let avgPaceSecKm: number | null = null;
@@ -113,7 +149,84 @@ export function useWorkoutRecorder() {
       currentPaceSecKm,
       avgPaceSecKm,
     });
-  }, []);
+
+    const activeConfig = ghostConfigRef.current;
+    if (activeConfig && activeConfig.mode !== "disabled") {
+      let ghostDistance = 0;
+      if (activeConfig.mode === "pace" && activeConfig.targetPaceSecKm) {
+        const speedMps = 1000 / activeConfig.targetPaceSecKm;
+        ghostDistance = elapsedSec * speedMps;
+      } else if (activeConfig.mode === "activity" && ghostRefPointsRef.current.length > 0) {
+        const refPts = ghostRefPointsRef.current;
+        if (elapsedSec >= refPts[refPts.length - 1].elapsedSec) {
+          ghostDistance = refPts[refPts.length - 1].cumDistanceM;
+        } else {
+          let idx = 0;
+          for (let i = 0; i < refPts.length - 1; i++) {
+            if (refPts[i].elapsedSec <= elapsedSec && refPts[i + 1].elapsedSec > elapsedSec) {
+              idx = i;
+              break;
+            }
+          }
+          const p1 = refPts[idx];
+          const p2 = refPts[idx + 1];
+          const segDuration = p2.elapsedSec - p1.elapsedSec;
+          const ratio = segDuration > 0 ? (elapsedSec - p1.elapsedSec) / segDuration : 0;
+          ghostDistance = p1.cumDistanceM + ratio * (p2.cumDistanceM - p1.cumDistanceM);
+        }
+      }
+
+      const diffM = distanceM - ghostDistance;
+      let statusVal: "ahead" | "behind" | "tied" = "tied";
+      if (diffM > 0.5) statusVal = "ahead";
+      else if (diffM < -0.5) statusVal = "behind";
+
+      setGhostStats({
+        distanceM: ghostDistance,
+        diffM,
+        status: statusVal,
+      });
+
+      // TTS voice alerts
+      if (activeConfig.audioAlerts && statusRef.current === "recording") {
+        let shouldSpeak = false;
+        if (activeConfig.audioFreq === "1km") {
+          const currKm = Math.floor(distanceM / 1000);
+          if (currKm > lastSpokenKmRef.current) {
+            shouldSpeak = true;
+            lastSpokenKmRef.current = currKm;
+          }
+        } else if (activeConfig.audioFreq === "2min") {
+          const currMin = Math.floor(elapsedSec / 120);
+          if (currMin > lastSpokenMinRef.current) {
+            shouldSpeak = true;
+            lastSpokenMinRef.current = currMin;
+          }
+        } else if (activeConfig.audioFreq === "5min") {
+          const currMin = Math.floor(elapsedSec / 300);
+          if (currMin > lastSpokenMinRef.current) {
+            shouldSpeak = true;
+            lastSpokenMinRef.current = currMin;
+          }
+        }
+
+        if (shouldSpeak) {
+          const diffAbs = Math.round(Math.abs(diffM));
+          let msg = "";
+          if (statusVal === "ahead") {
+            msg = t("record.ghost_audio_alert_ahead", { diff: diffAbs });
+          } else if (statusVal === "behind") {
+            msg = t("record.ghost_audio_alert_behind", { diff: diffAbs });
+          } else {
+            msg = t("record.ghost_audio_alert_tied");
+          }
+          speak(msg);
+        }
+      }
+    } else {
+      setGhostStats(null);
+    }
+  }, [speak, t]);
 
   const getElapsedSec = useCallback(() => {
     if (!startedAtRef.current) return 0;
@@ -175,7 +288,7 @@ export function useWorkoutRecorder() {
     stopWatchRef.current = null;
   }, []);
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (gConfig?: GhostConfig) => {
     setError(null);
     const ok = await requestLocationPermission();
     if (!ok) {
@@ -183,6 +296,38 @@ export function useWorkoutRecorder() {
         "Permissão de localização negada. Ative o GPS nas configurações do app."
       );
       return false;
+    }
+
+    // Reset Ghost Runner TTS trackers
+    lastSpokenKmRef.current = 0;
+    lastSpokenMinRef.current = 0;
+    ghostRefPointsRef.current = [];
+
+    // Load past activity points if Ghost mode is activity
+    if (gConfig && gConfig.mode === "activity" && gConfig.activityId) {
+      try {
+        const act = await getActivity(gConfig.activityId);
+        if (act && act.points && act.points.length > 0) {
+          const refPts = act.points;
+          const validPts = refPts.filter((p) => p.timestamp);
+          if (validPts.length > 0) {
+            const startT = new Date(validPts[0].timestamp!).getTime();
+            let cumD = 0;
+            const mappedRefPts = [{ elapsedSec: 0, cumDistanceM: 0 }];
+            for (let i = 1; i < validPts.length; i++) {
+              const p1 = validPts[i - 1];
+              const p2 = validPts[i];
+              const d = haversineM(p1.lat, p1.lng, p2.lat, p2.lng);
+              cumD += d;
+              const elapsed = (new Date(p2.timestamp!).getTime() - startT) / 1000;
+              mappedRefPts.push({ elapsedSec: elapsed, cumDistanceM: cumD });
+            }
+            ghostRefPointsRef.current = mappedRefPts;
+          }
+        }
+      } catch (e) {
+        console.error("Error loading ghost runner activity reference:", e);
+      }
     }
 
     const initial = await getCurrentPosition();
@@ -204,6 +349,11 @@ export function useWorkoutRecorder() {
     } else {
       setPoints([]);
     }
+
+    const activeConfig = gConfig || { mode: "disabled", audioAlerts: false, audioFreq: "1km" };
+    setGhostConfig(activeConfig);
+    ghostConfigRef.current = activeConfig;
+    setGhostStats(activeConfig.mode !== "disabled" ? { distanceM: 0, diffM: 0, status: "tied" } : null);
 
     setStatus("recording");
     await startGpsWatch();
@@ -273,6 +423,12 @@ export function useWorkoutRecorder() {
       currentPaceSecKm: null,
       avgPaceSecKm: null,
     });
+    setGhostConfig(null);
+    ghostConfigRef.current = null;
+    setGhostStats(null);
+    lastSpokenKmRef.current = 0;
+    lastSpokenMinRef.current = 0;
+    ghostRefPointsRef.current = [];
   }, [stopGpsWatch]);
 
   const connectHr = useCallback(async () => {
@@ -415,5 +571,7 @@ export function useWorkoutRecorder() {
     hrSupported,
     connectHr,
     disconnectHr,
+    ghostConfig,
+    ghostStats,
   };
 }

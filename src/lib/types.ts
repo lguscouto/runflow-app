@@ -83,3 +83,18 @@ export interface DashboardStats {
   thisWeekDistanceM: number;
   thisWeekActivities: number;
 }
+
+export interface GhostConfig {
+  mode: "disabled" | "pace" | "activity";
+  targetPaceSecKm?: number; // Ritmo alvo em segundos por quilômetro (ex: 300 para 5:00/km)
+  activityId?: string | null; // ID da atividade anterior
+  audioAlerts: boolean;
+  audioFreq: "1km" | "2min" | "5min";
+}
+
+export interface GhostStats {
+  distanceM: number;
+  diffM: number;
+  status: "ahead" | "behind" | "tied";
+}
+
