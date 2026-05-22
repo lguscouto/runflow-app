@@ -6,3 +6,6 @@
   - Certifique-se de configurar e propagar as variáveis de ambiente necessárias:
     * `JAVA_HOME` para a JBR do Android Studio em `C:\Program Files\Android\Android Studio\jbr`
     * `ANDROID_HOME` para o SDK do Android em `C:\Users\gustavo\AppData\Local\Android\Sdk`
+
+- **Atualizar Roadmap e README**:
+  Sempre que uma feature for implementada, você DEVE atualizar o `ROADMAP.md` (marcando-a como concluída/progredida) e o `README.md` de modo que fiquem alinhados.

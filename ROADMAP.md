@@ -81,16 +81,16 @@ Tradução e internacionalização completa do aplicativo para Português (PT) e
 
 ---
 
-## 6. Histórico e estatísticas avançadas
+## 6. Histórico e estatísticas avançadas ✅
 
-**Esforço:** M · **Prioridade:** Média
+**Esforço:** M · **Prioridade:** Média · **Status:** Concluído
 
 Painel além do resumo atual da home.
 
-- Gráfico de volume semanal/mensal (km e tempo)
-- Média de ritmo e calorias no período
-- Filtro por tipo: corrida, caminhada, ciclismo
-- Total acumulado no ano
+- [x] Gráfico de volume semanal/mensal (km e tempo)
+- [x] Média de ritmo e calorias no período
+- [x] Filtro por tipo: corrida, caminhada, ciclismo
+- [x] Total acumulado no ano
 
 ---
 

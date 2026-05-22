@@ -17,6 +17,7 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - Interface multilíngue (Português do Brasil 🇧🇷 e Inglês 🇺🇸)
 - **Assistente de configuração inicial (Wizard de Boas-vindas)** para novos usuários
 - **Recordes pessoais (PRs)** automáticos (distância, ritmo, duração e ganho de altitude)
+- **Histórico e estatísticas avançadas** (filtros temporais/esporte, acumulado anual e gráficos de volume semanal/mensal)
 
 ## Requisitos
 
@@ -163,7 +164,7 @@ Resumo do status das features:
 4. ~~Recordes pessoais (PRs)~~ ✅  
 5. ~~Splits por km / voltas~~ ✅  
 * ~~Suporte Multilíngue (Português & Inglês)~~ ✅  
-6. Histórico e estatísticas avançadas  
+6. ~~Histórico e estatísticas avançadas~~ ✅  
 7. Tela escura durante gravação (modo treino)  
 8. Backup e restauração de dados  
 9. Integração com frequência cardíaca em tempo real (BLE)  
