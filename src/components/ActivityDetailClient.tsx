@@ -9,6 +9,9 @@ import { getUserProfile } from "@/lib/profile";
 import { listActivities } from "@/lib/activities";
 import { getPersonalRecords, getActivityPRs, type PRCategory } from "@/lib/prs";
 import { useI18n } from "@/lib/i18n";
+import { getAllStoredGear } from "@/lib/storage";
+import { associateGearToActivity } from "@/lib/gear";
+import type { Gear } from "@/lib/types";
 
 const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
   longestDistance: "prs.longest_distance",
@@ -51,6 +54,41 @@ export function ActivityDetailClient() {
   const [prCategories, setPrCategories] = useState<PRCategory[]>([]);
   const { t, language } = useI18n();
 
+  // Gear States
+  const [allGears, setAllGears] = useState<Gear[]>([]);
+  const [activityGearId, setActivityGearId] = useState<string>("");
+
+  useEffect(() => {
+    async function loadGears() {
+      try {
+        const gears = await getAllStoredGear();
+        setAllGears(gears);
+      } catch (err) {
+        console.error("Error loading gears in activity detail:", err);
+      }
+    }
+    loadGears();
+  }, []);
+
+  useEffect(() => {
+    if (activity) {
+      setActivityGearId(activity.gearId || "");
+    }
+  }, [activity]);
+
+  async function handleGearChange(newGearId: string) {
+    if (!activity) return;
+    try {
+      const targetId = newGearId || null;
+      await associateGearToActivity(activity.id, targetId);
+      setActivityGearId(newGearId);
+      // Directly reload to compute and display fresh stats/wear
+      window.location.reload();
+    } catch (err) {
+      console.error("Error updating activity gear association:", err);
+    }
+  }
+
   useEffect(() => {
     if (!activity) return;
     const activityId = activity.id;
@@ -86,6 +124,9 @@ export function ActivityDetailClient() {
   if (loading || !activity) {
     return <p className="text-[var(--muted)]">{t("detail.loading")}</p>;
   }
+
+  const associatedGear = allGears.find((g) => g.id === activityGearId);
+  const dropdownGears = allGears.filter((g) => g.status === "active" || g.id === activityGearId);
 
   return (
     <div className="space-y-6">
@@ -135,6 +176,43 @@ export function ActivityDetailClient() {
       <ActivityCharts activity={activity} />
 
       <ActivitySplits points={activity.points} />
+
+      {/* Gear Selector Section */}
+      <div className="stat-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-[var(--border)] bg-[var(--surface)]">
+        <div className="flex items-center gap-3">
+          <span className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-xl shrink-0">
+            👟
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--muted)]">{t("detail.gear")}</h3>
+            <p className="text-base font-bold">
+              {associatedGear ? (
+                <>
+                  {associatedGear.name}
+                  {associatedGear.brand && ` (${associatedGear.brand})`}
+                </>
+              ) : (
+                t("detail.gear_none")
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={activityGearId}
+            onChange={(e) => handleGearChange(e.target.value)}
+            className="profile-input bg-[var(--bg)] text-[var(--text)] border-[var(--border)] text-sm py-1.5 px-3 max-w-[200px]"
+          >
+            <option value="">-- {t("detail.gear_select")} --</option>
+            {dropdownGears.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name} {g.brand ? `(${g.brand})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="stat-card">

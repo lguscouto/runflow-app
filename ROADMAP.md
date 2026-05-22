@@ -156,15 +156,18 @@ Melhorar a experiência de onboarding do usuário logo no primeiro uso do aplica
 
 ---
 
-## 12. Conquistas Pessoais e Analytics de Equipamentos
+## 12. Conquistas Pessoais e Analytics de Equipamentos ✅
 
-**Esforço:** S · **Prioridade:** Média · **Dificuldade:** Fácil
+**Esforço:** S · **Prioridade:** Média · **Dificuldade:** Fácil · **Status:** Concluído
 
 Gamificação introspectiva e controle estatístico de tênis/calçados.
 
-- [ ] Criar conquistas baseadas em consistência pessoal e metas
-- [ ] Vincular tênis/calçados aos treinos gravados
-- [ ] Exibir estatísticas de ritmo médio e projeção de desgaste por tênis
+- [x] 10 conquistas (insígnias) calculadas dinamicamente com base no histórico de treinos
+- [x] Cadastro e gerenciamento de tênis/calçados com limite de km recomendado e barra de desgaste
+- [x] Associação automática do tênis padrão a novos treinos (gravação e importação GPX/FIT)
+- [x] Seletor de tênis na tela de detalhe do treino para alterar ou remover associação
+- [x] Abas de "Dados do Perfil", "Tênis / Equipamentos" e "Minhas Conquistas" na tela de Perfil
+- [x] Banco de dados IndexedDB atualizado para v3 com store `gear`
 
 ---
 
@@ -263,10 +266,11 @@ flowchart LR
 | **v0.3** | 3, 4, 5 | Engajamento e detalhe de treino |
 | **v0.4** | 11, 6, 7, 8 | Polimento, onboarding e confiança nos dados |
 | **v0.5** | 9, 10 | Hardware e distribuição |
-| **v0.6+** | 12, 13, 14 | Gamificação e inteligência local |
-| **v0.7+** | 15, 16, 17 | Sincronização avançada e recursos 3D/offline |
+| **v0.6** | 12 | Gamificação e controle de equipamentos ✅ |
+| **v0.7+** | 13, 14 | Ghost Runner e Enriquecimento de dados |
+| **v0.8+** | 15, 16, 17 | Sincronização avançada e recursos 3D/offline |
 
 ---
 
-*Última atualização: maio 2026*
+*Última atualização: maio 2026 — Feature 12 (Conquistas e Equipamentos) concluída*
 

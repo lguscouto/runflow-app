@@ -54,6 +54,7 @@ export interface ActivitySummary {
   calories: number | null;
   source: string;
   fileName: string | null;
+  gearId: string | null;
 }
 
 export interface ActivityDetail extends ActivitySummary {
@@ -61,6 +62,18 @@ export interface ActivityDetail extends ActivitySummary {
   maxHr: number | null;
   notes: string | null;
   points: TrackPoint[];
+}
+
+export interface Gear {
+  id: string;
+  name: string;
+  brand?: string;
+  initialDistanceM: number;
+  maxDistanceM?: number;
+  status: "active" | "retired";
+  isDefault: boolean;
+  notes?: string;
+  createdAt: string;
 }
 
 export interface DashboardStats {

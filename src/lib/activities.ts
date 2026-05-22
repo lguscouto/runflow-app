@@ -16,6 +16,7 @@ import {
   toActivityDetail,
   toActivitySummary,
   type StoredActivity,
+  getAllStoredGear,
 } from "./storage";
 
 async function resolveCalories(parsed: ParsedActivity): Promise<number | null> {
@@ -41,6 +42,10 @@ export async function saveActivity(
   const points = simplifyPoints(parsed.points, 1200);
   const calories = await resolveCalories(parsed);
 
+  const gears = await getAllStoredGear();
+  const defaultGear = gears.find((g) => g.isDefault && g.status === "active");
+  const gearId = defaultGear ? defaultGear.id : null;
+
   const stored: StoredActivity = {
     id,
     name: parsed.name,
@@ -57,6 +62,7 @@ export async function saveActivity(
     source,
     fileName: fileName ?? null,
     notes: null,
+    gearId,
     points: points.map((p) => ({
       lat: p.lat,
       lng: p.lng,

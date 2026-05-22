@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { ActivityDetail, ActivitySummary, Sport, TrackPoint, UserProfile } from "./types";
+import type { ActivityDetail, ActivitySummary, Sport, TrackPoint, UserProfile, Gear } from "./types";
 
 export const PROFILE_KEY = "user";
 
@@ -26,10 +26,14 @@ interface RunFlowDB extends DBSchema {
     key: string;
     value: UserProfile;
   };
+  gear: {
+    key: string;
+    value: Gear;
+  };
 }
 
 const DB_NAME = "runflow";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase<RunFlowDB>> | null = null;
 
@@ -45,6 +49,11 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
         }
         if (oldVersion < 2 && !database.objectStoreNames.contains("profile")) {
           database.createObjectStore("profile");
+        }
+        if (oldVersion < 3 && !database.objectStoreNames.contains("gear")) {
+          database.createObjectStore("gear", {
+            keyPath: "id",
+          });
         }
       },
     });
@@ -80,6 +89,29 @@ export async function removeActivity(id: string): Promise<boolean> {
   return true;
 }
 
+export async function putGear(gear: Gear): Promise<void> {
+  const db = await getStore();
+  await db.put("gear", gear);
+}
+
+export async function getStoredGear(id: string): Promise<Gear | undefined> {
+  const db = await getStore();
+  return db.get("gear", id);
+}
+
+export async function getAllStoredGear(): Promise<Gear[]> {
+  const db = await getStore();
+  return db.getAll("gear");
+}
+
+export async function removeGear(id: string): Promise<boolean> {
+  const db = await getStore();
+  const existing = await db.get("gear", id);
+  if (!existing) return false;
+  await db.delete("gear", id);
+  return true;
+}
+
 export function toActivityDetail(stored: StoredActivity): ActivityDetail {
   const points: TrackPoint[] = stored.points.map((p) => ({
     lat: p.lat,
@@ -105,6 +137,7 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     calories,
     source,
     fileName,
+    gearId,
   } = stored;
   return {
     id,
@@ -119,5 +152,6 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     calories,
     source,
     fileName,
+    gearId: gearId || null,
   };
 }

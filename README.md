@@ -18,6 +18,8 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - **Assistente de configuração inicial (Wizard de Boas-vindas)** para novos usuários
 - **Recordes pessoais (PRs)** automáticos (distância, ritmo, duração e ganho de altitude)
 - **Histórico e estatísticas avançadas** (filtros temporais/esporte, acumulado anual e gráficos de volume semanal/mensal)
+- **Controle de Tênis / Equipamentos**: cadastro com barra de desgaste, km acumulado e associação automática a novos treinos
+- **Conquistas Pessoais**: 10 insígnias desbloqueadas dinamicamente com base no histórico de treinos (consistência, distância, horário, elevação e mais)
 
 ## Requisitos
 
@@ -128,11 +130,13 @@ Por isso o RunFlow usa **importação de arquivos GPX/FIT** — método estável
 ```
 src/
   app/           # Páginas (export estático)
-  components/    # UI (mapa, lista, importação)
+  components/    # UI (mapa, lista, importação, perfil, conquistas)
   lib/
     parsers/     # GPX e FIT
-    storage.ts   # IndexedDB (web + Android)
+    storage.ts   # IndexedDB v3 (activities, profile, gear)
     activities.ts
+    gear.ts      # Utilitários de equipamentos
+    achievements.ts  # Cálculo dinâmico de conquistas
 android/         # Projeto nativo Capacitor
 out/             # Build estático (gerado)
 ```
@@ -170,7 +174,7 @@ Resumo do status das features:
 9. Integração com frequência cardíaca em tempo real (BLE)  
 10. Publicação na Play Store (release assinado)  
 11. ~~Assistente de configuração inicial (Wizard)~~ ✅  
-12. Conquistas Pessoais e Analytics de Equipamentos  
+12. ~~Conquistas Pessoais e Analytics de Equipamentos~~ ✅  
 13. Competidor Virtual / Ghost Runner Offline  
 14. Motor de Enriquecimento e Correção de Altimetria  
 15. Sincronização Multidispositivo Sem Servidor  
