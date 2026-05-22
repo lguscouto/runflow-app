@@ -2,15 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle, User, Info, Target, Trophy } from "lucide-react";
+import { ArrowLeft, CheckCircle, User, Info, Target, Trophy, Settings } from "lucide-react";
 import {
   getUserProfile,
   refreshEstimatedCalories,
   saveUserProfile,
 } from "@/lib/profile";
 import type { UserProfile } from "@/lib/types";
+import { useI18n } from "@/lib/i18n";
 
 export function ProfilePageClient() {
+  const { t, changeLanguage } = useI18n();
   const [age, setAge] = useState("");
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
@@ -18,6 +20,7 @@ export function ProfilePageClient() {
   const [weeklyDistanceKm, setWeeklyDistanceKm] = useState("");
   const [weeklyWorkouts, setWeeklyWorkouts] = useState("");
   const [prMinPaceDistanceKm, setPrMinPaceDistanceKm] = useState("");
+  const [langSelect, setLangSelect] = useState<"pt" | "en">("pt");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{
@@ -44,6 +47,7 @@ export function ProfilePageClient() {
       setPrMinPaceDistanceKm(
         p.prMinPaceDistanceKm != null ? String(p.prMinPaceDistanceKm) : ""
       );
+      setLangSelect(p.language || "pt");
     }
     setLoading(false);
   }, []);
@@ -51,6 +55,11 @@ export function ProfilePageClient() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleLangChange = async (val: "pt" | "en") => {
+    setLangSelect(val);
+    await changeLanguage(val);
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -68,10 +77,11 @@ export function ProfilePageClient() {
       prMinPaceDistanceKm: prMinPaceDistanceKm
         ? parseFloat(prMinPaceDistanceKm)
         : undefined,
+      language: langSelect,
     };
 
     if (parsed.age != null && (parsed.age < 10 || parsed.age > 120)) {
-      setMessage({ type: "err", text: "Idade deve estar entre 10 e 120." });
+      setMessage({ type: "err", text: t("profile.val_age") });
       return;
     }
     if (
@@ -80,7 +90,7 @@ export function ProfilePageClient() {
     ) {
       setMessage({
         type: "err",
-        text: "Altura deve estar entre 100 e 250 cm.",
+        text: t("profile.val_height"),
       });
       return;
     }
@@ -90,7 +100,7 @@ export function ProfilePageClient() {
     ) {
       setMessage({
         type: "err",
-        text: "Peso deve estar entre 30 e 300 kg.",
+        text: t("profile.val_weight"),
       });
       return;
     }
@@ -100,7 +110,7 @@ export function ProfilePageClient() {
     ) {
       setMessage({
         type: "err",
-        text: "% de gordura deve estar entre 3 e 70.",
+        text: t("profile.val_body_fat"),
       });
       return;
     }
@@ -110,7 +120,7 @@ export function ProfilePageClient() {
     ) {
       setMessage({
         type: "err",
-        text: "Meta de distância: entre 1 e 500 km por semana.",
+        text: t("profile.val_weekly_distance"),
       });
       return;
     }
@@ -120,7 +130,7 @@ export function ProfilePageClient() {
     ) {
       setMessage({
         type: "err",
-        text: "Meta de treinos: entre 1 e 14 por semana.",
+        text: t("profile.val_weekly_workouts"),
       });
       return;
     }
@@ -130,7 +140,7 @@ export function ProfilePageClient() {
     ) {
       setMessage({
         type: "err",
-        text: "Distância mínima para recorde de ritmo: entre 1 e 100 km.",
+        text: t("profile.val_min_pace"),
       });
       return;
     }
@@ -145,11 +155,11 @@ export function ProfilePageClient() {
         type: "ok",
         text:
           count > 0
-            ? `Perfil salvo. Calorias estimadas em ${count} treino(s).`
-            : "Perfil salvo com sucesso.",
+            ? t("profile.save_success_kcal", { count })
+            : t("profile.save_success"),
       });
     } catch {
-      setMessage({ type: "err", text: "Erro ao salvar perfil." });
+      setMessage({ type: "err", text: t("profile.save_error") });
     }
     setSaving(false);
   }
@@ -161,7 +171,7 @@ export function ProfilePageClient() {
         className="text-sm text-[var(--muted)] hover:text-[var(--text)] inline-flex items-center gap-1"
       >
         <ArrowLeft size={14} />
-        Voltar
+        {t("common.back")}
       </Link>
 
       <div className="flex items-center gap-3">
@@ -169,9 +179,9 @@ export function ProfilePageClient() {
           <User size={24} className="text-[var(--accent)]" />
         </span>
         <div>
-          <h1 className="text-2xl font-bold">Seu perfil</h1>
+          <h1 className="text-2xl font-bold">{t("profile.title")}</h1>
           <p className="text-[var(--muted)] text-sm">
-            Calorias, metas semanais e dados corporais
+            {t("profile.subtitle")}
           </p>
         </div>
       </div>
@@ -179,24 +189,20 @@ export function ProfilePageClient() {
       <section className="stat-card space-y-3 border-[var(--border)]">
         <h2 className="text-sm font-semibold flex items-center gap-2">
           <Info size={16} className="text-[var(--accent)]" />
-          Como calculamos
+          {t("profile.how_we_calculate_title")}
         </h2>
         <p className="text-xs text-[var(--muted)] leading-relaxed">
-          Usamos a fórmula MET (equivalente metabólico) com seu peso — ou massa
-          magra, se informar o % de gordura —, duração, tipo de atividade e
-          ritmo médio. Altura e idade ficam registradas para evoluções futuras.
-          Se o treino já trouxer calorias do relógio (FIT), esse valor é
-          mantido.
+          {t("profile.how_we_calculate_text")}
         </p>
       </section>
 
       {loading ? (
-        <p className="text-[var(--muted)]">Carregando...</p>
+        <p className="text-[var(--muted)]">{t("common.loading")}</p>
       ) : (
         <form onSubmit={handleSubmit} className="stat-card space-y-5">
           <div>
             <label className="block text-sm text-[var(--muted)] mb-1.5">
-              Idade (anos)
+              {t("profile.age")}
             </label>
             <input
               type="number"
@@ -205,13 +211,13 @@ export function ProfilePageClient() {
               value={age}
               onChange={(e) => setAge(e.target.value)}
               className="profile-input"
-              placeholder="Ex.: 32"
+              placeholder={t("profile.age_placeholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm text-[var(--muted)] mb-1.5">
-              Altura (cm)
+              {t("profile.height")}
             </label>
             <input
               type="number"
@@ -221,13 +227,13 @@ export function ProfilePageClient() {
               value={heightCm}
               onChange={(e) => setHeightCm(e.target.value)}
               className="profile-input"
-              placeholder="Ex.: 175"
+              placeholder={t("profile.height_placeholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm text-[var(--muted)] mb-1.5">
-              Peso (kg)
+              {t("profile.weight")}
             </label>
             <input
               type="number"
@@ -237,13 +243,13 @@ export function ProfilePageClient() {
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
               className="profile-input"
-              placeholder="Ex.: 72.5 (calorias)"
+              placeholder={t("profile.weight_placeholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm text-[var(--muted)] mb-1.5">
-              Gordura corporal (%)
+              {t("profile.body_fat")}
             </label>
             <input
               type="number"
@@ -253,24 +259,24 @@ export function ProfilePageClient() {
               value={bodyFatPercent}
               onChange={(e) => setBodyFatPercent(e.target.value)}
               className="profile-input"
-              placeholder="Ex.: 18 (opcional)"
+              placeholder={t("profile.body_fat_placeholder")}
             />
             <p className="text-xs text-[var(--muted)] mt-1">
-              Opcional. Melhora a estimativa usando massa magra.
+              {t("profile.body_fat_sub")}
             </p>
           </div>
 
           <div className="border-t border-[var(--border)] pt-5 space-y-4">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <Target size={16} className="text-[var(--accent)]" />
-              Metas da semana
+              {t("profile.weekly_goals")}
             </h3>
             <p className="text-xs text-[var(--muted)]">
-              Semana de segunda a domingo. Progresso na tela inicial.
+              {t("profile.weekly_goals_sub")}
             </p>
             <div>
               <label className="block text-sm text-[var(--muted)] mb-1.5">
-                Distância por semana (km)
+                {t("profile.weekly_distance")}
               </label>
               <input
                 type="number"
@@ -280,12 +286,12 @@ export function ProfilePageClient() {
                 value={weeklyDistanceKm}
                 onChange={(e) => setWeeklyDistanceKm(e.target.value)}
                 className="profile-input"
-                placeholder="Ex.: 20"
+                placeholder={t("profile.weekly_distance_placeholder")}
               />
             </div>
             <div>
               <label className="block text-sm text-[var(--muted)] mb-1.5">
-                Treinos por semana
+                {t("profile.weekly_workouts")}
               </label>
               <input
                 type="number"
@@ -294,7 +300,7 @@ export function ProfilePageClient() {
                 value={weeklyWorkouts}
                 onChange={(e) => setWeeklyWorkouts(e.target.value)}
                 className="profile-input"
-                placeholder="Ex.: 3"
+                placeholder={t("profile.weekly_workouts_placeholder")}
               />
             </div>
           </div>
@@ -302,14 +308,14 @@ export function ProfilePageClient() {
           <div className="border-t border-[var(--border)] pt-5 space-y-4">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <Trophy size={16} className="text-[var(--accent)]" />
-              Recordes Pessoais
+              {t("profile.personal_records")}
             </h3>
             <p className="text-xs text-[var(--muted)]">
-              Configurações para determinação dos seus recordes pessoais.
+              {t("profile.personal_records_sub")}
             </p>
             <div>
               <label className="block text-sm text-[var(--muted)] mb-1.5">
-                Distância mínima para recorde de ritmo (km)
+                {t("profile.min_pace_distance")}
               </label>
               <input
                 type="number"
@@ -319,8 +325,31 @@ export function ProfilePageClient() {
                 value={prMinPaceDistanceKm}
                 onChange={(e) => setPrMinPaceDistanceKm(e.target.value)}
                 className="profile-input"
-                placeholder="Padrão: 5"
+                placeholder={t("profile.min_pace_distance_placeholder")}
               />
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--border)] pt-5 space-y-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Settings size={16} className="text-[var(--accent)]" />
+              {t("profile.preferences")}
+            </h3>
+            <p className="text-xs text-[var(--muted)]">
+              {t("profile.preferences_sub")}
+            </p>
+            <div>
+              <label className="block text-sm text-[var(--muted)] mb-1.5">
+                {t("profile.language")}
+              </label>
+              <select
+                value={langSelect}
+                onChange={(e) => handleLangChange(e.target.value as "pt" | "en")}
+                className="profile-input bg-[var(--surface)] text-[var(--text)] border-[var(--border)]"
+              >
+                <option value="pt">{t("profile.lang_pt")}</option>
+                <option value="en">{t("profile.lang_en")}</option>
+              </select>
             </div>
           </div>
 
@@ -329,7 +358,7 @@ export function ProfilePageClient() {
             className="btn-primary w-full justify-center"
             disabled={saving}
           >
-            {saving ? "Salvando..." : "Salvar perfil"}
+            {saving ? t("common.saving") : t("profile.save_btn")}
           </button>
         </form>
       )}

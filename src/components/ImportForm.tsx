@@ -4,9 +4,11 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUp, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { importWorkoutFile } from "@/lib/import-file";
+import { useI18n } from "@/lib/i18n";
 
 export function ImportForm() {
   const router = useRouter();
+  const { t } = useI18n();
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -22,7 +24,7 @@ export function ImportForm() {
       if (valid.length === 0) {
         setMessage({
           type: "err",
-          text: "Selecione arquivos .gpx ou .fit exportados do Amazfit/Zepp.",
+          text: t("import.val_files"),
         });
         return;
       }
@@ -37,7 +39,7 @@ export function ImportForm() {
         try {
           lastId = await importWorkoutFile(file);
         } catch (err) {
-          const msg = err instanceof Error ? err.message : "Erro ao importar";
+          const msg = err instanceof Error ? err.message : t("common.error");
           errors.push(`${file.name}: ${msg}`);
         }
       }
@@ -49,7 +51,7 @@ export function ImportForm() {
       } else {
         setMessage({
           type: "ok",
-          text: `${valid.length} treino(s) importado(s) com sucesso!`,
+          text: t("import.success", { count: valid.length }),
         });
         if (valid.length === 1 && lastId) {
           setTimeout(
@@ -61,7 +63,7 @@ export function ImportForm() {
         }
       }
     },
-    [router]
+    [router, t]
   );
 
   const onDrop = useCallback(
@@ -88,22 +90,21 @@ export function ImportForm() {
       >
         <FileUp className="mx-auto mb-4 text-[var(--accent)]" size={48} />
         <p className="text-lg font-medium mb-2">
-          Arraste arquivos GPX ou FIT aqui
+          {t("import.drag_gpx_fit")}
         </p>
         <p className="text-[var(--muted)] text-sm mb-4 max-w-md mx-auto">
-          Exporte seus treinos do relógio Amazfit com o app Zepp ou ferramentas
-          open source (veja o guia abaixo) e importe aqui.
+          {t("import.guide")}
         </p>
         <label className="btn-primary cursor-pointer">
           {loading ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Importando...
+              {t("import.importing")}
             </>
           ) : (
             <>
               <FileUp size={18} />
-              Escolher arquivos
+              {t("import.choose_files")}
             </>
           )}
           <input

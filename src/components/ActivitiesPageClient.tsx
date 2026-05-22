@@ -5,8 +5,10 @@ import { ActivityList } from "@/components/ActivityList";
 import { useActivityList } from "@/hooks/useActivities";
 import { getUserProfile } from "@/lib/profile";
 import { getPersonalRecords, getPRMap, type PRCategory } from "@/lib/prs";
+import { useI18n } from "@/lib/i18n";
 
 export function ActivitiesPageClient() {
+  const { t } = useI18n();
   const { activities, loading } = useActivityList();
   const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
 
@@ -27,11 +29,11 @@ export function ActivitiesPageClient() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Atividades</h1>
+        <h1 className="text-2xl font-bold">{t("activities.title")}</h1>
         <p className="text-[var(--muted)]">
           {loading
-            ? "Carregando..."
-            : `${activities.length} treino(s) registrado(s)`}
+            ? t("common.loading")
+            : t("activities.registered_count", { count: activities.length })}
         </p>
       </div>
       {!loading && <ActivityList activities={activities} prMap={prMap} />}

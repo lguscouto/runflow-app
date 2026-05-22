@@ -1,6 +1,7 @@
 "use client";
 
 import type { ChartPoint } from "@/lib/chart-data";
+import { useI18n } from "@/lib/i18n";
 
 interface SimpleLineChartProps {
   data: ChartPoint[];
@@ -25,6 +26,7 @@ export function SimpleLineChart({
   invertY = false,
   fillArea = true,
 }: SimpleLineChartProps) {
+  const { t } = useI18n();
   const width = 400;
   const innerW = width - PAD.left - PAD.right;
   const innerH = height - PAD.top - PAD.bottom;
@@ -32,7 +34,7 @@ export function SimpleLineChart({
   if (data.length < 2) {
     return (
       <p className="text-sm text-[var(--muted)] text-center py-8">
-        Dados insuficientes para o gráfico.
+        {t("charts.insufficient_data")}
       </p>
     );
   }
@@ -82,7 +84,7 @@ export function SimpleLineChart({
       viewBox={`0 0 ${width} ${height}`}
       className="w-full h-auto"
       role="img"
-      aria-label={yLabel ?? "Gráfico"}
+      aria-label={yLabel ?? t("charts.graph")}
     >
       {yTickValues.map((v, i) => {
         const y = scaleY(invertY ? v : v);

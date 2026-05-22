@@ -5,13 +5,15 @@ import { Trophy, Zap, Clock, Compass, Landmark } from "lucide-react";
 import { PersonalRecords } from "@/lib/prs";
 import { formatDistance, formatDuration, formatPace, formatElevation } from "@/lib/format";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR, enUS } from "date-fns/locale";
+import { useI18n } from "@/lib/i18n";
 
 interface PersonalRecordsCardProps {
   prs: PersonalRecords;
 }
 
 export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
+  const { t, language } = useI18n();
   const { longestDistance, bestPace, longestDuration, highestElevation } = prs;
 
   const hasAnyPR = !!(longestDistance || bestPace || longestDuration || highestElevation);
@@ -22,9 +24,9 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
         <div className="flex items-center gap-3">
           <Trophy size={22} className="text-amber-500 shrink-0" />
           <div>
-            <p className="font-semibold text-lg">Recordes Pessoais</p>
+            <p className="font-semibold text-lg">{t("prs.title")}</p>
             <p className="text-sm text-[var(--muted)]">
-              Complete treinos de corrida para registrar seus recordes aqui!
+              {t("prs.empty")}
             </p>
           </div>
         </div>
@@ -35,7 +37,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
   const items = [
     {
       id: "longestDistance",
-      label: "Maior Distância",
+      label: t("prs.longest_distance"),
       activity: longestDistance,
       value: longestDistance ? formatDistance(longestDistance.distanceM) : "—",
       icon: <Compass className="text-blue-400" size={18} />,
@@ -43,7 +45,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
     },
     {
       id: "bestPace",
-      label: "Melhor Ritmo",
+      label: t("prs.best_pace"),
       activity: bestPace,
       value: bestPace ? formatPace(bestPace.avgPaceSecKm) : "—",
       icon: <Zap className="text-amber-500" size={18} />,
@@ -51,7 +53,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
     },
     {
       id: "longestDuration",
-      label: "Maior Duração",
+      label: t("prs.longest_duration"),
       activity: longestDuration,
       value: longestDuration ? formatDuration(longestDuration.durationSec) : "—",
       icon: <Clock className="text-emerald-400" size={18} />,
@@ -59,7 +61,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
     },
     {
       id: "highestElevation",
-      label: "Maior Subida",
+      label: t("prs.highest_elevation"),
       activity: highestElevation,
       value: highestElevation ? formatElevation(highestElevation.elevationGainM) : "—",
       icon: <Landmark className="text-purple-400" size={18} />,
@@ -72,7 +74,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Trophy size={20} className="text-amber-500 animate-bounce" />
-          Recordes Pessoais
+          {t("prs.title")}
         </h2>
       </div>
 
@@ -95,11 +97,15 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
                 </p>
                 {act ? (
                   <p className="text-[10px] text-[var(--muted)] mt-1 truncate">
-                    {format(new Date(act.startedAt), "d 'de' MMM 'de' yyyy", { locale: ptBR })}
+                    {format(
+                      new Date(act.startedAt),
+                      language === "en" ? "MMM d, yyyy" : "d 'de' MMM 'de' yyyy",
+                      { locale: language === "en" ? enUS : ptBR }
+                    )}
                   </p>
                 ) : (
                   <p className="text-[10px] text-[var(--muted)] mt-1">
-                    Sem registro
+                    {t("common.no_data")}
                   </p>
                 )}
               </div>
@@ -110,7 +116,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
             return (
               <Link
                 key={item.id}
-                href={`/atividade/${act.id}`}
+                href={`/atividades/ver/?id=${act.id}`}
                 className="block p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--accent)] hover:shadow-sm transition-all duration-200"
               >
                 {content}

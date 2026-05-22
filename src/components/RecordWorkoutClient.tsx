@@ -22,6 +22,7 @@ import {
   formatPace,
   sportLabel,
 } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import type { Sport } from "@/lib/types";
 
 const LiveMapTrack = dynamic(
@@ -33,7 +34,7 @@ const LiveMapTrack = dynamic(
         className="rounded-xl bg-[var(--surface)] border border-[var(--border)] animate-pulse flex items-center justify-center text-[var(--muted)] text-sm"
         style={{ height: "280px" }}
       >
-        Carregando mapa...
+        Carregando mapa / Loading map...
       </div>
     ),
   }
@@ -43,6 +44,7 @@ const SPORTS: Sport[] = ["running", "walking", "cycling"];
 
 export function RecordWorkoutClient() {
   const router = useRouter();
+  const { t, language } = useI18n();
   const [confirmStop, setConfirmStop] = useState(false);
   const [liveCalories, setLiveCalories] = useState<number | null>(null);
   const {
@@ -104,7 +106,7 @@ export function RecordWorkoutClient() {
     if (
       isActive &&
       !confirm(
-        "Descartar este treino em andamento? Os dados não serão salvos."
+        t("record.discard_confirm")
       )
     ) {
       return;
@@ -121,18 +123,18 @@ export function RecordWorkoutClient() {
           className="text-sm text-[var(--muted)] hover:text-[var(--text)] inline-flex items-center gap-1"
         >
           <ArrowLeft size={14} />
-          Voltar
+          {t("common.back")}
         </Link>
       )}
 
       <div>
         <h1 className="text-2xl font-bold">
-          {isActive ? "Treino em andamento" : "Iniciar treino"}
+          {isActive ? t("record.active_title") : t("record.title")}
         </h1>
         <p className="text-[var(--muted)] text-sm mt-1">
           {isActive
-            ? "GPS ativo — mantenha o app aberto durante a corrida"
-            : "Grave sua corrida com GPS, como no Strava"}
+            ? t("record.active_sub")
+            : t("record.inactive_sub")}
         </p>
       </div>
 
@@ -144,7 +146,7 @@ export function RecordWorkoutClient() {
             className="block mt-2 underline"
             onClick={() => setError(null)}
           >
-            Fechar
+            {t("record.close")}
           </button>
         </div>
       )}
@@ -156,7 +158,7 @@ export function RecordWorkoutClient() {
           <div className="grid grid-cols-2 gap-3">
             <div className="stat-card text-center py-5">
               <p className="text-xs text-[var(--muted)] uppercase tracking-wide">
-                Tempo
+                {t("record.time")}
               </p>
               <p className="text-3xl font-bold tabular-nums mt-1">
                 {formatDuration(stats.elapsedSec)}
@@ -164,26 +166,28 @@ export function RecordWorkoutClient() {
             </div>
             <div className="stat-card text-center py-5">
               <p className="text-xs text-[var(--muted)] uppercase tracking-wide">
-                Distância
+                {t("detail.distance")}
               </p>
               <p className="text-3xl font-bold tabular-nums mt-1 text-[var(--accent)]">
                 {formatDistance(stats.distanceM)}
               </p>
             </div>
             <div className="stat-card text-center py-4">
-              <p className="text-xs text-[var(--muted)]">Ritmo atual</p>
+              <p className="text-xs text-[var(--muted)]">{t("record.current_pace")}</p>
               <p className="text-xl font-semibold mt-1">
                 {formatPace(stats.currentPaceSecKm)}
               </p>
             </div>
             <div className="stat-card text-center py-4">
-              <p className="text-xs text-[var(--muted)]">Ritmo médio</p>
+              <p className="text-xs text-[var(--muted)]">{t("detail.avg_pace")}</p>
               <p className="text-xl font-semibold mt-1">
                 {formatPace(stats.avgPaceSecKm)}
               </p>
             </div>
             <div className="stat-card text-center py-4 col-span-2">
-              <p className="text-xs text-[var(--muted)]">Calorias (estimada)</p>
+              <p className="text-xs text-[var(--muted)]">
+                {t("detail.calories")} ({t("detail.calories_source_profile").toLowerCase()})
+              </p>
               <p className="text-xl font-semibold mt-1 text-orange-400">
                 {liveCalories != null ? formatCalories(liveCalories) : "—"}
               </p>
@@ -192,7 +196,7 @@ export function RecordWorkoutClient() {
                   href="/perfil/"
                   className="text-xs text-[var(--accent)] mt-1 inline-block"
                 >
-                  Cadastre seu peso no perfil
+                  {t("detail.kcal_sub")}
                 </Link>
               )}
             </div>
@@ -200,15 +204,15 @@ export function RecordWorkoutClient() {
 
           <div className="flex items-center justify-center gap-2 text-sm text-[var(--muted)]">
             <MapPin size={14} className="text-[var(--accent)]" />
-            {points.length} pontos GPS · {sportLabel(sport)}
-            {status === "paused" && " · Pausado"}
+            {t("record.points_count", { count: points.length })} · {sportLabel(sport, language)}
+            {status === "paused" && ` · ${t("record.paused")}`}
           </div>
         </>
       )}
 
       {!isActive && status !== "saving" && (
         <div className="stat-card space-y-4">
-          <p className="text-sm text-[var(--muted)]">Tipo de atividade</p>
+          <p className="text-sm text-[var(--muted)]">{t("record.activity_type")}</p>
           <div className="flex flex-wrap gap-2">
             {SPORTS.map((s) => (
               <button
@@ -221,20 +225,20 @@ export function RecordWorkoutClient() {
                     : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--muted)]"
                 }`}
               >
-                {sportLabel(s)}
+                {sportLabel(s, language)}
               </button>
             ))}
           </div>
           <ul className="text-xs text-[var(--muted)] space-y-1 list-disc list-inside">
-            <li>Use ao ar livre para melhor sinal GPS</li>
-            <li>Permita acesso à localização quando solicitado</li>
+            <li>{t("record.guide_gps")}</li>
+            <li>{t("record.guide_permission")}</li>
             <li>
               <Link href="/perfil/" className="text-[var(--accent)] hover:underline">
-                Perfil
+                {t("nav.profile")}
               </Link>{" "}
-              com peso para estimar calorias
+              {language === "en" ? "with weight to estimate calories" : "com peso para estimar calorias"}
             </li>
-            <li>Mínimo: 20 m e 15 segundos para salvar</li>
+            <li>{t("record.guide_min")}</li>
           </ul>
         </div>
       )}
@@ -247,7 +251,7 @@ export function RecordWorkoutClient() {
             onClick={handleStart}
           >
             <Play size={22} fill="currentColor" />
-            Iniciar {sportLabel(sport).toLowerCase()}
+            {language === "en" ? `Start ${sportLabel(sport, language).toLowerCase()}` : `Iniciar ${sportLabel(sport, language).toLowerCase()}`}
           </button>
         )}
 
@@ -259,7 +263,7 @@ export function RecordWorkoutClient() {
               onClick={pause}
             >
               <Pause size={22} />
-              Pausar
+              {t("record.pause_btn")}
             </button>
             <button
               type="button"
@@ -271,7 +275,7 @@ export function RecordWorkoutClient() {
               onClick={handleStop}
             >
               <Square size={20} fill="currentColor" />
-              {confirmStop ? "Confirmar parada" : "Finalizar"}
+              {confirmStop ? t("record.confirm_stop_btn") : t("record.stop_btn")}
             </button>
           </div>
         )}
@@ -284,7 +288,7 @@ export function RecordWorkoutClient() {
               onClick={resume}
             >
               <Play size={22} fill="currentColor" />
-              Retomar
+              {t("record.resume_btn")}
             </button>
             <button
               type="button"
@@ -296,7 +300,7 @@ export function RecordWorkoutClient() {
               onClick={handleStop}
             >
               <Square size={20} />
-              {confirmStop ? "Confirmar" : "Finalizar"}
+              {confirmStop ? t("common.confirm") : t("record.stop_btn")}
             </button>
           </div>
         )}
@@ -304,7 +308,7 @@ export function RecordWorkoutClient() {
         {status === "saving" && (
           <div className="btn-primary w-full justify-center py-4 opacity-80">
             <Loader2 size={22} className="animate-spin" />
-            Salvando treino...
+            {t("record.saving_workout")}
           </div>
         )}
 
@@ -314,7 +318,7 @@ export function RecordWorkoutClient() {
             className="text-sm text-[var(--muted)] hover:text-red-400"
             onClick={handleCancelActive}
           >
-            Descartar treino
+            {t("record.discard_btn")}
           </button>
         )}
       </div>

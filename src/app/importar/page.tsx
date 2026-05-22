@@ -1,14 +1,18 @@
+"use client";
+
 import { ImportForm } from "@/components/ImportForm";
+import { useI18n } from "@/lib/i18n";
 import { ExternalLink, Info } from "lucide-react";
 
 export default function ImportPage() {
+  const { t } = useI18n();
+
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-2xl font-bold mb-2">Importar treinos</h1>
+        <h1 className="text-2xl font-bold mb-2">{t("import.page_title")}</h1>
         <p className="text-[var(--muted)]">
-          Suporte a arquivos GPX e FIT — os formatos usados ao exportar do
-          Amazfit/Zepp.
+          {t("import.subtitle")}
         </p>
       </div>
 
@@ -17,11 +21,12 @@ export default function ImportPage() {
       <section className="stat-card space-y-3 border-amber-500/30 bg-amber-500/5">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Info size={20} className="text-amber-400 shrink-0" />
-          Por que não sincroniza direto com a Zepp?
+          {t("import.why_no_sync_title")}
         </h2>
         <p className="text-sm text-[var(--muted)] leading-relaxed">
-          A nuvem Zepp/Huami é <strong className="text-[var(--text)]">proprietária</strong>.
-          Não há API pública estável para apps independentes. A API oficial (
+          {t("import.why_no_sync_desc1_1")}
+          <strong className="text-[var(--text)]">{t("import.why_no_sync_desc1_strong")}</strong>
+          {t("import.why_no_sync_desc1_2")}
           <a
             href="https://dev.huami.com"
             target="_blank"
@@ -30,27 +35,25 @@ export default function ImportPage() {
           >
             dev.huami.com
           </a>
-          ) exige parceria empresarial; os endpoints usados por exportadores
-          open source são não documentados e podem parar de funcionar a qualquer
-          momento.
+          {t("import.why_no_sync_desc1_3")}
         </p>
         <p className="text-sm text-[var(--muted)] leading-relaxed">
-          O RunFlow importa <strong className="text-[var(--text)]">arquivos GPX ou FIT</strong> —
-          o método recomendado e confiável. Seus dados continuam apenas no seu
-          computador.
+          {t("import.why_no_sync_desc2_1")}
+          <strong className="text-[var(--text)]">{t("import.why_no_sync_desc2_strong")}</strong>
+          {t("import.why_no_sync_desc2_2")}
         </p>
       </section>
 
       <section className="stat-card space-y-4">
-        <h2 className="text-lg font-semibold">Como exportar do Amazfit</h2>
+        <h2 className="text-lg font-semibold">{t("import.how_to_export_title")}</h2>
         <ol className="list-decimal list-inside space-y-3 text-[var(--muted)] text-sm leading-relaxed">
           <li>
-            Instale o app <strong className="text-[var(--text)]">Zepp</strong> no
-            celular e sincronize o relógio Amazfit.
+            {t("import.how_to_export_step1_1")}
+            <strong className="text-[var(--text)]">{t("import.how_to_export_step1_strong")}</strong>
+            {t("import.how_to_export_step1_2")}
           </li>
           <li>
-            Use uma ferramenta open source para baixar seus treinos em GPX ou FIT,
-            por exemplo{" "}
+            {t("import.how_to_export_step2_1")}
             <a
               href="https://github.com/rolandsz/Mi-Fit-and-Zepp-workout-exporter"
               target="_blank"
@@ -59,8 +62,8 @@ export default function ImportPage() {
             >
               Mi-Fit-and-Zepp-workout-exporter
               <ExternalLink size={12} />
-            </a>{" "}
-            ou{" "}
+            </a>
+            {t("import.how_to_export_step2_or")}
             <a
               href="https://github.com/H3llK33p3r/zepp-fit-extractor"
               target="_blank"
@@ -73,8 +76,9 @@ export default function ImportPage() {
             .
           </li>
           <li>
-            Para essas ferramentas, obtenha o <code className="text-[var(--text)]">apptoken</code> na
-            página de privacidade/GDPR (
+            {t("import.how_to_export_step3_1")}
+            <code className="text-[var(--text)]">apptoken</code>
+            {t("import.how_to_export_step3_2")}
             <a
               href="https://user.huami.com/privacy2/index.html"
               target="_blank"
@@ -83,22 +87,26 @@ export default function ImportPage() {
             >
               user.huami.com
             </a>
-            , F12 → Rede) — veja a documentação de cada projeto.
+            {t("import.how_to_export_step3_3")}
           </li>
           <li>
-            Alternativa: exporte <strong className="text-[var(--text)]">um treino por vez</strong> em
-            GPX pelo próprio app Zepp (manual).
+            {t("import.how_to_export_step4_1")}
+            <strong className="text-[var(--text)]">{t("import.how_to_export_step4_strong")}</strong>
+            {t("import.how_to_export_step4_2")}
           </li>
           <li>
-            Envie os arquivos <code className="text-[var(--text)]">.gpx</code> ou{" "}
-            <code className="text-[var(--text)]">.fit</code> na área acima.
+            {t("import.how_to_export_step5_1")}
+            <code className="text-[var(--text)]">.gpx</code>
+            {t("import.how_to_export_step5_or")}
+            <code className="text-[var(--text)]">.fit</code>
+            {t("import.how_to_export_step5_2")}
           </li>
         </ol>
         <p className="text-xs text-[var(--muted)] border-t border-[var(--border)] pt-4">
-          A exportação GDPR da Huami geralmente não inclui atividades com GPS. Por
-          isso ferramentas da comunidade ou export manual são necessárias.
+          {t("import.gdpr_warning")}
         </p>
       </section>
     </div>
   );
 }
+

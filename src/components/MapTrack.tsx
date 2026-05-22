@@ -5,6 +5,7 @@ import { MapContainer, Polyline, TileLayer, useMap } from "react-leaflet";
 import type { TrackPoint } from "@/lib/types";
 import { boundsFromPoints } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
+import { useI18n } from "@/lib/i18n";
 
 function FitBounds({ points }: { points: TrackPoint[] }) {
   const map = useMap();
@@ -32,6 +33,7 @@ export function MapTrack({
   points: TrackPoint[];
   height?: string;
 }) {
+  const { t } = useI18n();
   const positions = points.map((p) => [p.lat, p.lng] as [number, number]);
   const center = positions[0] ?? [-23.55, -46.63];
 
@@ -41,7 +43,7 @@ export function MapTrack({
         className="rounded-xl bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)]"
         style={{ height }}
       >
-        Sem dados de GPS para exibir o mapa.
+        {t("map.no_gps")}
       </div>
     );
   }

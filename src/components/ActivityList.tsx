@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight, Footprints, Trophy } from "lucide-react";
 import type { ActivitySummary } from "@/lib/types";
-import { PRCategory, PR_CATEGORY_LABELS } from "@/lib/prs";
+import { PRCategory } from "@/lib/prs";
 import {
   formatDate,
   formatDistance,
@@ -10,23 +10,35 @@ import {
   formatPace,
   sportLabel,
 } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
+
+const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
+  longestDistance: "prs.longest_distance",
+  bestPace: "prs.best_pace",
+  longestDuration: "prs.longest_duration",
+  highestElevation: "prs.highest_elevation",
+};
 
 export function ActivityList({
   activities,
-  emptyMessage = "Nenhum treino ainda.",
+  emptyMessage,
   prMap = {},
 }: {
   activities: ActivitySummary[];
   emptyMessage?: string;
   prMap?: Record<string, PRCategory[]>;
 }) {
+  const { t, language } = useI18n();
+
+  const displayEmptyMessage = emptyMessage ?? t("activities.empty");
+
   if (activities.length === 0) {
     return (
       <div className="stat-card text-center py-12 text-[var(--muted)]">
         <Footprints className="mx-auto mb-3 opacity-50" size={40} />
-        <p>{emptyMessage}</p>
+        <p>{displayEmptyMessage}</p>
         <Link href="/importar/" className="btn-primary mt-4 inline-flex">
-          Importar treino
+          {t("activities.import_btn")}
         </Link>
       </div>
     );
@@ -48,8 +60,8 @@ export function ActivityList({
                 {prCategories && prCategories.length > 0 && (
                   <span
                     className="inline-flex items-center justify-center p-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/25 shrink-0"
-                    title={`Recorde Pessoal: ${prCategories
-                      .map((cat) => PR_CATEGORY_LABELS[cat] || cat)
+                    title={`${t("prs.title")}: ${prCategories
+                      .map((cat) => t(PR_CATEGORY_KEYS[cat]) || cat)
                       .join(", ")}`}
                   >
                     <Trophy size={12} className="fill-amber-500/20" />
@@ -57,7 +69,7 @@ export function ActivityList({
                 )}
               </div>
               <p className="text-sm text-[var(--muted)]">
-                {sportLabel(a.sport)} · {formatDate(a.startedAt)}
+                {sportLabel(a.sport, language)} · {formatDate(a.startedAt, language)}
               </p>
             </div>
             <div className="text-right flex items-center gap-2">

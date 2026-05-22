@@ -1,5 +1,5 @@
 import { format, formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR, enUS } from "date-fns/locale";
 
 export function formatDistance(meters: number): string {
   if (meters >= 1000) {
@@ -27,12 +27,14 @@ export function formatPace(secPerKm: number | null | undefined): string {
   return `${m}:${String(s).padStart(2, "0")} /km`;
 }
 
-export function formatDate(iso: string): string {
-  return format(new Date(iso), "d MMM yyyy, HH:mm", { locale: ptBR });
+export function formatDate(iso: string, lang: "pt" | "en" = "pt"): string {
+  const locale = lang === "en" ? enUS : ptBR;
+  return format(new Date(iso), "d MMM yyyy, HH:mm", { locale });
 }
 
-export function formatRelative(iso: string): string {
-  return formatDistanceToNow(new Date(iso), { addSuffix: true, locale: ptBR });
+export function formatRelative(iso: string, lang: "pt" | "en" = "pt"): string {
+  const locale = lang === "en" ? enUS : ptBR;
+  return formatDistanceToNow(new Date(iso), { addSuffix: true, locale });
 }
 
 export function formatElevation(meters: number | null | undefined): string {
@@ -45,12 +47,20 @@ export function formatCalories(kcal: number | null | undefined): string {
   return `${Math.round(kcal)} kcal`;
 }
 
-export function sportLabel(sport: string): string {
-  const labels: Record<string, string> = {
-    running: "Corrida",
-    walking: "Caminhada",
-    cycling: "Ciclismo",
-    other: "Outro",
+export function sportLabel(sport: string, lang: "pt" | "en" = "pt"): string {
+  const labels: Record<string, Record<string, string>> = {
+    pt: {
+      running: "Corrida",
+      walking: "Caminhada",
+      cycling: "Ciclismo",
+      other: "Outro",
+    },
+    en: {
+      running: "Run",
+      walking: "Walk",
+      cycling: "Ride",
+      other: "Other",
+    },
   };
-  return labels[sport] ?? sport;
+  return labels[lang]?.[sport] ?? labels["pt"][sport] ?? sport;
 }

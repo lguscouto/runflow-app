@@ -11,6 +11,8 @@ export interface UserProfile {
   weeklyWorkouts?: number;
   /** Distância mínima em km para considerar recorde de ritmo (ex: 5). */
   prMinPaceDistanceKm?: number;
+  /** Idioma preferido do usuário ("pt" ou "en"). */
+  language?: "pt" | "en";
   updatedAt: string;
 }
 

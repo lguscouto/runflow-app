@@ -7,7 +7,15 @@ import { ArrowLeft, Flame, Heart, Mountain, Timer, Trophy } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getUserProfile } from "@/lib/profile";
 import { listActivities } from "@/lib/activities";
-import { getPersonalRecords, getActivityPRs, type PRCategory, PR_CATEGORY_LABELS } from "@/lib/prs";
+import { getPersonalRecords, getActivityPRs, type PRCategory } from "@/lib/prs";
+import { useI18n } from "@/lib/i18n";
+
+const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
+  longestDistance: "prs.longest_distance",
+  bestPace: "prs.best_pace",
+  longestDuration: "prs.longest_duration",
+  highestElevation: "prs.highest_elevation",
+};
 
 const ActivityMap = dynamic(
   () => import("@/components/ActivityMap").then((m) => m.ActivityMap),
@@ -41,6 +49,7 @@ export function ActivityDetailClient() {
   const id = searchParams.get("id");
   const { activity, loading, notFound } = useActivityDetail(id);
   const [prCategories, setPrCategories] = useState<PRCategory[]>([]);
+  const { t, language } = useI18n();
 
   useEffect(() => {
     if (!activity) return;
@@ -66,16 +75,16 @@ export function ActivityDetailClient() {
   if (!id || notFound) {
     return (
       <p className="text-[var(--muted)]">
-        Treino não encontrado.{" "}
+        {t("detail.not_found")}{" "}
         <Link href="/atividades/" className="text-[var(--accent)]">
-          Voltar
+          {t("common.back")}
         </Link>
       </p>
     );
   }
 
   if (loading || !activity) {
-    return <p className="text-[var(--muted)]">Carregando treino...</p>;
+    return <p className="text-[var(--muted)]">{t("detail.loading")}</p>;
   }
 
   return (
@@ -87,13 +96,13 @@ export function ActivityDetailClient() {
             className="text-sm text-[var(--muted)] hover:text-[var(--text)] flex items-center gap-1 mb-2"
           >
             <ArrowLeft size={14} />
-            Voltar
+            {t("common.back")}
           </Link>
           <h1 className="text-2xl font-bold">{activity.name}</h1>
           <p className="text-[var(--muted)]">
-            {sportLabel(activity.sport)} · {formatDate(activity.startedAt)}
+            {sportLabel(activity.sport, language)} · {formatDate(activity.startedAt, language)}
             {activity.source === "recorded"
-              ? " · Gravado no RunFlow"
+              ? ` · ${t("activities.recorded_on")}`
               : activity.fileName && ` · ${activity.fileName}`}
           </p>
         </div>
@@ -108,12 +117,12 @@ export function ActivityDetailClient() {
           <Trophy className="text-amber-500 shrink-0" size={28} />
           <div>
             <p className="font-semibold text-base text-amber-500 flex items-center gap-1.5 animate-pulse">
-              Recorde Pessoal Batido! 🏆
+              {t("prs.congrats_title")}
             </p>
             <p className="text-sm text-[var(--muted)] leading-normal mt-0.5">
-              Este treino estabeleceu sua melhor marca em:{" "}
+              {t("prs.congrats_sub")}{" "}
               <strong className="font-semibold text-[var(--text)]">
-                {prCategories.map((cat) => PR_CATEGORY_LABELS[cat]).join(", ")}
+                {prCategories.map((cat) => t(PR_CATEGORY_KEYS[cat])).join(", ")}
               </strong>
               .
             </p>
@@ -129,7 +138,7 @@ export function ActivityDetailClient() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="stat-card">
-          <p className="text-sm text-[var(--muted)]">Distância</p>
+          <p className="text-sm text-[var(--muted)]">{t("detail.distance")}</p>
           <p className="text-xl font-bold text-[var(--accent)]">
             {formatDistance(activity.distanceM)}
           </p>
@@ -137,14 +146,14 @@ export function ActivityDetailClient() {
         <div className="stat-card flex gap-2">
           <Timer className="text-[var(--muted)] shrink-0 mt-1" size={18} />
           <div>
-            <p className="text-sm text-[var(--muted)]">Duração</p>
+            <p className="text-sm text-[var(--muted)]">{t("detail.duration")}</p>
             <p className="text-xl font-bold">
               {formatDuration(activity.durationSec)}
             </p>
           </div>
         </div>
         <div className="stat-card">
-          <p className="text-sm text-[var(--muted)]">Ritmo médio</p>
+          <p className="text-sm text-[var(--muted)]">{t("detail.avg_pace")}</p>
           <p className="text-xl font-bold">
             {formatPace(activity.avgPaceSecKm)}
           </p>
@@ -152,7 +161,7 @@ export function ActivityDetailClient() {
         <div className="stat-card flex gap-2">
           <Mountain className="text-[var(--muted)] shrink-0 mt-1" size={18} />
           <div>
-            <p className="text-sm text-[var(--muted)]">Elevação</p>
+            <p className="text-sm text-[var(--muted)]">{t("detail.elevation")}</p>
             <p className="text-xl font-bold">
               {formatElevation(activity.elevationGainM)}
             </p>
@@ -161,15 +170,15 @@ export function ActivityDetailClient() {
         <div className="stat-card flex gap-2">
           <Flame className="text-orange-400 shrink-0 mt-1" size={18} />
           <div>
-            <p className="text-sm text-[var(--muted)]">Calorias</p>
+            <p className="text-sm text-[var(--muted)]">{t("detail.calories")}</p>
             <p className="text-xl font-bold">
               {formatCalories(activity.calories)}
             </p>
             {activity.calories != null && activity.calories > 0 && (
               <p className="text-xs text-[var(--muted)] mt-0.5">
                 {activity.source === "fit" || activity.source === "gpx"
-                  ? "Do arquivo ou estimada"
-                  : "Estimada pelo perfil"}
+                  ? t("detail.calories_source_file")
+                  : t("detail.calories_source_profile")}
               </p>
             )}
           </div>
@@ -178,7 +187,7 @@ export function ActivityDetailClient() {
           <div className="stat-card flex gap-2">
             <Heart className="text-red-400 shrink-0 mt-1" size={18} />
             <div>
-              <p className="text-sm text-[var(--muted)]">FC média / máx</p>
+              <p className="text-sm text-[var(--muted)]">{t("detail.avg_max_hr")}</p>
               <p className="text-xl font-bold">
                 {activity.avgHr}
                 {activity.maxHr != null && ` / ${activity.maxHr}`} bpm

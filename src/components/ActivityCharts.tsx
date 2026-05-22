@@ -8,6 +8,7 @@ import {
   computePaceSeries,
 } from "@/lib/chart-data";
 import { SimpleLineChart } from "./SimpleLineChart";
+import { useI18n } from "@/lib/i18n";
 
 function paceMinLabel(secPerKm: number): string {
   const m = Math.floor(secPerKm / 60);
@@ -16,6 +17,7 @@ function paceMinLabel(secPerKm: number): string {
 }
 
 export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
+  const { t } = useI18n();
   const paceByKm = computePaceByKm(activity);
   const paceSeries =
     paceByKm.length > 0
@@ -39,22 +41,22 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-lg font-semibold">Análise do treino</h2>
+      <h2 className="text-lg font-semibold">{t("charts.title")}</h2>
 
       {hasPace && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3">
-            Ritmo {paceByKm.length > 0 ? "por km" : "ao longo do treino"}
+            {paceByKm.length > 0 ? t("charts.pace_km") : t("charts.pace_time")}
           </h3>
           <SimpleLineChart
             data={paceSeries}
             color="#ff6b35"
             invertY
             formatY={paceMinLabel}
-            xLabel={paceByKm.length > 0 ? "Quilômetro" : "Distância (km)"}
+            xLabel={paceByKm.length > 0 ? t("charts.kilometer") : t("charts.distance_km")}
           />
           <p className="text-xs text-[var(--muted)] mt-2 text-center">
-            Menor valor = ritmo mais rápido
+            {t("charts.pace_tip")}
           </p>
         </div>
       )}
@@ -62,13 +64,13 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       {hasElevation && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3">
-            Elevação
+            {t("charts.elevation")}
           </h3>
           <SimpleLineChart
             data={elevation}
             color="#60a5fa"
             formatY={(v) => `${Math.round(v)} m`}
-            xLabel="Distância (km)"
+            xLabel={t("charts.distance_km")}
           />
         </div>
       )}
@@ -76,13 +78,13 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       {hasHr && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3">
-            Frequência cardíaca
+            {t("charts.hr")}
           </h3>
           <SimpleLineChart
             data={heartRate}
             color="#f87171"
             formatY={(v) => `${Math.round(v)}`}
-            xLabel="Distância (km)"
+            xLabel={t("charts.distance_km")}
             fillArea={false}
           />
           <p className="text-xs text-[var(--muted)] mt-2 text-center">bpm</p>
@@ -91,7 +93,7 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
 
       {!hasHr && (
         <p className="text-xs text-[var(--muted)] text-center">
-          FC disponível em treinos importados de FIT ou relógio com sensor.
+          {t("charts.hr_not_available")}
         </p>
       )}
     </section>

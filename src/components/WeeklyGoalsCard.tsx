@@ -6,6 +6,7 @@ import { Target, Trophy, Settings2 } from "lucide-react";
 import { getUserProfile } from "@/lib/profile";
 import { getWeeklyProgress, type WeeklyProgress } from "@/lib/goals";
 import { formatDistance } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 function ProgressBar({
   label,
@@ -43,6 +44,7 @@ function ProgressBar({
 }
 
 export function WeeklyGoalsCard() {
+  const { t } = useI18n();
   const [progress, setProgress] = useState<WeeklyProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +62,7 @@ export function WeeklyGoalsCard() {
   if (loading) {
     return (
       <div className="stat-card">
-        <p className="text-sm text-[var(--muted)]">Carregando metas...</p>
+        <p className="text-sm text-[var(--muted)]">{t("goals.loading")}</p>
       </div>
     );
   }
@@ -76,9 +78,9 @@ export function WeeklyGoalsCard() {
         <div className="flex items-center gap-3">
           <Target size={22} className="text-[var(--accent)]" />
           <div>
-            <p className="font-medium">Definir metas da semana</p>
+            <p className="font-medium">{t("goals.set_goals")}</p>
             <p className="text-sm text-[var(--muted)]">
-              Distância e número de treinos — em Perfil
+              {t("goals.set_goals_sub")}
             </p>
           </div>
         </div>
@@ -91,12 +93,12 @@ export function WeeklyGoalsCard() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Target size={20} className="text-[var(--accent)]" />
-          Metas da semana
+          {t("profile.weekly_goals")}
         </h2>
         <Link
           href="/perfil/"
           className="text-[var(--muted)] hover:text-[var(--text)]"
-          title="Editar metas"
+          title={t("profile.weekly_goals")}
         >
           <Settings2 size={18} />
         </Link>
@@ -107,10 +109,10 @@ export function WeeklyGoalsCard() {
           <Trophy size={28} className="text-[var(--success)] shrink-0" />
           <div>
             <p className="font-semibold text-[var(--success)]">
-              Metas da semana concluídas!
+              {t("goals.completed")}
             </p>
             <p className="text-sm text-[var(--muted)]">
-              Parabéns — continue assim na próxima semana.
+              {t("goals.completed_sub")}
             </p>
           </div>
         </div>
@@ -119,7 +121,7 @@ export function WeeklyGoalsCard() {
       <div className="space-y-4">
         {progress.distanceGoalKm != null && progress.distanceGoalKm > 0 && (
           <ProgressBar
-            label="Distância"
+            label={t("goals.distance")}
             current={formatDistance(progress.distanceM)}
             goal={`${progress.distanceGoalKm} km`}
             percent={progress.distancePercent}
@@ -129,12 +131,12 @@ export function WeeklyGoalsCard() {
         )}
         {progress.workoutsGoal != null && progress.workoutsGoal > 0 && (
           <ProgressBar
-            label="Treinos"
+            label={t("goals.workouts")}
             current={String(progress.workoutCount)}
             goal={String(progress.workoutsGoal)}
             percent={progress.workoutsPercent}
             complete={progress.workoutsComplete}
-            unit="treinos"
+            unit={t("goals.workouts_unit")}
           />
         )}
       </div>
