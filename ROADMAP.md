@@ -121,15 +121,16 @@ Evitar perda ao trocar de celular.
 
 ---
 
-## 9. Integração com frequência cardíaca em tempo real
+## 9. Integração com frequência cardíaca em tempo real ✅
 
-**Esforço:** L · **Prioridade:** Baixa–média
+**Esforço:** L · **Prioridade:** Baixa–média · **Status:** Concluído
 
 Melhorar gravação e calorias com FC ao vivo.
 
-- Conectar relógio/pulseira via Bluetooth (BLE) — pesquisa por protocolo Amazfit/Zepp
-- Alternativa inicial: leitura de sensor BLE genérico (cinta FC)
-- Exibir FC ao vivo e salvar no treino gravado
+- [x] Conectar relógio/pulseira ou cinta cardíaca genérica via Bluetooth Low Energy (BLE)
+- [x] Abstração multiplataforma (Web Bluetooth API + Plugin nativo do Android/iOS via Capacitor)
+- [x] Exibir FC ao vivo e salvar no treino gravado
+- [x] Obter médias (avgHr) e máximos (maxHr) de frequência cardíaca no resumo das atividades
 
 ---
 
@@ -276,5 +277,5 @@ flowchart LR
 
 ---
 
-*Última atualização: maio 2026 — Feature 7 (Modo Treino) concluída*
+*Última atualização: maio 2026 — Feature 9 (Frequência Cardíaca BLE no Celular/Web) concluída*
 
