@@ -42,28 +42,42 @@ Motivar uso contínuo com metas configuráveis.
 
 ---
 
-## 4. Recordes pessoais (PRs)
+## 4. Recordes pessoais (PRs) ✅
 
-**Esforço:** M · **Prioridade:** Média
+**Esforço:** M · **Prioridade:** Média · **Status:** Concluído
 
 Destacar melhores marcas automaticamente.
 
-- Maior distância em um treino
-- Melhor ritmo médio (distância mínima configurável, ex. 5 km)
-- Maior duração / maior elevação
-- Badge “PR” na lista e no detalhe
+- [x] Maior distância em um treino
+- [x] Melhor ritmo médio (distância mínima configurável, ex. 5 km)
+- [x] Maior duração / maior elevação
+- [x] Badge “PR” (troféu dourado) na lista, detalhe e home
 
 ---
 
-## 5. Divisão por voltas / km (splits)
+## 5. Divisão por voltas / km (splits) ✅
 
-**Esforço:** M · **Prioridade:** Média
+**Esforço:** M · **Prioridade:** Média · **Status:** Concluído
 
 Tabela de parciais automáticos.
 
-- Splits por quilômetro (tempo, ritmo, elevação)
-- Exibir na tela de detalhe abaixo do mapa
-- Suporte a voltas manuais (botão “Volta” durante gravação) — opcional na mesma entrega
+- [x] Splits por quilômetro (tempo, ritmo, elevação)
+- [x] Exibir na tela de detalhe abaixo do mapa
+- [ ] Suporte a voltas manuais (botão “Volta” durante gravação) — pendente/futuro
+
+---
+
+## Extra: Suporte Multilíngue (Português & Inglês) ✅
+
+**Esforço:** M · **Prioridade:** Alta · **Status:** Concluído
+
+Tradução e internacionalização completa do aplicativo para Português (PT) e Inglês (EN).
+
+- [x] Dicionários completos para PT e EN
+- [x] Hook de tradução client-side (`useI18n`) e Context Provider
+- [x] Configuração e preferência de idioma na tela de Perfil com salvamento dinâmico
+- [x] Tradução de toda a interface, gráficos, mapas, e guias de importação
+
 
 ---
 
