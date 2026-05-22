@@ -143,16 +143,16 @@ Distribuir para mais pessoas sem instalar APK manualmente.
 
 ---
 
-## 11. Assistente de configuração inicial (Wizard de Boas-vindas)
+## 11. Assistente de configuração inicial (Wizard de Boas-vindas) ✅
 
-**Esforço:** S · **Prioridade:** Alta
+**Esforço:** S · **Prioridade:** Alta · **Status:** Concluído
 
 Melhorar a experiência de onboarding do usuário logo no primeiro uso do aplicativo.
 
-- Detectar se é o primeiro acesso ao aplicativo (ausência de perfil configurado no IndexedDB)
-- Apresentar um modal ou tela passo a passo (Wizard) amigável
-- Solicitar nome, dados físicos (peso, altura, idade), metas e preferência de idioma
-- Salvar automaticamente essas informações no perfil para personalização imediata (como o cálculo de calorias dos treinos)
+- [x] Detectar se é o primeiro acesso ao aplicativo (ausência de perfil configurado no IndexedDB)
+- [x] Apresentar um modal ou tela passo a passo (Wizard) amigável com design premium dark e glassmorphic
+- [x] Solicitar nome, preferência de idioma (com tradução reativa imediata), dados físicos (peso, altura, idade) e metas semanais
+- [x] Salvar automaticamente essas informações no perfil para personalização imediata (como o cálculo de calorias dos treinos) e exibir saudação personalizada
 
 ---
 

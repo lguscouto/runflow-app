@@ -5,6 +5,8 @@ import { Activity, Home, Play, Upload, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import React from "react";
 
+import { OnboardingWizard } from "@/components/OnboardingWizard";
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { t, loading } = useI18n();
 
@@ -51,7 +53,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {t("common.loading")}
           </div>
         ) : (
-          children
+          <>
+            {children}
+            <OnboardingWizard />
+          </>
         )}
       </main>
       <footer className="border-t border-[var(--border)] py-6 text-center text-sm text-[var(--muted)] safe-area-bottom">

@@ -47,6 +47,8 @@ export const translations = {
     // Profile
     "profile.title": "Seu perfil",
     "profile.subtitle": "Calorias, metas semanais e dados corporais",
+    "profile.name": "Nome",
+    "profile.name_placeholder": "Ex.: Gustavo",
     "profile.how_we_calculate_title": "Como calculamos",
     "profile.how_we_calculate_text": "Usamos a fórmula MET (equivalente metabólico) com seu peso — ou massa magra, se informar o % de gordura —, duração, tipo de atividade e ritmo médio. Altura e idade ficam registradas para evoluções futuras. Se o treino já trouxer calorias do relógio (FIT), esse valor é mantido.",
     "profile.age": "Idade (anos)",
@@ -74,6 +76,7 @@ export const translations = {
     "profile.lang_pt": "Português",
     "profile.lang_en": "English",
     "profile.save_btn": "Salvar perfil",
+    "profile.val_name": "Nome deve ter pelo menos 2 caracteres.",
     "profile.val_age": "Idade deve estar entre 10 e 120.",
     "profile.val_height": "Altura deve estar entre 100 e 250 cm.",
     "profile.val_weight": "Peso deve estar entre 30 e 300 kg.",
@@ -226,6 +229,25 @@ export const translations = {
     "import.how_to_export_step5_or": " ou ",
     "import.how_to_export_step5_2": " na área acima.",
     "import.gdpr_warning": "A exportação GDPR da Huami geralmente não inclui atividades com GPS. Por isso ferramentas da comunidade ou export manual são necessárias.",
+
+    // Wizard
+    "wizard.welcome": "Boas-vindas!",
+    "wizard.subtitle": "Vamos configurar seu perfil inicial para você começar a registrar seus treinos no RunFlow.",
+    "wizard.step_title": "Passo {current} de {total}",
+    "wizard.step1_title": "Idioma e Nome",
+    "wizard.step1_desc": "Escolha o seu idioma de preferência e nos diga como deseja ser chamado.",
+    "wizard.step2_title": "Dados Físicos",
+    "wizard.step2_desc": "Esses dados são usados para calcular o gasto de calorias de maneira personalizada.",
+    "wizard.step3_title": "Metas Semanais",
+    "wizard.step3_desc": "Defina suas metas semanais para se manter motivado.",
+    "wizard.name_label": "Seu Nome",
+    "wizard.name_placeholder": "Ex.: Gustavo",
+    "wizard.name_required": "Por favor, insira o seu nome para continuar.",
+    "wizard.btn_next": "Avançar",
+    "wizard.btn_back": "Voltar",
+    "wizard.btn_finish": "Concluir e Começar",
+    "wizard.success": "Configuração concluída! Bons treinos!",
+    "home.greeting": "Olá, {name}!",
   },
   en: {
     // Nav / Layout
@@ -268,6 +290,8 @@ export const translations = {
     // Profile
     "profile.title": "Your profile",
     "profile.subtitle": "Calories, weekly goals, and body metrics",
+    "profile.name": "Name",
+    "profile.name_placeholder": "E.g.: Gustavo",
     "profile.how_we_calculate_title": "How we calculate",
     "profile.how_we_calculate_text": "We use the MET (metabolic equivalent) formula with your weight — or lean body mass, if you provide body fat % —, duration, activity type, and average pace. Height and age are logged for future stats. If the workout already has calories from the device (FIT), that value is kept.",
     "profile.age": "Age (years)",
@@ -295,6 +319,7 @@ export const translations = {
     "profile.lang_pt": "Português",
     "profile.lang_en": "English",
     "profile.save_btn": "Save profile",
+    "profile.val_name": "Name must be at least 2 characters.",
     "profile.val_age": "Age must be between 10 and 120.",
     "profile.val_height": "Height must be between 100 and 250 cm.",
     "profile.val_weight": "Weight must be between 30 and 300 kg.",
@@ -447,6 +472,25 @@ export const translations = {
     "import.how_to_export_step5_or": " or ",
     "import.how_to_export_step5_2": " files to the area above.",
     "import.gdpr_warning": "Huami's GDPR export usually does not include GPS activities. Community tools or manual export are therefore required.",
+
+    // Wizard
+    "wizard.welcome": "Welcome!",
+    "wizard.subtitle": "Let's set up your initial profile to get you started with recording your runs in RunFlow.",
+    "wizard.step_title": "Step {current} of {total}",
+    "wizard.step1_title": "Language & Name",
+    "wizard.step1_desc": "Choose your preferred language and tell us what we should call you.",
+    "wizard.step2_title": "Body Metrics",
+    "wizard.step2_desc": "These metrics are used to estimate your calorie burn.",
+    "wizard.step3_title": "Weekly Goals",
+    "wizard.step3_desc": "Set your weekly running goals to keep yourself motivated.",
+    "wizard.name_label": "Your Name",
+    "wizard.name_placeholder": "E.g., Gustavo",
+    "wizard.name_required": "Please enter your name to continue.",
+    "wizard.btn_next": "Next",
+    "wizard.btn_back": "Back",
+    "wizard.btn_finish": "Finish & Start",
+    "wizard.success": "Setup completed! Have a great workout!",
+    "home.greeting": "Hello, {name}!",
   }
 };
 

@@ -17,6 +17,7 @@ export function ProfilePageClient() {
   const [heightCm, setHeightCm] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [bodyFatPercent, setBodyFatPercent] = useState("");
+  const [name, setName] = useState("");
   const [weeklyDistanceKm, setWeeklyDistanceKm] = useState("");
   const [weeklyWorkouts, setWeeklyWorkouts] = useState("");
   const [prMinPaceDistanceKm, setPrMinPaceDistanceKm] = useState("");
@@ -32,6 +33,7 @@ export function ProfilePageClient() {
     setLoading(true);
     const p = await getUserProfile();
     if (p) {
+      setName(p.name || "");
       setAge(p.age != null ? String(p.age) : "");
       setHeightCm(p.heightCm != null ? String(p.heightCm) : "");
       setWeightKg(p.weightKg != null ? String(p.weightKg) : "");
@@ -65,7 +67,10 @@ export function ProfilePageClient() {
     e.preventDefault();
     setMessage(null);
 
+    const currentProfile = await getUserProfile();
     const parsed = {
+      ...currentProfile,
+      name: name.trim(),
       age: age ? parseInt(age, 10) : undefined,
       heightCm: heightCm ? parseFloat(heightCm) : undefined,
       weightKg: weightKg ? parseFloat(weightKg) : undefined,
@@ -79,6 +84,11 @@ export function ProfilePageClient() {
         : undefined,
       language: langSelect,
     };
+
+    if (!parsed.name || parsed.name.length < 2) {
+      setMessage({ type: "err", text: t("profile.val_name") });
+      return;
+    }
 
     if (parsed.age != null && (parsed.age < 10 || parsed.age > 120)) {
       setMessage({ type: "err", text: t("profile.val_age") });
@@ -200,6 +210,20 @@ export function ProfilePageClient() {
         <p className="text-[var(--muted)]">{t("common.loading")}</p>
       ) : (
         <form onSubmit={handleSubmit} className="stat-card space-y-5">
+          <div>
+            <label className="block text-sm text-[var(--muted)] mb-1.5">
+              {t("profile.name")}
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="profile-input"
+              placeholder={t("profile.name_placeholder")}
+              required
+            />
+          </div>
+
           <div>
             <label className="block text-sm text-[var(--muted)] mb-1.5">
               {t("profile.age")}

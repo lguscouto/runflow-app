@@ -20,6 +20,7 @@ export function HomePageClient() {
   const [prs, setPrs] = useState<PersonalRecords | null>(null);
   const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
   const [loadingPrs, setLoadingPrs] = useState(true);
+  const [profileName, setProfileName] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadPRs() {
@@ -28,6 +29,9 @@ export function HomePageClient() {
           getUserProfile(),
           listActivities(1000),
         ]);
+        if (profile?.name) {
+          setProfileName(profile.name);
+        }
         const computedPrs = getPersonalRecords(allActivities, profile);
         setPrs(computedPrs);
         setPrMap(getPRMap(allActivities, computedPrs));
@@ -44,7 +48,7 @@ export function HomePageClient() {
     <div className="space-y-8">
       <section>
         <h1 className="text-3xl font-bold tracking-tight mb-2">
-          {t("home.title")}
+          {profileName ? t("home.greeting", { name: profileName }) : t("home.title")}
         </h1>
         <p className="text-[var(--muted)] max-w-xl">
           {t("home.subtitle")}

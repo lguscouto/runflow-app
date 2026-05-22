@@ -1,6 +1,8 @@
 export type Sport = "running" | "walking" | "cycling" | "other";
 
 export interface UserProfile {
+  name?: string;
+  onboarded?: boolean;
   age?: number;
   heightCm?: number;
   weightKg?: number;
