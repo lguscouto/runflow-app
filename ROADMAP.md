@@ -1,0 +1,169 @@
+# RunFlow — Roadmap
+
+Prioridades sugeridas para as **10 próximas features**, com base no que o app já faz hoje (gravar treino, importar GPX/FIT, perfil, calorias estimadas, APK Android).
+
+Legenda de esforço: **S** (pequeno) · **M** (médio) · **L** (grande)
+
+---
+
+## 1. Exportar treinos em GPX ✅
+
+**Esforço:** S · **Prioridade:** Alta · **Status:** Concluído
+
+Permitir exportar qualquer atividade gravada ou importada para `.gpx`, para backup ou uso em outros apps (Strava, Komoot, etc.).
+
+- [x] Botão “Exportar GPX” na tela de detalhe do treino
+- [x] Compartilhar arquivo no Android (share sheet)
+- [x] Download direto no navegador
+
+---
+
+## 2. Gráficos de ritmo, elevação e FC ✅
+
+**Esforço:** M · **Prioridade:** Alta · **Status:** Concluído
+
+Visualizar a evolução ao longo do treino, como no Strava.
+
+- [x] Gráfico de ritmo por km ou por distância
+- [x] Gráfico de altitude (quando houver dados)
+- [x] Gráfico de frequência cardíaca (treinos FIT)
+
+---
+
+## 3. Metas semanais e progresso ✅
+
+**Esforço:** M · **Prioridade:** Alta · **Status:** Concluído
+
+Motivar uso contínuo com metas configuráveis.
+
+- [x] Meta de distância (km/semana) e/ou número de treinos (Perfil)
+- [x] Barra de progresso na home
+- [x] Aviso visual ao atingir 100% da meta
+
+---
+
+## 4. Recordes pessoais (PRs)
+
+**Esforço:** M · **Prioridade:** Média
+
+Destacar melhores marcas automaticamente.
+
+- Maior distância em um treino
+- Melhor ritmo médio (distância mínima configurável, ex. 5 km)
+- Maior duração / maior elevação
+- Badge “PR” na lista e no detalhe
+
+---
+
+## 5. Divisão por voltas / km (splits)
+
+**Esforço:** M · **Prioridade:** Média
+
+Tabela de parciais automáticos.
+
+- Splits por quilômetro (tempo, ritmo, elevação)
+- Exibir na tela de detalhe abaixo do mapa
+- Suporte a voltas manuais (botão “Volta” durante gravação) — opcional na mesma entrega
+
+---
+
+## 6. Histórico e estatísticas avançadas
+
+**Esforço:** M · **Prioridade:** Média
+
+Painel além do resumo atual da home.
+
+- Gráfico de volume semanal/mensal (km e tempo)
+- Média de ritmo e calorias no período
+- Filtro por tipo: corrida, caminhada, ciclismo
+- Total acumulado no ano
+
+---
+
+## 7. Tela escura durante gravação (modo treino)
+
+**Esforço:** S · **Prioridade:** Média
+
+Experiência focada enquanto corre.
+
+- UI simplificada: tempo, distância, ritmo em fonte grande
+- Manter tela ligada (`Keep Awake`) no Android
+- Bloqueio de toques acidentais (opcional)
+
+---
+
+## 8. Backup e restauração de dados
+
+**Esforço:** M · **Prioridade:** Média
+
+Evitar perda ao trocar de celular.
+
+- Exportar backup JSON (atividades + perfil + pontos GPS)
+- Importar backup no mesmo ou outro dispositivo
+- Opcional: backup automático para pasta do celular
+
+---
+
+## 9. Integração com frequência cardíaca em tempo real
+
+**Esforço:** L · **Prioridade:** Baixa–média
+
+Melhorar gravação e calorias com FC ao vivo.
+
+- Conectar relógio/pulseira via Bluetooth (BLE) — pesquisa por protocolo Amazfit/Zepp
+- Alternativa inicial: leitura de sensor BLE genérico (cinta FC)
+- Exibir FC ao vivo e salvar no treino gravado
+
+---
+
+## 10. Publicação na Play Store (release assinado)
+
+**Esforço:** M · **Prioridade:** Baixa (quando estável)
+
+Distribuir para mais pessoas sem instalar APK manualmente.
+
+- Build de release assinado (keystore)
+- Ícone e splash screen dedicados
+- Política de privacidade (dados 100% locais)
+- Listagem F-Droid como alternativa open source
+
+---
+
+## Ideias para depois do top 10
+
+- Modo escuro/claro configurável
+- Múltiplos perfis no mesmo aparelho
+- Planejamento de treino (ex.: plano 5K / 10K)
+- Comparar dois treinos lado a lado
+- Widget Android com resumo da semana
+- Sincronização opcional com pasta na nuvem (Nextcloud/Google Drive) — sem servidor RunFlow
+- Suporte a TCX além de GPX/FIT
+- Zonas de ritmo e FC configuráveis no perfil
+
+---
+
+## Ordem sugerida de implementação
+
+```mermaid
+flowchart LR
+  F1[1 Exportar GPX] --> F2[2 Gráficos]
+  F2 --> F3[3 Metas semanais]
+  F3 --> F5[5 Splits]
+  F5 --> F4[4 PRs]
+  F4 --> F6[6 Estatísticas]
+  F6 --> F7[7 Modo treino]
+  F7 --> F8[8 Backup]
+  F8 --> F9[9 FC BLE]
+  F9 --> F10[10 Play Store]
+```
+
+| Fase | Features | Objetivo |
+|------|----------|----------|
+| **v0.2** | 1, 2 | Dados portáveis e análise visual |
+| **v0.3** | 3, 4, 5 | Engajamento e detalhe de treino |
+| **v0.4** | 6, 7, 8 | Polimento e confiança nos dados |
+| **v0.5+** | 9, 10 | Hardware e distribuição |
+
+---
+
+*Última atualização: maio 2026*

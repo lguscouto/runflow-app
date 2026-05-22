@@ -1,0 +1,72 @@
+"use client";
+
+import { useEffect, useMemo } from "react";
+import { MapContainer, Polyline, TileLayer, useMap } from "react-leaflet";
+import type { TrackPoint } from "@/lib/types";
+import { boundsFromPoints } from "@/lib/geo";
+import "leaflet/dist/leaflet.css";
+
+function FitBounds({ points }: { points: TrackPoint[] }) {
+  const map = useMap();
+  const bounds = useMemo(() => boundsFromPoints(points), [points]);
+
+  useEffect(() => {
+    if (points.length > 0) {
+      map.fitBounds(
+        [
+          [bounds.south, bounds.west],
+          [bounds.north, bounds.east],
+        ],
+        { padding: [40, 40] }
+      );
+    }
+  }, [map, bounds, points.length]);
+
+  return null;
+}
+
+export function MapTrack({
+  points,
+  height = "var(--map-height)",
+}: {
+  points: TrackPoint[];
+  height?: string;
+}) {
+  const positions = points.map((p) => [p.lat, p.lng] as [number, number]);
+  const center = positions[0] ?? [-23.55, -46.63];
+
+  if (positions.length < 2) {
+    return (
+      <div
+        className="rounded-xl bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)]"
+        style={{ height }}
+      >
+        Sem dados de GPS para exibir o mapa.
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden border border-[var(--border)]"
+      style={{ height }}
+    >
+      <MapContainer
+        center={center}
+        zoom={14}
+        style={{ height: "100%", width: "100%" }}
+        scrollWheelZoom
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <Polyline
+          positions={positions}
+          pathOptions={{ color: "#ff6b35", weight: 4, opacity: 0.9 }}
+        />
+        <FitBounds points={points} />
+      </MapContainer>
+    </div>
+  );
+}
