@@ -156,14 +156,80 @@ Melhorar a experiência de onboarding do usuário logo no primeiro uso do aplica
 
 ---
 
-## Ideias para depois do top 10
+## 12. Conquistas Pessoais e Analytics de Equipamentos
+
+**Esforço:** S · **Prioridade:** Média · **Dificuldade:** Fácil
+
+Gamificação introspectiva e controle estatístico de tênis/calçados.
+
+- [ ] Criar conquistas baseadas em consistência pessoal e metas
+- [ ] Vincular tênis/calçados aos treinos gravados
+- [ ] Exibir estatísticas de ritmo médio e projeção de desgaste por tênis
+
+---
+
+## 13. Competidor Virtual / Ghost Runner Offline
+
+**Esforço:** M · **Prioridade:** Média · **Dificuldade:** Média
+
+Correr contra o ritmo de atividades anteriores ou contra uma meta fixa.
+
+- [ ] Comparar distâncias e ritmos acumulados em tempo real com o treino de referência
+- [ ] Avisos de voz dinâmicos (Web Speech API / Capacitor TTS) ditando atraso/vantagem em metros ou segundos
+
+---
+
+## 14. Motor de Enriquecimento e Correção de Altimetria
+
+**Esforço:** M · **Prioridade:** Baixa · **Dificuldade:** Média
+
+Melhorar e unificar dados de sensores locais.
+
+- [ ] Mesclar dados de arquivos de GPS (.gpx) com dados de batimentos cardíacos (.fit) de relógios locais
+- [ ] Obter altitudes corretas consultando APIs de mapeamento topográfico aberto
+
+---
+
+## 15. Sincronização Multidispositivo Sem Servidor
+
+**Esforço:** L · **Prioridade:** Média · **Dificuldade:** Alta
+
+Manter dados atualizados em vários aparelhos sem usar um banco de dados centralizado do RunFlow.
+
+- [ ] Sincronização local-first com nuvens do usuário (Google Drive, Nextcloud, iCloud)
+- [ ] Sincronização via rede local (P2P Wi-Fi Sync) entre computador e celular
+
+---
+
+## 16. Navegação Offline e Alerta de Desvio de Rota
+
+**Esforço:** L · **Prioridade:** Baixa · **Dificuldade:** Alta
+
+Seguir rotas importadas sem conexão à internet.
+
+- [ ] Alertas sonoros instantâneos de fora de rota ("Off-route") baseados em proximidade geométrica
+- [ ] Suporte a desenho e criação rápida de trajetos GPX direto no app
+
+---
+
+## 17. Replay e Visualização da Atividade em 3D (Flyover)
+
+**Esforço:** L · **Prioridade:** Baixa · **Dificuldade:** Alta
+
+Uma visualização premium e interativa do percurso.
+
+- [ ] Renderizar o trajeto do treino em 3D (Three.js / WebGL) com dados topográficos locais
+- [ ] Animação de câmera (flyover) e mapa de calor de velocidade ao longo da rota
+
+---
+
+## Ideias para depois do top 17
 
 - Modo escuro/claro configurável
 - Múltiplos perfis no mesmo aparelho
 - Planejamento de treino (ex.: plano 5K / 10K)
 - Comparar dois treinos lado a lado
 - Widget Android com resumo da semana
-- Sincronização opcional com pasta na nuvem (Nextcloud/Google Drive) — sem servidor RunFlow
 - Suporte a TCX além de GPX/FIT
 - Zonas de ritmo e FC configuráveis no perfil
 
@@ -183,6 +249,12 @@ flowchart LR
   F7 --> F8[8 Backup]
   F8 --> F9[9 FC BLE]
   F9 --> F10[10 Play Store]
+  F10 --> F12[12 Conquistas & Gear]
+  F12 --> F13[13 Ghost Runner]
+  F13 --> F14[14 Enriquecimento]
+  F14 --> F15[15 Cloud Sync]
+  F15 --> F16[16 Rota Offline]
+  F16 --> F17[17 Flyover 3D]
 ```
 
 | Fase | Features | Objetivo |
@@ -190,7 +262,9 @@ flowchart LR
 | **v0.2** | 1, 2 | Dados portáveis e análise visual |
 | **v0.3** | 3, 4, 5 | Engajamento e detalhe de treino |
 | **v0.4** | 11, 6, 7, 8 | Polimento, onboarding e confiança nos dados |
-| **v0.5+** | 9, 10 | Hardware e distribuição |
+| **v0.5** | 9, 10 | Hardware e distribuição |
+| **v0.6+** | 12, 13, 14 | Gamificação e inteligência local |
+| **v0.7+** | 15, 16, 17 | Sincronização avançada e recursos 3D/offline |
 
 ---
 
