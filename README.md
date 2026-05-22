@@ -165,4 +165,5 @@ Resumo rápido:
 8. Backup e restauração  
 9. FC em tempo real (BLE)  
 10. Play Store / F-Droid  
+11. Assistente de configuração inicial (Wizard)  
 * Extra: Suporte Multilíngue (PT/EN) ✅  

@@ -143,6 +143,19 @@ Distribuir para mais pessoas sem instalar APK manualmente.
 
 ---
 
+## 11. Assistente de configuração inicial (Wizard de Boas-vindas)
+
+**Esforço:** S · **Prioridade:** Alta
+
+Melhorar a experiência de onboarding do usuário logo no primeiro uso do aplicativo.
+
+- Detectar se é o primeiro acesso ao aplicativo (ausência de perfil configurado no IndexedDB)
+- Apresentar um modal ou tela passo a passo (Wizard) amigável
+- Solicitar nome, dados físicos (peso, altura, idade), metas e preferência de idioma
+- Salvar automaticamente essas informações no perfil para personalização imediata (como o cálculo de calorias dos treinos)
+
+---
+
 ## Ideias para depois do top 10
 
 - Modo escuro/claro configurável
@@ -164,7 +177,8 @@ flowchart LR
   F2 --> F3[3 Metas semanais]
   F3 --> F5[5 Splits]
   F5 --> F4[4 PRs]
-  F4 --> F6[6 Estatísticas]
+  F4 --> F11[11 Wizard]
+  F11 --> F6[6 Estatísticas]
   F6 --> F7[7 Modo treino]
   F7 --> F8[8 Backup]
   F8 --> F9[9 FC BLE]
@@ -175,9 +189,10 @@ flowchart LR
 |------|----------|----------|
 | **v0.2** | 1, 2 | Dados portáveis e análise visual |
 | **v0.3** | 3, 4, 5 | Engajamento e detalhe de treino |
-| **v0.4** | 6, 7, 8 | Polimento e confiança nos dados |
+| **v0.4** | 11, 6, 7, 8 | Polimento, onboarding e confiança nos dados |
 | **v0.5+** | 9, 10 | Hardware e distribuição |
 
 ---
 
 *Última atualização: maio 2026*
+
