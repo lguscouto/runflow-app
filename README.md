@@ -7,14 +7,16 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 
 ## Funcionalidades
 
-- Dashboard com estatísticas (distância total, tempo, semana atual)
-- Lista de atividades com distância, duração e ritmo
-- Detalhe do treino com **mapa** (OpenStreetMap) e métricas
+- Dashboard com estatísticas (distância total, tempo, semana atual e metas)
+- Lista de atividades com distância, duração e ritmo médio
+- Detalhe do treino com **mapa** (OpenStreetMap), gráficos analíticos e tabela de voltas (splits)
 - **Gravar treino** com GPS ao vivo (distância, tempo, ritmo, mapa) — estilo Strava
 - **Importação** de arquivos `.gpx` e `.fit` (arrastar ou selecionar)
-- Dados armazenados **localmente** no dispositivo (IndexedDB)
+- Dados armazenados **localmente** no dispositivo (IndexedDB) — privacidade total local-first
 - **App Android (APK)** via Capacitor
-- Interface em português
+- Interface multilíngue (Português do Brasil 🇧🇷 e Inglês 🇺🇸)
+- **Assistente de configuração inicial (Wizard de Boas-vindas)** para novos usuários
+- **Recordes pessoais (PRs)** automáticos (distância, ritmo, duração e ganho de altitude)
 
 ## Requisitos
 
@@ -151,19 +153,26 @@ MIT — use, modifique e compartilhe livremente.
 
 ## Roadmap
 
-As **10 próximas features** planejadas estão em [ROADMAP.md](./ROADMAP.md), com prioridade, esforço e ordem sugerida de versões (v0.2 → v0.5+).
+As features planejadas e o progresso do aplicativo estão detalhados em [ROADMAP.md](./ROADMAP.md), contendo prioridades, estimativas de esforço e a ordem sugerida de versões (v0.2 → v0.7+).
 
-Resumo rápido:
+Resumo do status das features:
 
 1. ~~Exportar GPX~~ ✅  
 2. ~~Gráficos (ritmo, elevação, FC)~~ ✅  
 3. ~~Metas semanais~~ ✅  
 4. ~~Recordes pessoais (PRs)~~ ✅  
 5. ~~Splits por km / voltas~~ ✅  
-6. Estatísticas avançadas  
-7. Modo treino (tela escura)  
-8. Backup e restauração  
-9. FC em tempo real (BLE)  
-10. Play Store / F-Droid  
-11. Assistente de configuração inicial (Wizard)  
-* Extra: Suporte Multilíngue (PT/EN) ✅  
+* ~~Suporte Multilíngue (Português & Inglês)~~ ✅  
+6. Histórico e estatísticas avançadas  
+7. Tela escura durante gravação (modo treino)  
+8. Backup e restauração de dados  
+9. Integração com frequência cardíaca em tempo real (BLE)  
+10. Publicação na Play Store (release assinado)  
+11. ~~Assistente de configuração inicial (Wizard)~~ ✅  
+12. Conquistas Pessoais e Analytics de Equipamentos  
+13. Competidor Virtual / Ghost Runner Offline  
+14. Motor de Enriquecimento e Correção de Altimetria  
+15. Sincronização Multidispositivo Sem Servidor  
+16. Navegação Offline e Alerta de Desvio de Rota  
+17. Replay e Visualização da Atividade em 3D (Flyover)  
+
