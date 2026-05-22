@@ -9,6 +9,8 @@ export interface UserProfile {
   weeklyDistanceKm?: number;
   /** Meta de quantidade de treinos por semana. */
   weeklyWorkouts?: number;
+  /** Distância mínima em km para considerar recorde de ritmo (ex: 5). */
+  prMinPaceDistanceKm?: number;
   updatedAt: string;
 }
 

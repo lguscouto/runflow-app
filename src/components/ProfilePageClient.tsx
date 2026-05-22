@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle, User, Info, Target } from "lucide-react";
+import { ArrowLeft, CheckCircle, User, Info, Target, Trophy } from "lucide-react";
 import {
   getUserProfile,
   refreshEstimatedCalories,
@@ -17,6 +17,7 @@ export function ProfilePageClient() {
   const [bodyFatPercent, setBodyFatPercent] = useState("");
   const [weeklyDistanceKm, setWeeklyDistanceKm] = useState("");
   const [weeklyWorkouts, setWeeklyWorkouts] = useState("");
+  const [prMinPaceDistanceKm, setPrMinPaceDistanceKm] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{
@@ -40,6 +41,9 @@ export function ProfilePageClient() {
       setWeeklyWorkouts(
         p.weeklyWorkouts != null ? String(p.weeklyWorkouts) : ""
       );
+      setPrMinPaceDistanceKm(
+        p.prMinPaceDistanceKm != null ? String(p.prMinPaceDistanceKm) : ""
+      );
     }
     setLoading(false);
   }, []);
@@ -61,6 +65,9 @@ export function ProfilePageClient() {
         ? parseFloat(weeklyDistanceKm)
         : undefined,
       weeklyWorkouts: weeklyWorkouts ? parseInt(weeklyWorkouts, 10) : undefined,
+      prMinPaceDistanceKm: prMinPaceDistanceKm
+        ? parseFloat(prMinPaceDistanceKm)
+        : undefined,
     };
 
     if (parsed.age != null && (parsed.age < 10 || parsed.age > 120)) {
@@ -114,6 +121,16 @@ export function ProfilePageClient() {
       setMessage({
         type: "err",
         text: "Meta de treinos: entre 1 e 14 por semana.",
+      });
+      return;
+    }
+    if (
+      parsed.prMinPaceDistanceKm != null &&
+      (parsed.prMinPaceDistanceKm < 1 || parsed.prMinPaceDistanceKm > 100)
+    ) {
+      setMessage({
+        type: "err",
+        text: "Distância mínima para recorde de ritmo: entre 1 e 100 km.",
       });
       return;
     }
@@ -278,6 +295,31 @@ export function ProfilePageClient() {
                 onChange={(e) => setWeeklyWorkouts(e.target.value)}
                 className="profile-input"
                 placeholder="Ex.: 3"
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--border)] pt-5 space-y-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <Trophy size={16} className="text-[var(--accent)]" />
+              Recordes Pessoais
+            </h3>
+            <p className="text-xs text-[var(--muted)]">
+              Configurações para determinação dos seus recordes pessoais.
+            </p>
+            <div>
+              <label className="block text-sm text-[var(--muted)] mb-1.5">
+                Distância mínima para recorde de ritmo (km)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                step={0.1}
+                value={prMinPaceDistanceKm}
+                onChange={(e) => setPrMinPaceDistanceKm(e.target.value)}
+                className="profile-input"
+                placeholder="Padrão: 5"
               />
             </div>
           </div>

@@ -3,7 +3,11 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Flame, Heart, Mountain, Timer } from "lucide-react";
+import { ArrowLeft, Flame, Heart, Mountain, Timer, Trophy } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getUserProfile } from "@/lib/profile";
+import { listActivities } from "@/lib/activities";
+import { getPersonalRecords, getActivityPRs, type PRCategory, PR_CATEGORY_LABELS } from "@/lib/prs";
 
 const ActivityMap = dynamic(
   () => import("@/components/ActivityMap").then((m) => m.ActivityMap),
@@ -36,6 +40,28 @@ export function ActivityDetailClient() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
   const { activity, loading, notFound } = useActivityDetail(id);
+  const [prCategories, setPrCategories] = useState<PRCategory[]>([]);
+
+  useEffect(() => {
+    if (!activity) return;
+    const activityId = activity.id;
+    async function checkPR() {
+      try {
+        const [profile, allActivities] = await Promise.all([
+          getUserProfile(),
+          listActivities(1000),
+        ]);
+        const prs = getPersonalRecords(allActivities, profile);
+        const { isPR, categories } = getActivityPRs(activityId, prs);
+        if (isPR) {
+          setPrCategories(categories);
+        }
+      } catch (err) {
+        console.error("Erro ao verificar PR do treino:", err);
+      }
+    }
+    checkPR();
+  }, [activity]);
 
   if (!id || notFound) {
     return (
@@ -76,6 +102,24 @@ export function ActivityDetailClient() {
           <DeleteActivityButton id={activity.id} />
         </div>
       </div>
+
+      {prCategories.length > 0 && (
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400">
+          <Trophy className="text-amber-500 shrink-0" size={28} />
+          <div>
+            <p className="font-semibold text-base text-amber-500 flex items-center gap-1.5 animate-pulse">
+              Recorde Pessoal Batido! 🏆
+            </p>
+            <p className="text-sm text-[var(--muted)] leading-normal mt-0.5">
+              Este treino estabeleceu sua melhor marca em:{" "}
+              <strong className="font-semibold text-[var(--text)]">
+                {prCategories.map((cat) => PR_CATEGORY_LABELS[cat]).join(", ")}
+              </strong>
+              .
+            </p>
+          </div>
+        </div>
+      )}
 
       <ActivityMap points={activity.points} height="360px" />
 

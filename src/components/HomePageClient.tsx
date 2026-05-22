@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Play, Upload, Zap } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
@@ -7,9 +8,35 @@ import { ActivityList } from "@/components/ActivityList";
 import { WeeklyGoalsCard } from "@/components/WeeklyGoalsCard";
 import { useDashboard } from "@/hooks/useActivities";
 import { formatDistance, formatDuration } from "@/lib/format";
+import { getUserProfile } from "@/lib/profile";
+import { listActivities } from "@/lib/activities";
+import { getPersonalRecords, getPRMap, type PersonalRecords, type PRCategory } from "@/lib/prs";
+import { PersonalRecordsCard } from "@/components/PersonalRecordsCard";
 
 export function HomePageClient() {
   const { stats, recent, loading } = useDashboard();
+  const [prs, setPrs] = useState<PersonalRecords | null>(null);
+  const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
+  const [loadingPrs, setLoadingPrs] = useState(true);
+
+  useEffect(() => {
+    async function loadPRs() {
+      try {
+        const [profile, allActivities] = await Promise.all([
+          getUserProfile(),
+          listActivities(1000),
+        ]);
+        const computedPrs = getPersonalRecords(allActivities, profile);
+        setPrs(computedPrs);
+        setPrMap(getPRMap(allActivities, computedPrs));
+      } catch (err) {
+        console.error("Erro ao calcular recordes pessoais:", err);
+      } finally {
+        setLoadingPrs(false);
+      }
+    }
+    loadPRs();
+  }, [recent]);
 
   return (
     <div className="space-y-8">
@@ -52,8 +79,16 @@ export function HomePageClient() {
 
       <WeeklyGoalsCard />
 
+      {loadingPrs ? (
+        <div className="stat-card">
+          <p className="text-sm text-[var(--muted)]">Carregando recordes...</p>
+        </div>
+      ) : (
+        prs && <PersonalRecordsCard prs={prs} />
+      )}
+
       {loading || !stats ? (
-        <p className="text-[var(--muted)]">Carregando...</p>
+        <p className="text-[var(--muted)]">Carregando estatísticas...</p>
       ) : (
         <>
           <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -84,7 +119,7 @@ export function HomePageClient() {
                 Atividades recentes
               </h2>
             </div>
-            <ActivityList activities={recent} />
+            <ActivityList activities={recent} prMap={prMap} />
           </section>
         </>
       )}
