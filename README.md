@@ -158,10 +158,11 @@ Resumo rápido:
 1. ~~Exportar GPX~~ ✅  
 2. ~~Gráficos (ritmo, elevação, FC)~~ ✅  
 3. ~~Metas semanais~~ ✅  
-4. Recordes pessoais (PRs)  
-5. Splits por km / voltas  
+4. ~~Recordes pessoais (PRs)~~ ✅  
+5. ~~Splits por km / voltas~~ ✅  
 6. Estatísticas avançadas  
 7. Modo treino (tela escura)  
 8. Backup e restauração  
 9. FC em tempo real (BLE)  
 10. Play Store / F-Droid  
+* Extra: Suporte Multilíngue (PT/EN) ✅  

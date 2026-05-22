@@ -1,0 +1,8 @@
+# RunFlow - Project Instructions
+
+- **Sempre que buildarmos, buildar o APK**:
+  Toda vez que a compilação do projeto for iniciada ou solicitada para fins de build de produção/distribuição móvel, você DEVE gerar também o APK correspondente (compilando a versão nativa do Android).
+  - Use o script integrado: `npm run build:mobile` (que executa a compilação Next.js, sincroniza o Capacitor e compila o APK de depuração via Gradle wrapper).
+  - Certifique-se de configurar e propagar as variáveis de ambiente necessárias:
+    * `JAVA_HOME` para a JBR do Android Studio em `C:\Program Files\Android\Android Studio\jbr`
+    * `ANDROID_HOME` para o SDK do Android em `C:\Users\gustavo\AppData\Local\Android\Sdk`
