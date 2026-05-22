@@ -227,7 +227,7 @@ export function OnboardingWizard() {
                         : "border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--muted)]"
                     }`}
                   >
-                    🇵🇹 {t("profile.lang_pt")}
+                    🇧🇷 {t("profile.lang_pt")}
                   </button>
                   <button
                     type="button"

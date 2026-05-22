@@ -371,8 +371,8 @@ export function ProfilePageClient() {
                 onChange={(e) => handleLangChange(e.target.value as "pt" | "en")}
                 className="profile-input bg-[var(--surface)] text-[var(--text)] border-[var(--border)]"
               >
-                <option value="pt">{t("profile.lang_pt")}</option>
-                <option value="en">{t("profile.lang_en")}</option>
+                <option value="pt">🇧🇷 {t("profile.lang_pt")}</option>
+                <option value="en">🇺🇸 {t("profile.lang_en")}</option>
               </select>
             </div>
           </div>
