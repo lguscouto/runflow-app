@@ -81,6 +81,21 @@ export async function getAllStoredActivities(): Promise<StoredActivity[]> {
   );
 }
 
+export async function listStoredActivitiesWithCursor(
+  limit = 50
+): Promise<ActivitySummary[]> {
+  const db = await getStore();
+  const tx = db.transaction("activities", "readonly");
+  const index = tx.store.index("by-started");
+  const summaries: ActivitySummary[] = [];
+  let cursor = await index.openCursor(null, "prev");
+  while (cursor && summaries.length < limit) {
+    summaries.push(toActivitySummary(cursor.value));
+    cursor = await cursor.continue();
+  }
+  return summaries;
+}
+
 export async function removeActivity(id: string): Promise<boolean> {
   const db = await getStore();
   const existing = await db.get("activities", id);

@@ -28,7 +28,7 @@ import {
   sportLabel,
 } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
-import type { Sport } from "@/lib/types";
+import type { Sport, UserProfile } from "@/lib/types";
 
 const LiveMapTrack = dynamic(
   () => import("@/components/LiveMapTrack").then((m) => m.LiveMapTrack),
@@ -53,6 +53,14 @@ export function RecordWorkoutClient() {
   const [confirmStop, setConfirmStop] = useState(false);
   const [liveCalories, setLiveCalories] = useState<number | null>(null);
   const [trainingMode, setTrainingMode] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  // Load user profile on mount
+  useEffect(() => {
+    getUserProfile().then((p) => {
+      setProfile(p);
+    });
+  }, []);
 
   const {
     status,
@@ -91,22 +99,21 @@ export function RecordWorkoutClient() {
       setLiveCalories(null);
       return;
     }
-    getUserProfile().then((profile) => {
-      setLiveCalories(
-        estimateActivityCalories(profile, {
-          sport,
-          durationSec: stats.elapsedSec,
-          distanceM: stats.distanceM,
-          avgPaceSecKm: stats.avgPaceSecKm,
-        })
-      );
-    });
+    setLiveCalories(
+      estimateActivityCalories(profile, {
+        sport,
+        durationSec: stats.elapsedSec,
+        distanceM: stats.distanceM,
+        avgPaceSecKm: stats.avgPaceSecKm,
+      })
+    );
   }, [
     isActive,
     sport,
     stats.elapsedSec,
     stats.distanceM,
     stats.avgPaceSecKm,
+    profile,
   ]);
 
   async function handleStart() {

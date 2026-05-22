@@ -17,6 +17,7 @@ import {
   toActivitySummary,
   type StoredActivity,
   getAllStoredGear,
+  listStoredActivitiesWithCursor,
 } from "./storage";
 
 async function resolveCalories(parsed: ParsedActivity): Promise<number | null> {
@@ -79,8 +80,7 @@ export async function saveActivity(
 export async function listActivities(
   limit = 50
 ): Promise<ActivitySummary[]> {
-  const all = await getAllStoredActivities();
-  return all.slice(0, limit).map(toActivitySummary);
+  return listStoredActivitiesWithCursor(limit);
 }
 
 export async function getActivity(

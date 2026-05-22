@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { saveActivity } from "@/lib/activities";
-import { distanceFromPoints } from "@/lib/geo";
+import { distanceFromPoints, haversineM } from "@/lib/geo";
 import {
   acceptGpsReading,
   buildRecordedActivity,
@@ -55,6 +55,7 @@ export function useWorkoutRecorder() {
   const pointsRef = useRef<TrackPoint[]>([]);
   const stopWatchRef = useRef<(() => void) | null>(null);
   const lastPaceRef = useRef<{ dist: number; time: number } | null>(null);
+  const distanceMRef = useRef(0);
 
   // Bluetooth HR Refs
   const currentHrRef = useRef<number | null>(null);
@@ -88,7 +89,7 @@ export function useWorkoutRecorder() {
 
 
   const recomputeStats = useCallback((pts: TrackPoint[], elapsedSec: number) => {
-    const distanceM = distanceFromPoints(pts);
+    const distanceM = distanceMRef.current;
     let avgPaceSecKm: number | null = null;
     if (distanceM > 0 && elapsedSec > 0) {
       avgPaceSecKm = (elapsedSec / distanceM) * 1000;
@@ -98,7 +99,7 @@ export function useWorkoutRecorder() {
     const last = pts[pts.length - 1];
     const prev = pts[pts.length - 2];
     if (last?.timestamp && prev?.timestamp) {
-      const segDist = distanceFromPoints([prev, last]);
+      const segDist = haversineM(prev.lat, prev.lng, last.lat, last.lng);
       const segTime =
         (last.timestamp.getTime() - prev.timestamp.getTime()) / 1000;
       if (segDist > 0 && segTime > 0) {
@@ -147,6 +148,12 @@ export function useWorkoutRecorder() {
       const prev = pointsRef.current;
       if (!shouldAcceptPoint(prev, candidate)) return;
 
+      const lastPoint = prev[prev.length - 1];
+      if (lastPoint) {
+        const segDist = haversineM(lastPoint.lat, lastPoint.lng, candidate.lat, candidate.lng);
+        distanceMRef.current += segDist;
+      }
+
       const next = [...prev, candidate];
       pointsRef.current = next;
       setPoints(next);
@@ -180,6 +187,7 @@ export function useWorkoutRecorder() {
 
     const initial = await getCurrentPosition();
     pointsRef.current = [];
+    distanceMRef.current = 0;
     totalPausedMsRef.current = 0;
     pausedAtRef.current = null;
     startedAtRef.current = new Date();
@@ -256,6 +264,7 @@ export function useWorkoutRecorder() {
     setStatus("idle");
     setPoints([]);
     pointsRef.current = [];
+    distanceMRef.current = 0;
     startedAtRef.current = null;
     setError(null);
     setStats({

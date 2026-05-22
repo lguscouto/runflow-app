@@ -272,10 +272,11 @@ flowchart LR
 | **v0.5** | 9, 10 | Hardware e distribuição |
 | **v0.6** | 12 | Gamificação e controle de equipamentos ✅ |
 | **v0.6.1** | 7 | Modo Treino fullscreen + Wake Lock ✅ |
+| **v0.6.2** | — | Otimização de Código e Desempenho (Android/Capacitor) ✅ |
 | **v0.7+** | 8, 13, 14 | Backup, Ghost Runner e Enriquecimento de dados |
 | **v0.8+** | 15, 16, 17 | Sincronização avançada e recursos 3D/offline |
 
 ---
 
-*Última atualização: maio 2026 — Feature 9 (Frequência Cardíaca BLE no Celular/Web) concluída*
+*Última atualização: maio 2026 — Otimização de Código e Desempenho (Android/Capacitor) concluída*
 

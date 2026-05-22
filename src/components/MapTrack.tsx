@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { MapContainer, Polyline, TileLayer, useMap } from "react-leaflet";
 import type { TrackPoint } from "@/lib/types";
-import { boundsFromPoints } from "@/lib/geo";
+import { boundsFromPoints, simplifyPoints } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
 import { useI18n } from "@/lib/i18n";
 
@@ -34,7 +34,8 @@ export function MapTrack({
   height?: string;
 }) {
   const { t } = useI18n();
-  const positions = points.map((p) => [p.lat, p.lng] as [number, number]);
+  const simplifiedPoints = useMemo(() => simplifyPoints(points, 800), [points]);
+  const positions = useMemo(() => simplifiedPoints.map((p) => [p.lat, p.lng] as [number, number]), [simplifiedPoints]);
   const center = positions[0] ?? [-23.55, -46.63];
 
   if (positions.length < 2) {
@@ -67,7 +68,7 @@ export function MapTrack({
           positions={positions}
           pathOptions={{ color: "#ff6b35", weight: 4, opacity: 0.9 }}
         />
-        <FitBounds points={points} />
+        <FitBounds points={simplifiedPoints} />
       </MapContainer>
     </div>
   );

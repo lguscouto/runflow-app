@@ -1,11 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import type { ActivityDetail } from "@/lib/types";
 import {
   computeElevationSeries,
   computeHeartRateSeries,
   computePaceByKm,
   computePaceSeries,
+  cumulativeDistances,
 } from "@/lib/chart-data";
 import { SimpleLineChart } from "./SimpleLineChart";
 import { useI18n } from "@/lib/i18n";
@@ -18,18 +20,24 @@ function paceMinLabel(secPerKm: number): string {
 
 export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
   const { t } = useI18n();
-  const paceByKm = computePaceByKm(activity);
-  const paceSeries =
-    paceByKm.length > 0
+
+  const cumDist = useMemo(() => {
+    return cumulativeDistances(activity.points);
+  }, [activity.points]);
+
+  const paceByKm = useMemo(() => computePaceByKm(activity, cumDist), [activity, cumDist]);
+  const paceSeries = useMemo(() => {
+    return paceByKm.length > 0
       ? paceByKm.map((p) => ({
           x: p.km,
           y: p.paceSecKm,
           label: `${p.km}`,
         }))
-      : computePaceSeries(activity);
+      : computePaceSeries(activity, 80, cumDist);
+  }, [activity, paceByKm, cumDist]);
 
-  const elevation = computeElevationSeries(activity);
-  const heartRate = computeHeartRateSeries(activity);
+  const elevation = useMemo(() => computeElevationSeries(activity, 120, cumDist), [activity, cumDist]);
+  const heartRate = useMemo(() => computeHeartRateSeries(activity, 120, cumDist), [activity, cumDist]);
 
   const hasPace = paceSeries.length >= 2;
   const hasElevation = elevation.length >= 2;

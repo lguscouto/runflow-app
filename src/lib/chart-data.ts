@@ -27,7 +27,7 @@ function ensureTimestamps(
   }));
 }
 
-function cumulativeDistances(points: TrackPoint[]): number[] {
+export function cumulativeDistances(points: TrackPoint[]): number[] {
   const cum: number[] = [0];
   for (let i = 1; i < points.length; i++) {
     cum.push(
@@ -44,7 +44,10 @@ function cumulativeDistances(points: TrackPoint[]): number[] {
 }
 
 /** Ritmo médio por quilômetro completo. */
-export function computePaceByKm(activity: ActivityDetail): PaceKmPoint[] {
+export function computePaceByKm(
+  activity: ActivityDetail,
+  cumDist?: number[]
+): PaceKmPoint[] {
   const points = ensureTimestamps(
     activity.points,
     activity.startedAt,
@@ -52,7 +55,7 @@ export function computePaceByKm(activity: ActivityDetail): PaceKmPoint[] {
   );
   if (points.length < 2) return [];
 
-  const cum = cumulativeDistances(points);
+  const cum = cumDist ?? cumulativeDistances(points);
   const totalKm = cum[cum.length - 1] / 1000;
   if (totalKm < 0.3) return [];
 
@@ -88,7 +91,8 @@ export function computePaceByKm(activity: ActivityDetail): PaceKmPoint[] {
 /** Elevação ao longo da distância (amostragem). */
 export function computeElevationSeries(
   activity: ActivityDetail,
-  maxPoints = 120
+  maxPoints = 120,
+  cumDist?: number[]
 ): ChartPoint[] {
   const points = activity.points.filter(
     (p) => p.elevation != null && Number.isFinite(p.elevation)
@@ -96,7 +100,7 @@ export function computeElevationSeries(
   if (points.length < 2) return [];
 
   const all = activity.points;
-  const cum = cumulativeDistances(all);
+  const cum = cumDist ?? cumulativeDistances(all);
   const series: ChartPoint[] = [];
 
   for (let i = 0; i < all.length; i++) {
@@ -123,10 +127,11 @@ export function computeElevationSeries(
 /** FC ao longo da distância (km). */
 export function computeHeartRateSeries(
   activity: ActivityDetail,
-  maxPoints = 120
+  maxPoints = 120,
+  cumDist?: number[]
 ): ChartPoint[] {
   const all = activity.points;
-  const cum = cumulativeDistances(all);
+  const cum = cumDist ?? cumulativeDistances(all);
   const series: ChartPoint[] = [];
 
   for (let i = 0; i < all.length; i++) {
@@ -152,7 +157,8 @@ export function computeHeartRateSeries(
 /** Ritmo instantâneo suavizado por distância (quando não há km completo). */
 export function computePaceSeries(
   activity: ActivityDetail,
-  maxPoints = 80
+  maxPoints = 80,
+  cumDist?: number[]
 ): ChartPoint[] {
   const points = ensureTimestamps(
     activity.points,
@@ -161,7 +167,7 @@ export function computePaceSeries(
   );
   if (points.length < 3) return [];
 
-  const cum = cumulativeDistances(points);
+  const cum = cumDist ?? cumulativeDistances(points);
   const raw: ChartPoint[] = [];
 
   for (let i = 2; i < points.length; i++) {

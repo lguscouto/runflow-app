@@ -9,3 +9,8 @@
 
 - **Atualizar Roadmap e README**:
   Sempre que uma feature for implementada, você DEVE atualizar o `ROADMAP.md` (marcando-a como concluída/progredida) e o `README.md` de modo que fiquem alinhados.
+
+- **Sempre dar push para o GitHub**:
+  - SEMPRE PUSH TO GITHUB QUANDO HOUVER UMA ALTERACAO NO CODIGO.
+  - Toda vez que houver uma alteração de código ou arquivos do projeto, você DEVE realizar o commit e push para o repositório remoto no GitHub de forma automática.
+
