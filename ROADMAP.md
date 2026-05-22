@@ -175,14 +175,14 @@ Gamificação introspectiva e controle estatístico de tênis/calçados.
 
 ---
 
-## 13. Competidor Virtual / Ghost Runner Offline
+## 13. Competidor Virtual / Ghost Runner Offline ✅
 
-**Esforço:** M · **Prioridade:** Média · **Dificuldade:** Média
+**Esforço:** M · **Prioridade:** Média · **Dificuldade:** Média · **Status:** Concluído
 
 Correr contra o ritmo de atividades anteriores ou contra uma meta fixa.
 
-- [ ] Comparar distâncias e ritmos acumulados em tempo real com o treino de referência
-- [ ] Avisos de voz dinâmicos (Web Speech API / Capacitor TTS) ditando atraso/vantagem em metros ou segundos
+- [x] Comparar distâncias e ritmos acumulados em tempo real com o treino de referência
+- [x] Avisos de voz dinâmicos (Web Speech API / Capacitor TTS) ditando atraso/vantagem em metros ou segundos
 
 ---
 
@@ -273,10 +273,11 @@ flowchart LR
 | **v0.6** | 12 | Gamificação e controle de equipamentos ✅ |
 | **v0.6.1** | 7 | Modo Treino fullscreen + Wake Lock ✅ |
 | **v0.6.2** | — | Otimização de Código e Desempenho (Android/Capacitor) ✅ |
-| **v0.7+** | 8, 13, 14 | Backup, Ghost Runner e Enriquecimento de dados |
+| **v0.7** | 13 | Competidor Virtual / Ghost Runner Offline ✅ |
+| **v0.7+** | 8, 14 | Backup e Enriquecimento de dados |
 | **v0.8+** | 15, 16, 17 | Sincronização avançada e recursos 3D/offline |
 
 ---
 
-*Última atualização: maio 2026 — Otimização de Código e Desempenho (Android/Capacitor) concluída*
+*Última atualização: maio 2026 — Competidor Virtual / Ghost Runner Offline (Feature 13) concluído*
 
