@@ -13,6 +13,8 @@ import {
   Loader2,
   Maximize2,
   Minimize2,
+  Heart,
+  Bluetooth,
 } from "lucide-react";
 import { useWorkoutRecorder } from "@/hooks/useWorkoutRecorder";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -66,6 +68,12 @@ export function RecordWorkoutClient() {
     stop,
     reset,
     isActive,
+    hrStatus,
+    hrBpm,
+    hrDeviceName,
+    hrSupported,
+    connectHr,
+    disconnectHr,
   } = useWorkoutRecorder();
 
   // Keep screen awake while recording
@@ -227,20 +235,42 @@ export function RecordWorkoutClient() {
             </div>
           </div>
 
-          {/* Calories */}
-          {liveCalories != null && (
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
-                {t("detail.calories")}
-              </p>
-              <p
-                className="font-semibold tabular-nums text-orange-400"
-                style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)" }}
-              >
-                {formatCalories(liveCalories)}
-              </p>
-            </div>
-          )}
+          {/* Calories & Heart Rate */}
+          <div className="flex gap-8 justify-center items-center">
+            {liveCalories != null && (
+              <div className="text-center">
+                <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
+                  {t("detail.calories")}
+                </p>
+                <p
+                  className="font-bold tabular-nums text-orange-400"
+                  style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)" }}
+                >
+                  {formatCalories(liveCalories)}
+                </p>
+              </div>
+            )}
+            {liveCalories != null && hrBpm !== null && (
+              <div
+                className="w-px h-8"
+                style={{ background: "var(--border)" }}
+              />
+            )}
+            {hrBpm !== null && (
+              <div className="text-center flex flex-col items-center">
+                <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold flex items-center gap-1">
+                  <Heart size={12} className="text-red-500 fill-red-500 animate-pulse" />
+                  {t("record.hr_reading")}
+                </p>
+                <p
+                  className="font-bold tabular-nums text-red-500"
+                  style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)" }}
+                >
+                  {hrBpm} <span className="text-xs text-[var(--muted)] font-semibold">BPM</span>
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bottom action buttons */}
@@ -405,6 +435,18 @@ export function RecordWorkoutClient() {
                 </Link>
               )}
             </div>
+
+            {hrBpm !== null && (
+              <div className="stat-card text-center py-4 col-span-2 flex items-center justify-center gap-3 border border-red-500/20 bg-red-500/5 animate-pulse">
+                <Heart size={20} className="text-red-400 fill-red-400 shrink-0" />
+                <div className="text-left">
+                  <p className="text-xs text-[var(--muted)]">{t("record.hr_reading")}</p>
+                  <p className="text-xl font-bold text-red-400 tabular-nums">
+                    {hrBpm} <span className="text-xs font-semibold text-[var(--muted)]">bpm</span>
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center justify-center gap-2 text-sm text-[var(--muted)]">
@@ -413,6 +455,76 @@ export function RecordWorkoutClient() {
             {status === "paused" && ` · ${t("record.paused")}`}
           </div>
         </>
+      )}
+
+      {!isActive && status !== "saving" && (
+        <div className="stat-card space-y-4 border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center gap-2">
+            <Bluetooth size={18} className="text-[var(--accent)]" />
+            <h3 className="text-sm font-semibold text-[var(--text)]">{t("record.hr_sensor")}</h3>
+          </div>
+          <p className="text-xs text-[var(--muted)] -mt-2">
+            {t("record.hr_sensor_sub")}
+          </p>
+
+          {!hrSupported ? (
+            <p className="text-xs text-amber-500/80 bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg flex items-center gap-2">
+              ⚠️ {t("record.hr_not_supported")}
+            </p>
+          ) : (
+            <div className="flex items-center justify-between gap-3 p-1">
+              {hrStatus === "disconnected" && (
+                <button
+                  type="button"
+                  onClick={connectHr}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--text)] hover:bg-white/10 transition-colors"
+                >
+                  <Heart size={14} className="text-red-400 animate-pulse" />
+                  {t("record.connect_hr")}
+                </button>
+              )}
+
+              {hrStatus === "connecting" && (
+                <button
+                  type="button"
+                  disabled
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--muted)]"
+                >
+                  <Loader2 size={14} className="animate-spin" />
+                  {t("record.connecting_hr")}
+                </button>
+              )}
+
+              {hrStatus === "connected" && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-[var(--text)] leading-tight">
+                        {hrDeviceName}
+                      </p>
+                      <p className="text-xs text-red-400 font-semibold flex items-center gap-1 mt-0.5">
+                        <Heart size={10} className="fill-red-400 animate-pulse" />
+                        {hrBpm !== null ? `${hrBpm} BPM` : "--- BPM"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={disconnectHr}
+                    className="text-xs font-semibold text-red-400 hover:text-red-300 border border-red-500/20 bg-red-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
+                  >
+                    {t("record.disconnect_hr")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {!isActive && status !== "saving" && (

@@ -193,6 +193,14 @@ export const translations = {
     "record.mode_training": "Modo Treino",
     "record.mode_full": "Modo Completo",
     "record.elapsed": "Decorrido",
+    "record.connect_hr": "Conectar Cinta Cardíaca",
+    "record.connecting_hr": "Conectando sensor...",
+    "record.connected_hr": "Sensor Conectado",
+    "record.disconnect_hr": "Desconectar Sensor",
+    "record.hr_reading": "Frequência Cardíaca",
+    "record.hr_sensor": "Sensor de Frequência Cardíaca",
+    "record.hr_sensor_sub": "Compatível com cintas e sensores Bluetooth",
+    "record.hr_not_supported": "Bluetooth não suportado neste navegador.",
 
     // Import Form
     "import.drag_gpx_fit": "Arraste arquivos GPX ou FIT aqui",
@@ -493,6 +501,14 @@ export const translations = {
     "record.mode_training": "Training Mode",
     "record.mode_full": "Full View",
     "record.elapsed": "Elapsed",
+    "record.connect_hr": "Connect HR Strap",
+    "record.connecting_hr": "Connecting sensor...",
+    "record.connected_hr": "Sensor Connected",
+    "record.disconnect_hr": "Disconnect Sensor",
+    "record.hr_reading": "Heart Rate",
+    "record.hr_sensor": "Heart Rate Sensor",
+    "record.hr_sensor_sub": "Compatible with Bluetooth straps and monitors",
+    "record.hr_not_supported": "Bluetooth is not supported in this browser.",
 
     // Import Form
     "import.drag_gpx_fit": "Drag GPX or FIT files here",

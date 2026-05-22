@@ -46,6 +46,15 @@ export function buildRecordedActivity(
     avgPaceSecKm = (durationSec / distanceM) * 1000;
   }
 
+  const hrPoints = points.filter((p) => p.hr != null);
+  let avgHr: number | undefined;
+  let maxHr: number | undefined;
+  if (hrPoints.length > 0) {
+    const hrValues = hrPoints.map((p) => p.hr as number);
+    avgHr = Math.round(hrValues.reduce((acc, v) => acc + v, 0) / hrValues.length);
+    maxHr = Math.max(...hrValues);
+  }
+
   const sportNames: Record<Sport, string> = {
     running: "Corrida",
     walking: "Caminhada",
@@ -63,6 +72,8 @@ export function buildRecordedActivity(
     distanceM,
     avgPaceSecKm,
     elevationGainM,
+    avgHr,
+    maxHr,
     points,
   };
 }

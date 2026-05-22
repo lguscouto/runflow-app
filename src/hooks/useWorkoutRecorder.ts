@@ -37,12 +37,29 @@ export function useWorkoutRecorder() {
   });
   const [error, setError] = useState<string | null>(null);
 
+  // Bluetooth HR States
+  const [hrStatus, setHrStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
+  const [hrBpm, setHrBpm] = useState<number | null>(null);
+  const [hrDeviceName, setHrDeviceName] = useState<string | null>(null);
+  const [hrSupported, setHrSupported] = useState<boolean>(false);
+
   const startedAtRef = useRef<Date | null>(null);
   const pausedAtRef = useRef<Date | null>(null);
   const totalPausedMsRef = useRef(0);
   const pointsRef = useRef<TrackPoint[]>([]);
   const stopWatchRef = useRef<(() => void) | null>(null);
   const lastPaceRef = useRef<{ dist: number; time: number } | null>(null);
+
+  // Bluetooth HR Refs
+  const currentHrRef = useRef<number | null>(null);
+  const gattServerRef = useRef<any>(null);
+  const hrCharacteristicRef = useRef<any>(null);
+  const hrDeviceRef = useRef<any>(null);
+
+  // Check Bluetooth support on mount
+  useEffect(() => {
+    setHrSupported(typeof window !== "undefined" && (navigator as any).bluetooth !== undefined);
+  }, []);
 
   const recomputeStats = useCallback((pts: TrackPoint[], elapsedSec: number) => {
     const distanceM = distanceFromPoints(pts);
@@ -98,6 +115,7 @@ export function useWorkoutRecorder() {
         lng,
         elevation,
         timestamp: new Date(),
+        hr: currentHrRef.current !== null ? currentHrRef.current : undefined,
       };
 
       const prev = pointsRef.current;
@@ -222,8 +240,106 @@ export function useWorkoutRecorder() {
     });
   }, [stopGpsWatch]);
 
+  const connectHr = useCallback(async () => {
+    if (typeof window === "undefined" || !(navigator as any).bluetooth) {
+      setError("Bluetooth não suportado ou sem suporte neste navegador.");
+      return;
+    }
+
+    setHrStatus("connecting");
+    setError(null);
+
+    try {
+      const device = await (navigator as any).bluetooth.requestDevice({
+        filters: [{ services: ["heart_rate"] }],
+      });
+
+      hrDeviceRef.current = device;
+      setHrDeviceName(device.name || "Sensor de FC");
+
+      const onDisconnected = () => {
+        setHrStatus("disconnected");
+        setHrBpm(null);
+        setHrDeviceName(null);
+        currentHrRef.current = null;
+        gattServerRef.current = null;
+        hrCharacteristicRef.current = null;
+        hrDeviceRef.current = null;
+      };
+
+      device.addEventListener("gattserverdisconnected", onDisconnected);
+
+      const server = await device.gatt.connect();
+      gattServerRef.current = server;
+
+      const service = await server.getPrimaryService("heart_rate");
+      const characteristic = await service.getCharacteristic("heart_rate_measurement");
+      hrCharacteristicRef.current = characteristic;
+
+      const handleHrNotification = (event: any) => {
+        const value = event.target.value;
+        if (!value) return;
+
+        const flags = value.getUint8(0);
+        const rate16Bits = flags & 0x01;
+        let heartRate: number;
+
+        if (rate16Bits) {
+          heartRate = value.getUint16(1, true);
+        } else {
+          heartRate = value.getUint8(1);
+        }
+
+        setHrBpm(heartRate);
+        currentHrRef.current = heartRate;
+      };
+
+      characteristic.addEventListener("characteristicvaluechanged", handleHrNotification);
+      await characteristic.startNotifications();
+
+      setHrStatus("connected");
+    } catch (err: any) {
+      setHrStatus("disconnected");
+      setHrBpm(null);
+      setHrDeviceName(null);
+      currentHrRef.current = null;
+
+      if (err.name === "NotFoundError" || err.message?.includes("User cancelled")) {
+        return;
+      }
+
+      setError(err instanceof Error ? err.message : "Erro ao conectar sensor de FC.");
+    }
+  }, []);
+
+  const disconnectHr = useCallback(() => {
+    if (hrDeviceRef.current) {
+      try {
+        hrDeviceRef.current.gatt.disconnect();
+      } catch (err) {
+        console.error("Error disconnecting GATT:", err);
+      }
+    }
+    setHrStatus("disconnected");
+    setHrBpm(null);
+    setHrDeviceName(null);
+    currentHrRef.current = null;
+    gattServerRef.current = null;
+    hrCharacteristicRef.current = null;
+    hrDeviceRef.current = null;
+  }, []);
+
   useEffect(() => {
-    return () => stopGpsWatch();
+    return () => {
+      stopGpsWatch();
+      if (hrDeviceRef.current) {
+        try {
+          hrDeviceRef.current.gatt.disconnect();
+        } catch (err) {
+          console.error("Cleanup error disconnecting GATT:", err);
+        }
+      }
+    };
   }, [stopGpsWatch]);
 
   return {
@@ -240,5 +356,11 @@ export function useWorkoutRecorder() {
     stop,
     reset,
     isActive: status === "recording" || status === "paused",
+    hrStatus,
+    hrBpm,
+    hrDeviceName,
+    hrSupported,
+    connectHr,
+    disconnectHr,
   };
 }
