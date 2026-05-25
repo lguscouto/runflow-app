@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileUp, Loader2, CheckCircle, AlertCircle } from "lucide-react";
-import { importWorkoutFile } from "@/lib/import-file";
+import { importWorkoutFiles } from "@/lib/import-file";
 import { useI18n } from "@/lib/i18n";
 
 export function ImportForm() {
@@ -32,35 +32,37 @@ export function ImportForm() {
       setLoading(true);
       setMessage(null);
 
-      let lastId: string | null = null;
-      const errors: string[] = [];
+      try {
+        const result = await importWorkoutFiles(valid);
+        setLoading(false);
 
-      for (const file of valid) {
-        try {
-          lastId = await importWorkoutFile(file);
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : t("common.error");
-          errors.push(`${file.name}: ${msg}`);
+        if (result.merged) {
+          setMessage({
+            type: "ok",
+            text: t("import.success_merged"),
+          });
+        } else {
+          setMessage({
+            type: "ok",
+            text: t("import.success", { count: result.count }),
+          });
         }
-      }
 
-      setLoading(false);
-
-      if (errors.length > 0) {
-        setMessage({ type: "err", text: errors.join(" · ") });
-      } else {
-        setMessage({
-          type: "ok",
-          text: t("import.success", { count: valid.length }),
-        });
-        if (valid.length === 1 && lastId) {
+        if (result.lastId) {
           setTimeout(
-            () => router.push(`/atividades/ver/?id=${lastId}`),
+            () => router.push(`/atividades/ver/?id=${result.lastId}`),
             800
           );
         } else {
           setTimeout(() => router.push("/atividades/"), 800);
         }
+      } catch (err) {
+        setLoading(false);
+        const msg = err instanceof Error ? err.message : t("common.error");
+        setMessage({
+          type: "err",
+          text: msg,
+        });
       }
     },
     [router, t]

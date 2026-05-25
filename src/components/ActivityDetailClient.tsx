@@ -35,6 +35,7 @@ const ActivityMap = dynamic(
 import { DeleteActivityButton } from "@/components/DeleteActivityButton";
 import { ActivityCharts } from "@/components/ActivityCharts";
 import { ExportGpxButton } from "@/components/ExportGpxButton";
+import { CorrectElevationButton } from "@/components/CorrectElevationButton";
 import { ActivitySplits } from "@/components/ActivitySplits";
 import { useActivityDetail } from "@/hooks/useActivities";
 import {
@@ -149,6 +150,9 @@ export function ActivityDetailClient() {
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0">
           <ExportGpxButton activity={activity} />
+          {activity.points.length >= 2 && (
+            <CorrectElevationButton activityId={activity.id} />
+          )}
           <DeleteActivityButton id={activity.id} />
         </div>
       </div>

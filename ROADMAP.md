@@ -109,15 +109,15 @@ Experiência focada e imersiva enquanto corre.
 
 ---
 
-## 8. Backup e restauração de dados
+## 8. Backup e restauração de dados ✅
 
-**Esforço:** M · **Prioridade:** Média
+**Esforço:** M · **Prioridade:** Média · **Status:** Concluído
 
 Evitar perda ao trocar de celular.
 
-- Exportar backup JSON (atividades + perfil + pontos GPS)
-- Importar backup no mesmo ou outro dispositivo
-- Opcional: backup automático para pasta do celular
+- [x] Exportar backup JSON (atividades + perfil + pontos GPS)
+- [x] Importar backup no mesmo ou outro dispositivo
+- [ ] Opcional: backup automático para pasta do celular (futuro)
 
 ---
 
@@ -274,10 +274,11 @@ flowchart LR
 | **v0.6.1** | 7 | Modo Treino fullscreen + Wake Lock ✅ |
 | **v0.6.2** | — | Otimização de Código e Desempenho (Android/Capacitor) ✅ |
 | **v0.7** | 13 | Competidor Virtual / Ghost Runner Offline ✅ |
-| **v0.7+** | 8, 14 | Backup e Enriquecimento de dados |
+| **v0.7.1** | 8 | Backup e Restauração de Dados ✅ |
+| **v0.7.2** | 14 | Motor de Enriquecimento e Correção de Altimetria |
 | **v0.8+** | 15, 16, 17 | Sincronização avançada e recursos 3D/offline |
 
 ---
 
-*Última atualização: maio 2026 — Competidor Virtual / Ghost Runner Offline (Feature 13) concluído*
+*Última atualização: maio 2026 — Backup e Restauração de Dados (Feature 8) concluído*
 
