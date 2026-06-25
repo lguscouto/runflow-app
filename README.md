@@ -4,6 +4,7 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 
 ![RunFlow](https://img.shields.io/badge/license-MIT-blue)
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
+![Capacitor](https://img.shields.io/badge/Capacitor-7-green)
 
 ## Funcionalidades
 
@@ -21,6 +22,14 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - **Controle de Tênis / Equipamentos**: cadastro com barra de desgaste, km acumulado e associação automática a novos treinos
 - **Conquistas Pessoais**: 10 insígnias desbloqueadas dinamicamente com base no histórico de treinos (consistência, distância, horário, elevação e mais)
 - **Modo Treino**: tela imersiva fullscreen com métricas em fonte gigante e tela sempre ativa (`Screen Wake Lock API`) durante a gravação
+- **Backup e Restauração**: exportar/importar backup JSON completo (atividades, perfil, equipamentos)
+- **Frequência Cardíaca em Tempo Real**: conexão BLE com relógios e cintas cardíacas
+- **Competidor Virtual (Ghost Runner)**: corra contra o ritmo de treinos anteriores ou meta fixa, com alertas de voz
+- **Correção de Altimetria**: API Open-Meteo para corrigir dados de elevação dos treinos
+- **Associar FIT (FC)**: mesclagem de frequência cardíaca de arquivos FIT em treinos GPX já importados
+- **Navegação Offline**: siga rotas importadas ou desenhadas no mapa, com alertas sonoros de desvio de rota
+- **Desenho de Rotas**: crie rotas GPX clicando no mapa, com distância em tempo real e salvamento local
+- **Mapa de Comparação**: overlay da rota planejada vs trajeto real no detalhe da atividade
 
 ## Requisitos
 
@@ -72,8 +81,8 @@ No Android Studio:
 1. Aguarde o Gradle sincronizar (primeira vez pode demorar).
 2. Conecte um celular com **depuração USB** ou use um emulador.
 3. **Run** (▶) para instalar no aparelho, **ou**
-4. **Build → Build Bundle(s) / APK(s) → Build APK(s)**  
-   O APK de debug fica em:  
+4. **Build → Build Bundle(s) / APK(s) → Build APK(s)**
+   O APK de debug fica em:
    `android/app/build/outputs/apk/debug/app-debug.apk`
 
 ### APK de release (instalar fora da loja)
@@ -116,14 +125,14 @@ A nuvem Zepp/Huami é **proprietária**. Não existe uma API pública simples pa
 | **API oficial** ([dev.huami.com](https://dev.huami.com), [zepp-health/rest-api](https://github.com/zepp-health/rest-api)) | Exige cadastro de **empresa/parceiro**, aprovação e OAuth — não é voltada a projetos pessoais ou open source |
 | **API da nuvem** (`api-mifit*.huami.com`) | Usada pelo app Zepp, mas **não documentada**; acesso via engenharia reversa e `apptoken` (instável, pode quebrar) |
 | **Exportação GDPR** | Não inclui, em geral, atividades esportivas com GPX |
-| **Integrações oficiais** | Strava, TrainingPeaks, komoot etc. — só para **apps parceiros**, não para o RunFlow |
+| **Integrações oficiais** | Strava, TrainingPeaks, Komoot etc. — só para **apps parceiros**, não para o RunFlow |
 
 Por isso o RunFlow usa **importação de arquivos GPX/FIT** — método estável, local e sem depender da Zepp.
 
 ### Token Zepp (ferramentas externas)
 
-1. Acesse a página de privacidade/GDPR: https://user.huami.com/privacy2/index.html  
-2. No navegador (F12 → Rede), localize o `apptoken` nas requisições  
+1. Acesse a página de privacidade/GDPR: https://user.huami.com/privacy2/index.html
+2. No navegador (F12 → Rede), localize o `apptoken` nas requisições
 3. Use o token na ferramenta de exportação conforme a documentação do projeto
 
 ## Estrutura do projeto
@@ -131,13 +140,17 @@ Por isso o RunFlow usa **importação de arquivos GPX/FIT** — método estável
 ```
 src/
   app/           # Páginas (export estático)
-  components/    # UI (mapa, lista, importação, perfil, conquistas)
+    rotas/       # Navegação offline (listar rotas, criar rota)
+  components/    # UI (mapa, lista, importação, perfil, conquistas, navegação)
   lib/
     parsers/     # GPX e FIT
-    storage.ts   # IndexedDB v3 (activities, profile, gear)
+    storage.ts   # IndexedDB v4 (activities, profile, gear, routes)
     activities.ts
     gear.ts      # Utilitários de equipamentos
     achievements.ts  # Cálculo dinâmico de conquistas
+    route-geo.ts     # Algoritmos de proximidade geométrica
+    enrichment.ts    # Correção de altitude + merge de HR
+    calories.ts      # Estimativa de calorias MET
 android/         # Projeto nativo Capacitor
 out/             # Build estático (gerado)
 ```
@@ -159,26 +172,25 @@ MIT — use, modifique e compartilhe livremente.
 
 ## Roadmap
 
-As features planejadas e o progresso do aplicativo estão detalhados em [ROADMAP.md](./ROADMAP.md), contendo prioridades, estimativas de esforço e a ordem sugerida de versões (v0.2 → v0.7+).
+As features planejadas e o progresso do aplicativo estão detalhados em [ROADMAP.md](./ROADMAP.md), contendo prioridades, estimativas de esforço e a ordem sugerida de versões (v0.2 → v0.8+).
 
 Resumo do status das features:
 
-1. ~~Exportar GPX~~ ✅  
-2. ~~Gráficos (ritmo, elevação, FC)~~ ✅  
-3. ~~Metas semanais~~ ✅  
-4. ~~Recordes pessoais (PRs)~~ ✅  
-5. ~~Splits por km / voltas~~ ✅  
-* ~~Suporte Multilíngue (Português & Inglês)~~ ✅  
-6. ~~Histórico e estatísticas avançadas~~ ✅  
-7. ~~Tela escura durante gravação (modo treino)~~ ✅  
-8. Backup e restauração de dados  
-9. Integração com frequência cardíaca em tempo real (BLE)  
-10. Publicação na Play Store (release assinado)  
-11. ~~Assistente de configuração inicial (Wizard)~~ ✅  
-12. ~~Conquistas Pessoais e Analytics de Equipamentos~~ ✅  
-13. Competidor Virtual / Ghost Runner Offline  
-14. Motor de Enriquecimento e Correção de Altimetria  
-15. Sincronização Multidispositivo Sem Servidor  
-16. Navegação Offline e Alerta de Desvio de Rota  
-17. Replay e Visualização da Atividade em 3D (Flyover)  
-
+1. ~~Exportar GPX~~ ✅
+2. ~~Gráficos (ritmo, elevação, FC)~~ ✅
+3. ~~Metas semanais~~ ✅
+4. ~~Recordes pessoais (PRs)~~ ✅
+5. ~~Splits por km / voltas~~ ✅
+* ~~Suporte Multilíngue (Português & Inglês)~~ ✅
+6. ~~Histórico e estatísticas avançadas~~ ✅
+7. ~~Tela escura durante gravação (modo treino)~~ ✅
+8. ~~Backup e restauração de dados~~ ✅
+9. ~~Integração com frequência cardíaca em tempo real (BLE)~~ ✅
+10. Publicação na Play Store (release assinado)
+11. ~~Assistente de configuração inicial (Wizard)~~ ✅
+12. ~~Conquistas Pessoais e Analytics de Equipamentos~~ ✅
+13. ~~Competidor Virtual / Ghost Runner Offline~~ ✅
+14. ~~Motor de Enriquecimento e Correção de Altimetria~~ ✅
+15. Sincronização Multidispositivo Sem Servidor
+16. ~~Navegação Offline e Alerta de Desvio de Rota~~ ✅
+17. Replay e Visualização da Atividade em 3D (Flyover)
