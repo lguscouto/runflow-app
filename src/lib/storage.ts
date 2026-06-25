@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { ActivityDetail, ActivitySummary, Sport, TrackPoint, UserProfile, Gear } from "./types";
+import type { ActivityDetail, ActivitySummary, Sport, TrackPoint, UserProfile, Gear, SavedRoute } from "./types";
 
 export const PROFILE_KEY = "user";
 
@@ -7,6 +7,7 @@ export interface StoredActivity extends ActivitySummary {
   maxPaceSecKm: number | null;
   maxHr: number | null;
   notes: string | null;
+  routeId?: string | null;
   points: Array<{
     lat: number;
     lng: number;
@@ -30,10 +31,14 @@ interface RunFlowDB extends DBSchema {
     key: string;
     value: Gear;
   };
+  routes: {
+    key: string;
+    value: SavedRoute;
+  };
 }
 
 const DB_NAME = "runflow";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 let dbPromise: Promise<IDBPDatabase<RunFlowDB>> | null = null;
 
@@ -52,6 +57,11 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
         }
         if (oldVersion < 3 && !database.objectStoreNames.contains("gear")) {
           database.createObjectStore("gear", {
+            keyPath: "id",
+          });
+        }
+        if (oldVersion < 4 && !database.objectStoreNames.contains("routes")) {
+          database.createObjectStore("routes", {
             keyPath: "id",
           });
         }
@@ -135,7 +145,7 @@ export function toActivityDetail(stored: StoredActivity): ActivityDetail {
     timestamp: p.timestamp ? new Date(p.timestamp) : undefined,
     hr: p.hr,
   }));
-  return { ...stored, points };
+  return { ...stored, points, routeId: (stored as any).routeId || null };
 }
 
 export function toActivitySummary(stored: StoredActivity): ActivitySummary {
@@ -153,6 +163,7 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     source,
     fileName,
     gearId,
+    routeId,
   } = stored;
   return {
     id,
@@ -168,5 +179,33 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     source,
     fileName,
     gearId: gearId || null,
+    routeId: routeId || null,
   };
+}
+
+// ── Routes ──────────────────────────────────────────────────────────────────
+
+export async function putRoute(route: SavedRoute): Promise<void> {
+  const db = await getStore();
+  await db.put("routes", route);
+}
+
+export async function getStoredRoute(
+  id: string
+): Promise<SavedRoute | undefined> {
+  const db = await getStore();
+  return db.get("routes", id);
+}
+
+export async function getAllStoredRoutes(): Promise<SavedRoute[]> {
+  const db = await getStore();
+  return db.getAll("routes");
+}
+
+export async function removeRoute(id: string): Promise<boolean> {
+  const db = await getStore();
+  const existing = await db.get("routes", id);
+  if (!existing) return false;
+  await db.delete("routes", id);
+  return true;
 }

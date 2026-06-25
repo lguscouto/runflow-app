@@ -192,8 +192,11 @@ Correr contra o ritmo de atividades anteriores ou contra uma meta fixa.
 
 Melhorar e unificar dados de sensores locais.
 
-- [ ] Mesclar dados de arquivos de GPS (.gpx) com dados de batimentos cardíacos (.fit) de relógios locais
-- [ ] Obter altitudes corretas consultando APIs de mapeamento topográfico aberto
+- [x] Mesclar dados de arquivos de GPS (.gpx) com dados de batimentos cardíacos (.fit) de relógios locais
+- [x] Obter altitudes corretas consultando APIs de mapeamento topográfico aberto
+- [x] Merge de HR (FIT) em atividade GPX já existente (pós-importação)
+- [x] Retry e tratamento de rate-limit na correção de altimetria
+- [x] Feedback de progresso na correção de elevação
 
 ---
 
@@ -214,8 +217,17 @@ Manter dados atualizados em vários aparelhos sem usar um banco de dados central
 
 Seguir rotas importadas sem conexão à internet.
 
-- [ ] Alertas sonoros instantâneos de fora de rota ("Off-route") baseados em proximidade geométrica
-- [ ] Suporte a desenho e criação rápida de trajetos GPX direto no app
+- [x] Store `routes` no IndexedDB (SavedRoute, RouteConfig, OffRouteState)
+- [x] Importar GPX como rota (não como atividade)
+- [x] Algoritmo de proximidade geométrica (point-to-polyline)
+- [x] Detecção de desvio de rota + alertas de voz durante gravação
+- [x] Página "Minhas Rotas" (`/rotas/`)
+- [x] Seletor de rota na tela de gravação
+- [x] Indicador visual "Na rota / Fora da rota!" durante treino
+- [x] Ferramenta de desenho de rotas no mapa (`/rotas/criar/`)
+- [x] Overlay da rota planejada no mapa de detalhe da atividade
+- [x] Link "Rotas" na navbar
+- [ ] Testes de validação completa no emulador (importar GPX, desenhar, navegar)
 
 ---
 
@@ -275,10 +287,11 @@ flowchart LR
 | **v0.6.2** | — | Otimização de Código e Desempenho (Android/Capacitor) ✅ |
 | **v0.7** | 13 | Competidor Virtual / Ghost Runner Offline ✅ |
 | **v0.7.1** | 8 | Backup e Restauração de Dados ✅ |
-| **v0.7.2** | 14 | Motor de Enriquecimento e Correção de Altimetria |
-| **v0.8+** | 15, 16, 17 | Sincronização avançada e recursos 3D/offline |
+| **v0.7.2** | 14 | Motor de Enriquecimento e Correção de Altimetria ✅ |
+| **v0.8** | 16 | Navegação Offline e Alerta de Desvio de Rota ✅ (implementação) |
+| **v0.8+** | 15, 17 | Sincronização avançada e recursos 3D (cloud sync, flyover) |
 
 ---
 
-*Última atualização: maio 2026 — Backup e Restauração de Dados (Feature 8) concluído*
+*Última atualização: junho 2026 — Navegação Offline (Feature 16) implementada — validação pendente*
 

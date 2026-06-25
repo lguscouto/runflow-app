@@ -15,6 +15,9 @@ import {
   startWatchingPosition,
 } from "@/lib/location";
 import type { Sport, TrackPoint, GhostConfig, GhostStats } from "@/lib/types";
+import { isOnRoute, pointToPolylineDistanceM } from "@/lib/route-geo";
+import type { RouteConfig, OffRouteState, SavedRoute } from "@/lib/types";
+import { getStoredRoute } from "@/lib/storage";
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { Capacitor } from "@capacitor/core";
 import { useI18n } from "@/lib/i18n";
@@ -49,6 +52,9 @@ export function useWorkoutRecorder() {
   // Ghost Runner States
   const [ghostConfig, setGhostConfig] = useState<GhostConfig | null>(null);
   const [ghostStats, setGhostStats] = useState<GhostStats | null>(null);
+  const [routeConfig, setRouteConfigState] = useState<RouteConfig | null>(null);
+  const [offRouteState, setOffRouteState] = useState<OffRouteState | null>(null);
+  const [routePoints, setRoutePoints] = useState<{lat: number; lng: number}[]>([]);
 
   // Bluetooth HR States
   const [hrStatus, setHrStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
@@ -84,6 +90,23 @@ export function useWorkoutRecorder() {
   useEffect(() => {
     ghostConfigRef.current = ghostConfig;
   }, [ghostConfig]);
+  const setRouteConfig = useCallback(async (config: RouteConfig | null) => {
+    setRouteConfigState(config);
+    if (config?.routeId) {
+      const route = await getStoredRoute(config.routeId);
+      setRoutePoints(route?.points || []);
+      setOffRouteState({
+        isOffRoute: false,
+        distanceFromRouteM: 0,
+        nearestPoint: null,
+        estimatedDistanceM: 0,
+        totalRouteDistanceM: route?.distanceM || 0,
+      });
+    } else {
+      setRoutePoints([]);
+      setOffRouteState(null);
+    }
+  }, []);
 
   // Check Bluetooth support on mount
   useEffect(() => {
@@ -271,6 +294,21 @@ export function useWorkoutRecorder() {
       pointsRef.current = next;
       setPoints(next);
       recomputeStats(next, getElapsedSec());
+      // Off-route check
+      if (routeConfig && routePoints.length > 0 && statusRef.current === "recording") {
+        const lastPoint = pointsRef.current[pointsRef.current.length - 1];
+        if (lastPoint) {
+          const onRoute = isOnRoute(lastPoint, routePoints, routeConfig.offRouteToleranceM);
+          const proximity = pointToPolylineDistanceM(lastPoint, routePoints);
+          setOffRouteState({
+            isOffRoute: !onRoute,
+            distanceFromRouteM: proximity.distanceM,
+            nearestPoint: proximity.snappedPoint,
+            estimatedDistanceM: 0, // TODO: calculate cumulative distance along route
+            totalRouteDistanceM: 0,
+          });
+        }
+      }
     },
     [getElapsedSec, recomputeStats]
   );
@@ -549,6 +587,17 @@ export function useWorkoutRecorder() {
       }
     };
   }, [stopGpsWatch]);
+  // Off-route audio alert
+  useEffect(() => {
+    if (offRouteState?.isOffRoute && routeConfig?.audioAlerts && "speechSynthesis" in window) {
+      const dist = Math.round(offRouteState.distanceFromRouteM);
+      const utterance = new SpeechSynthesisUtterance(
+        t("navigation.off_route_alert", { dist })
+      );
+      utterance.lang = language === "pt" ? "pt-BR" : "en-US";
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [offRouteState?.isOffRoute, routeConfig?.audioAlerts]);
 
 
   return {
@@ -573,5 +622,8 @@ export function useWorkoutRecorder() {
     disconnectHr,
     ghostConfig,
     ghostStats,
+    routeConfig,
+    setRouteConfig,
+    offRouteState,
   };
 }

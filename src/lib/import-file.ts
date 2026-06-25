@@ -1,7 +1,9 @@
 import { parseGpx } from "./parsers/gpx";
 import { parseFit } from "./parsers/fit";
+import { importRouteGpx as parseRouteGpx } from "./parsers/route-gpx";
 import { saveActivity } from "./activities";
-import type { TrackPoint } from "./types";
+import { putRoute } from "./storage";
+import type { TrackPoint, SavedRoute } from "./types";
 
 export async function importWorkoutFile(file: File): Promise<string> {
   const fileName = file.name;
@@ -132,4 +134,11 @@ export async function importWorkoutFiles(files: File[]): Promise<ImportResult> {
     count: importedCount,
     merged: false,
   };
+}
+
+export async function importRouteGpx(file: File): Promise<SavedRoute> {
+  const text = await file.text();
+  const route = parseRouteGpx(text, file.name);
+  await putRoute(route);
+  return route;
 }

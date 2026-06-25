@@ -55,6 +55,7 @@ export interface ActivitySummary {
   source: string;
   fileName: string | null;
   gearId: string | null;
+  routeId?: string | null;
 }
 
 export interface ActivityDetail extends ActivitySummary {
@@ -84,10 +85,42 @@ export interface DashboardStats {
   thisWeekActivities: number;
 }
 
+export interface RoutePoint {
+  lat: number;
+  lng: number;
+  elevation?: number;
+}
+
+export interface SavedRoute {
+  id: string;
+  name: string;
+  points: RoutePoint[];
+  distanceM: number;
+  source: "drawn" | "imported";
+  createdAt: string;
+  sport?: Sport;
+}
+
+export interface RouteConfig {
+  routeId: string;
+  offRouteToleranceM: number;
+  audioAlerts: boolean;
+  audioFreq: "1km" | "2min" | "5min";
+}
+
+export interface OffRouteState {
+  isOffRoute: boolean;
+  distanceFromRouteM: number;
+  nearestPoint: RoutePoint | null;
+  estimatedDistanceM: number;
+  totalRouteDistanceM: number;
+}
+
 export interface GhostConfig {
   mode: "disabled" | "pace" | "activity";
   targetPaceSecKm?: number; // Ritmo alvo em segundos por quilômetro (ex: 300 para 5:00/km)
   activityId?: string | null; // ID da atividade anterior
+  routeId?: string; // ID da rota para navegação
   audioAlerts: boolean;
   audioFreq: "1km" | "2min" | "5min";
 }

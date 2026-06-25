@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Activity, Home, Play, Upload, User } from "lucide-react";
+import { Activity, Home, MapPin, Play, Upload, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import React from "react";
 
@@ -39,6 +39,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link href="/importar/" className="nav-link flex items-center gap-1.5">
               <Upload size={16} />
               <span className="hidden sm:inline">{t("nav.import")}</span>
+            </Link>
+            <Link href="/rotas/" className="nav-link flex items-center gap-1.5">
+              <MapPin size={16} />
+              <span className="hidden sm:inline">{t("nav.routes")}</span>
             </Link>
             <Link href="/perfil/" className="nav-link flex items-center gap-1.5">
               <User size={16} />

@@ -18,6 +18,9 @@ import {
   Ghost,
   Volume2,
   VolumeX,
+  Route,
+  MapPinned,
+  Mic,
 } from "lucide-react";
 import { useWorkoutRecorder } from "@/hooks/useWorkoutRecorder";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -32,7 +35,8 @@ import {
   sportLabel,
 } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
-import type { Sport, UserProfile, ActivitySummary, GhostConfig } from "@/lib/types";
+import type { Sport, UserProfile, ActivitySummary, GhostConfig, SavedRoute } from "@/lib/types";
+import { getAllStoredRoutes } from "@/lib/storage";
 
 const LiveMapTrack = dynamic(
   () => import("@/components/LiveMapTrack").then((m) => m.LiveMapTrack),
@@ -74,6 +78,10 @@ export function RecordWorkoutClient() {
   const [audioAlerts, setAudioAlerts] = useState<boolean>(true);
   const [audioFreq, setAudioFreq] = useState<"1km" | "2min" | "5min">("1km");
   const [pastActivities, setPastActivities] = useState<ActivitySummary[]>([]);
+  const [allRoutes, setAllRoutes] = useState<SavedRoute[]>([]);
+  const [selectedRouteId, setSelectedRouteId] = useState<string>("");
+  const [routeTolerance, setRouteTolerance] = useState<number>(50);
+  const [routeVoiceAlerts, setRouteVoiceAlerts] = useState<boolean>(true);
 
   const {
     status,
@@ -113,6 +121,11 @@ export function RecordWorkoutClient() {
       });
     }
   }, [status, sport]);
+
+  // Load saved routes on mount
+  useEffect(() => {
+    getAllStoredRoutes().then(setAllRoutes);
+  }, []);
 
   // Keep screen awake while recording
   useWakeLock(status === "recording");
@@ -158,6 +171,9 @@ export function RecordWorkoutClient() {
       gConfig.targetPaceSecKm = paceSec > 0 ? paceSec : 300;
     } else if (ghostMode === "activity") {
       gConfig.activityId = selectedActivityId || null;
+    }
+    if (selectedRouteId && allRoutes.length > 0) {
+      gConfig.routeId = selectedRouteId;
     }
     await start(gConfig);
   }
@@ -712,6 +728,97 @@ export function RecordWorkoutClient() {
                     {t("record.disconnect_hr")}
                   </button>
                 </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Route Navigation Section */}
+      {!isActive && status !== "saving" && (
+        <div className="stat-card space-y-4 border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center gap-2">
+            <MapPinned size={18} className="text-[var(--accent)]" />
+            <h3 className="text-sm font-semibold text-[var(--text)]">{t("navigation.title")}</h3>
+          </div>
+
+          {allRoutes.length === 0 ? (
+            <p className="text-xs text-[var(--muted)] flex items-center gap-1.5">
+              <Route size={14} />
+              {t("navigation.no_routes")}{" "}
+              <Link href="/rotas/" className="text-[var(--accent)] hover:underline">
+                {t("routes.create_btn")}
+              </Link>
+            </p>
+          ) : (
+            <div className="space-y-3 pt-1">
+              <div>
+                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">
+                  {t("navigation.select_route")}
+                </label>
+                <select
+                  value={selectedRouteId}
+                  onChange={(e) => setSelectedRouteId(e.target.value)}
+                  className="w-full text-sm rounded-lg bg-[var(--background)] border border-[var(--border)] text-[var(--text)] px-3 py-2 outline-none focus:border-[var(--accent)] transition-colors font-semibold"
+                >
+                  <option value="">{language === "en" ? "No route selected" : "Nenhuma rota selecionada"}</option>
+                  {allRoutes.map((route) => (
+                    <option key={route.id} value={route.id}>
+                      {route.name} ({(route.distanceM / 1000).toFixed(1)} km)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedRouteId && (
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--muted)] mb-1.5">
+                      {t("navigation.off_route_tolerance")}: {routeTolerance}m
+                    </label>
+                    <input
+                      type="range"
+                      min={25}
+                      max={200}
+                      step={25}
+                      value={routeTolerance}
+                      onChange={(e) => setRouteTolerance(Number(e.target.value))}
+                      className="w-full accent-[var(--accent)]"
+                    />
+                    <div className="flex justify-between text-[10px] text-[var(--muted)] mt-0.5">
+                      <span>{t("navigation.tolerance_25m")}</span>
+                      <span>{t("navigation.tolerance_50m")}</span>
+                      <span>{t("navigation.tolerance_100m")}</span>
+                      <span>{t("navigation.tolerance_200m")}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {routeVoiceAlerts ? (
+                        <Mic size={14} className="text-[var(--accent)]" />
+                      ) : (
+                        <Mic size={14} className="text-[var(--muted)]" />
+                      )}
+                      <span className="text-xs font-semibold text-[var(--text)]">
+                        {t("navigation.voice_alerts")}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setRouteVoiceAlerts(!routeVoiceAlerts)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none ${
+                        routeVoiceAlerts ? "bg-[var(--accent)]" : "bg-white/10"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          routeVoiceAlerts ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}

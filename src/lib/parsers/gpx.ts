@@ -16,7 +16,7 @@ function extractTag(block: string, tag: string): string | undefined {
   return m2?.[1]?.trim();
 }
 
-function parseTrackPoints(xml: string): TrackPoint[] {
+export function parseTrackPoints(xml: string): TrackPoint[] {
   const points: TrackPoint[] = [];
   const trkptRegex = /<trkpt\s+([^>]*)>([\s\S]*?)<\/trkpt>/gi;
   let match: RegExpExecArray | null;
