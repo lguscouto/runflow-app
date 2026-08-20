@@ -233,14 +233,18 @@ Seguir rotas importadas sem conexão à internet.
 
 ---
 
-## 17. Replay e Visualização da Atividade em 3D (Flyover)
+## 17. Replay e Visualização da Atividade em 3D (Flyover) ✅
 
-**Esforço:** L · **Prioridade:** Baixa · **Dificuldade:** Alta
+**Esforço:** L · **Prioridade:** Baixa · **Dificuldade:** Alta · **Status:** Concluído
 
-Uma visualização premium e interativa do percurso.
+Uma visualização premium e interativa do percurso em 3D.
 
-- [ ] Renderizar o trajeto do treino em 3D (Three.js / WebGL) com dados topográficos locais
-- [ ] Animação de câmera (flyover) e mapa de calor de velocidade ao longo da rota
+- [x] Renderizar o trajeto do treino em 3D (Three.js / WebGL) com dados topográficos e altimetria reais
+- [x] Três modos cinemáticos de câmera: Drone Seguidor (3ª Pessoa), Visão Aérea (Top-Down) e Órbita Livre ($360^\circ$)
+- [x] Gradiente de calor de velocidade/ritmo e elevação ao longo da rota
+- [x] Controles interativos de reprodução: Play/Pause, Scrubber (timeline) e velocidades `1x` a `20x`
+- [x] Painel HUD com telemetria em tempo real (Ritmo, Distância, Tempo, Altitude e FC)
+- [x] Alternância instantânea 2D / 3D e modo tela cheia (Fullscreen)
 
 ---
 
@@ -292,9 +296,10 @@ flowchart LR
 | **v0.7.2** | 14 | Motor de Enriquecimento e Correção de Altimetria ✅ |
 | **v0.8** | 16 | Navegação Offline e Alerta de Desvio de Rota ✅ |
 | **v0.8.1** | 15 | Sincronização Multidispositivo Sem Servidor (P2P & WebDAV) ✅ |
-| **v0.9+** | 10, 17 | Preparação para Release e Flyover 3D |
+| **v0.8.2** | 17 | Replay e Visualização da Atividade em 3D (Flyover) ✅ |
+| **v0.9+** | 10 | Preparação e Publicação do Release Assinado |
 
 ---
 
-*Última atualização: agosto 2026 — Sincronização Multidispositivo Sem Servidor (Feature 15) concluída*
+*Última atualização: agosto 2026 — Replay e Visualização da Atividade em 3D (Feature 17) concluída*
 

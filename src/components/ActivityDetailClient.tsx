@@ -32,6 +32,22 @@ const ActivityMap = dynamic(
     ),
   }
 );
+
+const ActivityFlyover3D = dynamic(
+  () => import("@/components/ActivityFlyover3D").then((m) => m.ActivityFlyover3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="rounded-2xl bg-[#0b0e14] border border-[var(--border)] animate-pulse flex items-center justify-center text-sm text-[var(--muted)]"
+        style={{ height: "440px" }}
+      >
+        Carregando visualização 3D...
+      </div>
+    ),
+  }
+);
+
 import { DeleteActivityButton } from "@/components/DeleteActivityButton";
 import { ActivityCharts } from "@/components/ActivityCharts";
 import { ExportGpxButton } from "@/components/ExportGpxButton";
@@ -39,6 +55,7 @@ import { CorrectElevationButton } from "@/components/CorrectElevationButton";
 import { MergeFitButton } from "@/components/MergeFitButton";
 import { ActivitySplits } from "@/components/ActivitySplits";
 import { useActivityDetail } from "@/hooks/useActivities";
+import { Box, Map as MapIcon, Video } from "lucide-react";
 import {
   formatDate,
   formatDistance,
@@ -54,6 +71,7 @@ export function ActivityDetailClient() {
   const id = searchParams.get("id");
   const { activity, loading, notFound } = useActivityDetail(id);
   const [prCategories, setPrCategories] = useState<PRCategory[]>([]);
+  const [view3D, setView3D] = useState(false);
   const { t, language } = useI18n();
 
   // Gear States
@@ -179,7 +197,47 @@ export function ActivityDetailClient() {
         </div>
       )}
 
-      <ActivityMap points={activity.points} height="360px" />
+      {/* 2D vs 3D Map View Toggle */}
+      {activity.points.length >= 2 && (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex bg-[var(--surface)] border border-[var(--border)] p-1 rounded-xl gap-1">
+            <button
+              type="button"
+              onClick={() => setView3D(false)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                !view3D
+                  ? "bg-[var(--accent)] text-white shadow"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              <MapIcon size={14} />
+              {t("detail.view_2d_btn")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setView3D(true)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                view3D
+                  ? "bg-[var(--accent)] text-white shadow"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              <Box size={14} />
+              {t("detail.flyover_3d_btn")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {view3D && activity.points.length >= 2 ? (
+        <ActivityFlyover3D
+          points={activity.points}
+          activityName={activity.name}
+          onClose={() => setView3D(false)}
+        />
+      ) : (
+        <ActivityMap points={activity.points} height="360px" />
+      )}
 
       <ActivityCharts activity={activity} />
 

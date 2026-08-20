@@ -442,6 +442,18 @@ export const translations = {
     "sync.report_profile": "Perfil atualizado",
     "sync.how_it_works_title": "Como funciona a sincronização sem servidor?",
     "sync.how_it_works_desc": "O RunFlow não possui um servidor central com seus dados. No modo P2P, os aparelhos se comunicam diretamente através de um canal criptografado de ponta a ponta. No modo WebDAV, o cofre é armazenado e sincronizado exclusivamente na sua própria nuvem pessoal.",
+
+    // 3D Flyover (Feature 17)
+    "detail.flyover_3d_btn": "Flyover 3D",
+    "detail.view_2d_btn": "Mapa 2D",
+    "flyover.title": "Visualização 3D do Treino",
+    "flyover.camera_chase": "Drone Seguidor",
+    "flyover.camera_top": "Visão Aérea",
+    "flyover.camera_free": "Órbita Livre",
+    "flyover.speed": "Velocidade",
+    "flyover.start": "Largada",
+    "flyover.finish": "Chegada",
+    "flyover.orbit_instruction": "Arraste com o dedo ou mouse para girar o ângulo de visão em 360°",
   },
   en: {
     // Nav / Layout
@@ -879,6 +891,18 @@ export const translations = {
     "sync.report_profile": "Profile updated",
     "sync.how_it_works_title": "How does serverless sync work?",
     "sync.how_it_works_desc": "RunFlow has no central server holding your data. In P2P mode, devices communicate directly through an end-to-end encrypted channel. In WebDAV mode, the vault is stored and synced solely on your personal cloud.",
+
+    // 3D Flyover (Feature 17)
+    "detail.flyover_3d_btn": "3D Flyover",
+    "detail.view_2d_btn": "2D Map",
+    "flyover.title": "3D Workout Flyover",
+    "flyover.camera_chase": "Follow Drone",
+    "flyover.camera_top": "Aerial View",
+    "flyover.camera_free": "Free Orbit",
+    "flyover.speed": "Speed",
+    "flyover.start": "Start",
+    "flyover.finish": "Finish",
+    "flyover.orbit_instruction": "Drag with finger or mouse to rotate view angle in 360°",
   },
 };
 
