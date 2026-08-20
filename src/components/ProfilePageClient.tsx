@@ -362,73 +362,31 @@ export function ProfilePageClient() {
         </div>
       </div>
 
-      {/* Tabs Menu */}
-      <div className="flex border-b border-[var(--border)] overflow-x-auto gap-2">
-        <button
-          onClick={() => {
-            setActiveTab("profile");
-            setMessage(null);
-          }}
-          className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all whitespace-nowrap ${
-            activeTab === "profile"
-              ? "border-[var(--accent)] text-[var(--accent)]"
-              : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
-          }`}
-        >
-          {t("profile.tab_details")}
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab("gear");
-            setMessage(null);
-          }}
-          className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all whitespace-nowrap ${
-            activeTab === "gear"
-              ? "border-[var(--accent)] text-[var(--accent)]"
-              : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
-          }`}
-        >
-          {t("profile.tab_gear")}
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab("achievements");
-            setMessage(null);
-          }}
-          className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all whitespace-nowrap ${
-            activeTab === "achievements"
-              ? "border-[var(--accent)] text-[var(--accent)]"
-              : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
-          }`}
-        >
-          {t("profile.tab_achievements")}
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab("backup");
-            setMessage(null);
-          }}
-          className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all whitespace-nowrap ${
-            activeTab === "backup"
-              ? "border-[var(--accent)] text-[var(--accent)]"
-              : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
-          }`}
-        >
-          {t("profile.tab_backup")}
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab("sync");
-            setMessage(null);
-          }}
-          className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all whitespace-nowrap ${
-            activeTab === "sync"
-              ? "border-[var(--accent)] text-[var(--accent)]"
-              : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
-          }`}
-        >
-          {t("profile.tab_sync")}
-        </button>
+      {/* Tabs Menu — grid compacto em mobile para caber todas as 5 tabs */}
+      <div className="grid grid-cols-5 border-b border-[var(--border)]">
+        {([
+          { key: "profile" as const, icon: <User size={16} />, label: t("profile.tab_details") },
+          { key: "gear" as const, icon: <Award size={16} />, label: t("profile.tab_gear") },
+          { key: "achievements" as const, icon: <Trophy size={16} />, label: t("profile.tab_achievements") },
+          { key: "backup" as const, icon: <Database size={16} />, label: t("profile.tab_backup") },
+          { key: "sync" as const, icon: <RefreshCw size={16} />, label: t("profile.tab_sync") },
+        ]).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => {
+              setActiveTab(tab.key);
+              setMessage(null);
+            }}
+            className={`flex flex-col items-center gap-1 py-2.5 px-1 text-[11px] sm:text-sm font-semibold border-b-2 transition-all leading-tight text-center ${
+              activeTab === tab.key
+                ? "border-[var(--accent)] text-[var(--accent)]"
+                : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
+            }`}
+          >
+            {tab.icon}
+            <span className="truncate w-full">{tab.label}</span>
+          </button>
+        ))}
       </div>
 
       {loading ? (
