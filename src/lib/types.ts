@@ -131,3 +131,41 @@ export interface GhostStats {
   status: "ahead" | "behind" | "tied";
 }
 
+// ── Multi-Device Sync Types (Feature 15) ───────────────────────────────────
+
+export interface SyncManifest {
+  version: number;
+  deviceId: string;
+  generatedAt: string;
+  activities: Array<{ id: string; startedAt: string; durationSec: number }>;
+  gear: Array<{ id: string; createdAt: string }>;
+  routes: Array<{ id: string; createdAt: string }>;
+  profileUpdatedAt?: string;
+}
+
+export interface SyncPayload {
+  profile?: UserProfile | null;
+  gear?: Gear[];
+  activities?: any[]; // StoredActivity[]
+  routes?: SavedRoute[];
+}
+
+export interface SyncReport {
+  activitiesReceived: number;
+  activitiesSent: number;
+  gearReceived: number;
+  gearSent: number;
+  routesReceived: number;
+  routesSent: number;
+  profileUpdated: boolean;
+  timestamp: string;
+}
+
+export interface WebDavConfig {
+  serverUrl: string;
+  username: string;
+  password?: string;
+  remotePath: string;
+  lastSyncedAt?: string;
+}
+

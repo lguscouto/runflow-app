@@ -200,14 +200,16 @@ Melhorar e unificar dados de sensores locais.
 
 ---
 
-## 15. Sincronização Multidispositivo Sem Servidor
+## 15. Sincronização Multidispositivo Sem Servidor ✅
 
-**Esforço:** L · **Prioridade:** Média · **Dificuldade:** Alta
+**Esforço:** L · **Prioridade:** Média · **Dificuldade:** Alta · **Status:** Concluído
 
 Manter dados atualizados em vários aparelhos sem usar um banco de dados centralizado do RunFlow.
 
-- [ ] Sincronização local-first com nuvens do usuário (Google Drive, Nextcloud, iCloud)
-- [ ] Sincronização via rede local (P2P Wi-Fi Sync) entre computador e celular
+- [x] Sincronização local-first com nuvens do usuário via WebDAV (Nextcloud, ownCloud)
+- [x] Sincronização direta P2P via WebRTC DataChannel (Wi-Fi / Internet) com código de pareamento
+- [x] Motor de merge bidirecional inteligente (atividades, rotas, equipamentos e perfil)
+- [x] Painel de Sincronização na tela de Perfil com histórico e relatórios detalhados
 
 ---
 
@@ -288,10 +290,11 @@ flowchart LR
 | **v0.7** | 13 | Competidor Virtual / Ghost Runner Offline ✅ |
 | **v0.7.1** | 8 | Backup e Restauração de Dados ✅ |
 | **v0.7.2** | 14 | Motor de Enriquecimento e Correção de Altimetria ✅ |
-| **v0.8** | 16 | Navegação Offline e Alerta de Desvio de Rota ✅ (implementação) |
-| **v0.8+** | 15, 17 | Sincronização avançada e recursos 3D (cloud sync, flyover) |
+| **v0.8** | 16 | Navegação Offline e Alerta de Desvio de Rota ✅ |
+| **v0.8.1** | 15 | Sincronização Multidispositivo Sem Servidor (P2P & WebDAV) ✅ |
+| **v0.9+** | 10, 17 | Preparação para Release e Flyover 3D |
 
 ---
 
-*Última atualização: junho 2026 — Navegação Offline (Feature 16) implementada — validação pendente*
+*Última atualização: agosto 2026 — Sincronização Multidispositivo Sem Servidor (Feature 15) concluída*
 

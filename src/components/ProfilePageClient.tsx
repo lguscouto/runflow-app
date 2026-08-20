@@ -16,6 +16,7 @@ import {
   RotateCcw,
   Award,
   Database,
+  RefreshCw,
 } from "lucide-react";
 import {
   getUserProfile,
@@ -29,12 +30,13 @@ import { putGear, removeGear, getAllStoredActivities } from "@/lib/storage";
 import { calculateAchievements, type Achievement } from "@/lib/achievements";
 import { v4 as uuidv4 } from "uuid";
 import { exportBackup, importBackup } from "@/lib/backup";
+import { SyncPanel } from "@/components/SyncPanel";
 
 export function ProfilePageClient() {
   const { t, language } = useI18n();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"profile" | "gear" | "achievements" | "backup">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "gear" | "achievements" | "backup" | "sync">("profile");
 
   // Profile Form States
   const [name, setName] = useState("");
@@ -340,6 +342,7 @@ export function ProfilePageClient() {
           {activeTab === "gear" && <Award size={24} className="text-[var(--accent)]" />}
           {activeTab === "achievements" && <Trophy size={24} className="text-[var(--accent)]" />}
           {activeTab === "backup" && <Database size={24} className="text-[var(--accent)]" />}
+          {activeTab === "sync" && <RefreshCw size={24} className="text-[var(--accent)]" />}
         </span>
         <div>
           <h1 className="text-2xl font-bold">
@@ -347,12 +350,14 @@ export function ProfilePageClient() {
             {activeTab === "gear" && t("gear.title")}
             {activeTab === "achievements" && t("achievements.title")}
             {activeTab === "backup" && t("backup.title")}
+            {activeTab === "sync" && t("sync.title")}
           </h1>
           <p className="text-[var(--muted)] text-sm">
             {activeTab === "profile" && t("profile.subtitle")}
             {activeTab === "gear" && t("gear.subtitle")}
             {activeTab === "achievements" && t("achievements.subtitle")}
             {activeTab === "backup" && t("backup.subtitle")}
+            {activeTab === "sync" && t("sync.subtitle")}
           </p>
         </div>
       </div>
@@ -410,6 +415,19 @@ export function ProfilePageClient() {
           }`}
         >
           {t("profile.tab_backup")}
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("sync");
+            setMessage(null);
+          }}
+          className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all whitespace-nowrap ${
+            activeTab === "sync"
+              ? "border-[var(--accent)] text-[var(--accent)]"
+              : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
+          }`}
+        >
+          {t("profile.tab_sync")}
         </button>
       </div>
 
@@ -948,6 +966,11 @@ export function ProfilePageClient() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* TAB 5: Sincronização Multidispositivo */}
+          {activeTab === "sync" && (
+            <SyncPanel onSyncSuccess={refreshData} />
           )}
         </>
       )}
