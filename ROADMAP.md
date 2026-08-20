@@ -1,305 +1,175 @@
-# RunFlow — Roadmap
+# RunFlow — Roadmap & Benchmark de Mercado
 
-Prioridades sugeridas para as **10 próximas features**, com base no que o app já faz hoje (gravar treino, importar GPX/FIT, perfil, calorias estimadas, APK Android).
-
-Legenda de esforço: **S** (pequeno) · **M** (médio) · **L** (grande)
+Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da categoria (**Strava**, **Adidas Running / Runtastic**, **Nike Run Club - NRC** e **Garmin Connect**), mantendo o compromisso central do RunFlow: **100% offline, local-first, gratuito e com privacidade total de dados**.
 
 ---
 
-## 1. Exportar treinos em GPX ✅
+## 🏆 Benchmark de Mercado & Tendências (2025–2026)
 
-**Esforço:** S · **Prioridade:** Alta · **Status:** Concluído
-
-Permitir exportar qualquer atividade gravada ou importada para `.gpx`, para backup ou uso em outros apps (Strava, Komoot, etc.).
-
-- [x] Botão “Exportar GPX” na tela de detalhe do treino
-- [x] Compartilhar arquivo no Android (share sheet)
-- [x] Download direto no navegador
-
----
-
-## 2. Gráficos de ritmo, elevação e FC ✅
-
-**Esforço:** M · **Prioridade:** Alta · **Status:** Concluído
-
-Visualizar a evolução ao longo do treino, como no Strava.
-
-- [x] Gráfico de ritmo por km ou por distância
-- [x] Gráfico de altitude (quando houver dados)
-- [x] Gráfico de frequência cardíaca (treinos FIT)
+| Aplicativo | Pontos Fortes em UI/UX & Features | O que o RunFlow pode aprender / superar |
+|---|---|---|
+| **Strava** | • Cards de compartilhamento social belíssimos<br>• Heatmaps pessoais sobrepostos<br>• Análise detalhada de ritmo e segmentos | • No Strava, Heatmaps e análises profundas são pagos ($$$). No RunFlow, tudo é 100% gratuito e local.<br>• Compartilhamento visual direto para Instagram Stories sem marcas forçadas. |
+| **Adidas Running** | • Gamificação com streaks de chamas 🔥<br>• Treinos intervalados guiados com áudio<br>• Design clean com foco no botão de início | • Feedback tátil e sonoro durante o treino.<br>• Contador visual de consistência semanal na Home. |
+| **Nike Run Club (NRC)** | • Foco em superar a si mesmo (Past Self)<br>• Feedback de voz (Audio Cues) fluido e motivador<br>• Planos de treino estruturados e gratuitos | • Avisos por voz configuráveis (tempo/distância/FC/pace).<br>• Previsões de prova e metas claras de evolução. |
+| **Garmin Connect** | • Zonas de Frequência Cardíaca (Z1-Z5) detalhadas<br>• Carga de treino cardiovascular (TRIMP/Stress)<br>• Estimativa de VO2 Max e previsão de provas (5K, 10K, 21K, 42K) | • Trazer a profundidade métrica dos relógios Garmin direto para o celular sem precisar de hardware caro ou nuvem proprietária. |
 
 ---
 
-## 3. Metas semanais e progresso ✅
+## 🚀 Status das Features Implementadas (Top 1–17)
 
-**Esforço:** M · **Prioridade:** Alta · **Status:** Concluído
-
-Motivar uso contínuo com metas configuráveis.
-
-- [x] Meta de distância (km/semana) e/ou número de treinos (Perfil)
-- [x] Barra de progresso na home
-- [x] Aviso visual ao atingir 100% da meta
-
----
-
-## 4. Recordes pessoais (PRs) ✅
-
-**Esforço:** M · **Prioridade:** Média · **Status:** Concluído
-
-Destacar melhores marcas automaticamente.
-
-- [x] Maior distância em um treino
-- [x] Melhor ritmo médio (distância mínima configurável, ex. 5 km)
-- [x] Maior duração / maior elevação
-- [x] Badge “PR” (troféu dourado) na lista, detalhe e home
-
----
-
-## 5. Divisão por voltas / km (splits) ✅
-
-**Esforço:** M · **Prioridade:** Média · **Status:** Concluído
-
-Tabela de parciais automáticos.
-
-- [x] Splits por quilômetro (tempo, ritmo, elevação)
-- [x] Exibir na tela de detalhe abaixo do mapa
-- [ ] Suporte a voltas manuais (botão “Volta” durante gravação) — pendente/futuro
+| Feature | Descrição | Status |
+|---|---|---|
+| **1. Exportar treinos em GPX** | Download direto e compartilhamento nativo no Android | ✅ Concluído |
+| **2. Gráficos de ritmo, elevação e FC** | Gráficos interativos com hover e dados detalhados | ✅ Concluído |
+| **3. Metas semanais e progresso** | Metas de distância e quantidade com barras de progresso | ✅ Concluído |
+| **4. Recordes pessoais (PRs)** | Troféus automáticos para melhores marcas (ritmo, distância, duração) | ✅ Concluído |
+| **5. Splits por km** | Parciais de tempo, ritmo e elevação quilômetro a quilômetro | ✅ Concluído |
+| **Extra: Internacionalização (PT & EN)** | Suporte completo a múltiplos idiomas com troca instantânea | ✅ Concluído |
+| **6. Histórico e estatísticas avançadas** | Painel acumulado anual com filtros por período e esporte | ✅ Concluído |
+| **7. Modo treino com tela escura** | Interface de alta visibilidade com Screen Wake Lock | ✅ Concluído |
+| **8. Backup e restauração de dados** | Exportação e importação de JSON completo sem perdas | ✅ Concluído |
+| **9. Integração com FC ao vivo (BLE)** | Conexão com cintas cardíacas e smartwatches via Bluetooth LE | ✅ Concluído |
+| **11. Assistente Wizard de Onboarding** | Configuração guiada em 3 passos no primeiro acesso | ✅ Concluído |
+| **12. Conquistas & Analytics de Tênis** | 10 insígnias dinâmicas e controle de desgaste de calçados | ✅ Concluído |
+| **13. Competidor Virtual (Ghost Runner)** | Comparação em tempo real com atividades anteriores e alertas TTS | ✅ Concluído |
+| **14. Correção e Enriquecimento Topográfico** | Merge de altimetria aberta e junção de GPX com FC de FITs | ✅ Concluído |
+| **15. Sincronização Multidispositivo P2P & WebDAV** | Sincronização direta por WebRTC e nuvens privadas sem servidor central | ✅ Concluído |
+| **16. Navegação Offline & Alerta de Desvio** | Alertas sonoros/visuais ao sair da rota e criador de trajetos no mapa | ✅ Concluído |
+| **17. Replay e Flyover 3D** | Visualização imersiva 3D com WebGL/Three.js, 3 câmeras e telemetria | ✅ Concluído |
 
 ---
 
-## Extra: Suporte Multilíngue (Português & Inglês) ✅
+## 🎯 Novo Roadmap: Próximas 8 Features Prioritárias (Fase 2.0)
 
-**Esforço:** M · **Prioridade:** Alta · **Status:** Concluído
-
-Tradução e internacionalização completa do aplicativo para Português (PT) e Inglês (EN).
-
-- [x] Dicionários completos para PT e EN
-- [x] Hook de tradução client-side (`useI18n`) e Context Provider
-- [x] Configuração e preferência de idioma na tela de Perfil com salvamento dinâmico
-- [x] Tradução de toda a interface, gráficos, mapas, e guias de importação
-
+Legenda de esforço: **S** (pequeno: 1-2 dias) · **M** (médio: 3-5 dias) · **L** (grande: 1-2 semanas)
 
 ---
 
-## 6. Histórico e estatísticas avançadas ✅
+### 18. Gerador de Card de Compartilhamento Social (Stories & Feed)
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava / NRC
 
-**Esforço:** M · **Prioridade:** Média · **Status:** Concluído
+Permitir que o corredor crie imagens estilizadas com os dados do treino para postar no Instagram Stories, WhatsApp, Strava ou salvar na galeria.
 
-Painel além do resumo atual da home.
-
-- [x] Gráfico de volume semanal/mensal (km e tempo)
-- [x] Média de ritmo e calorias no período
-- [x] Filtro por tipo: corrida, caminhada, ciclismo
-- [x] Total acumulado no ano
-
----
-
-## 7. Tela escura durante gravação (modo treino) ✅
-
-**Esforço:** S · **Prioridade:** Média · **Status:** Concluído
-
-Experiência focada e imersiva enquanto corre.
-
-- [x] UI fullscreen com tempo, distância e ritmo em fonte gigante
-- [x] Manter tela ligada (`Screen Wake Lock API`) no Android e Chrome
-- [x] Botão toggle entre Modo Treino e Modo Completo (com mapa)
-- [x] Indicador de status GPS/pausa minimalista no topo
-- [x] Botões Pausar / Finalizar grandes e bem espaçados no rodapé
-- [x] Fallback silencioso para browsers sem suporte à Wake Lock (Firefox etc.)
+- [ ] Motor de renderização local via HTML5 Canvas / SVG (sem envio para servidor)
+- [ ] 4 temas visuais: *Dark Cyberpunk/Neon*, *Minimalist Clean*, *Sunset Flow*, *Topo Map Contour*
+- [ ] Opção de usar o mapa traçado em gradiente ou carregar uma foto da galeria como plano de fundo
+- [ ] Exibição harmônica de dados: Distância, Ritmo Médio, Duração, Ganho de Elevação e FC Média
+- [ ] Proporções: 9:16 (Instagram Stories / WhatsApp Status) e 1:1 (Feed)
+- [ ] Botão de compartilhamento nativo via Capacitor Share / Web Share API
 
 ---
 
-## 8. Backup e restauração de dados ✅
+### 19. Zonas de Frequência Cardíaca (Z1–Z5) & Análise de Carga de Treino
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Garmin Connect / Strava Summit
 
-**Esforço:** M · **Prioridade:** Média · **Status:** Concluído
+Aprofundar a análise cardiovascular dos treinos com dados de batimentos cardíacos (BLE ou importados via FIT).
 
-Evitar perda ao trocar de celular.
-
-- [x] Exportar backup JSON (atividades + perfil + pontos GPS)
-- [x] Importar backup no mesmo ou outro dispositivo
-- [ ] Opcional: backup automático para pasta do celular (futuro)
-
----
-
-## 9. Integração com frequência cardíaca em tempo real ✅
-
-**Esforço:** L · **Prioridade:** Baixa–média · **Status:** Concluído
-
-Melhorar gravação e calorias com FC ao vivo.
-
-- [x] Conectar relógio/pulseira ou cinta cardíaca genérica via Bluetooth Low Energy (BLE)
-- [x] Abstração multiplataforma (Web Bluetooth API + Plugin nativo do Android/iOS via Capacitor)
-- [x] Exibir FC ao vivo e salvar no treino gravado
-- [x] Obter médias (avgHr) e máximos (maxHr) de frequência cardíaca no resumo das atividades
+- [ ] Configuração de FC Máxima e FC de Repouso no Perfil (com cálculo automático via Tanaka/Karvonen)
+- [ ] Distribuição de tempo e % gasto nas 5 Zonas (Z1 Recuperação, Z2 Base Aeróbica, Z3 Ritmo, Z4 Limiar, Z5 Anaeróbico)
+- [ ] Gráfico de barras horizontais colorido na tela de detalhe da atividade
+- [ ] Cálculo da Carga Cardiovascular (TRIMP - Training Impulse / Training Load)
+- [ ] Indicador de impacto do treino (ex.: "Treino Regenerativo", "Desenvolvimento Aeróbico", "Treino de Limiar")
 
 ---
 
-## 10. Publicação na Play Store (release assinado)
+### 20. Assistente de Voz em Tempo Real (Audio Cues / Voice Coach)
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Nike Run Club / Adidas Running
 
-**Esforço:** M · **Prioridade:** Baixa (quando estável)
+Feedback em áudio periódico nos fones de ouvido durante a corrida sem precisar olhar para a tela do celular.
 
-Distribuir para mais pessoas sem instalar APK manualmente.
-
-- Build de release assinado (keystore)
-- Ícone e splash screen dedicados
-- Política de privacidade (dados 100% locais)
-- Listagem F-Droid como alternativa open source
-
----
-
-## 11. Assistente de configuração inicial (Wizard de Boas-vindas) ✅
-
-**Esforço:** S · **Prioridade:** Alta · **Status:** Concluído
-
-Melhorar a experiência de onboarding do usuário logo no primeiro uso do aplicativo.
-
-- [x] Detectar se é o primeiro acesso ao aplicativo (ausência de perfil configurado no IndexedDB)
-- [x] Apresentar um modal ou tela passo a passo (Wizard) amigável com design premium dark e glassmorphic
-- [x] Solicitar nome, preferência de idioma (com tradução reativa imediata), dados físicos (peso, altura, idade) e metas semanais
-- [x] Salvar automaticamente essas informações no perfil para personalização imediata (como o cálculo de calorias dos treinos) e exibir saudação personalizada
+- [ ] Síntese de voz nativa e offline usando a Web Speech API / Capacitor TTS
+- [ ] Gatilho configurável: Por distância (ex.: a cada 500m, 1km, 2km) ou Por tempo (ex.: a cada 3min, 5min, 10min)
+- [ ] Métricas faladas customizáveis: *"Distância total: 4 km. Ritmo médio: 5:15 por km. Frequência cardíaca: 148 bpm."*
+- [ ] Alerta especial de split de quilômetro mais rápido do treino
+- [ ] Suporte completo aos idiomas Português (PT-BR) e Inglês (EN-US)
 
 ---
 
-## 12. Conquistas Pessoais e Analytics de Equipamentos ✅
+### 21. Auto-Pause Inteligente & Detecção Automática de Paradas
+**Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / Garmin
 
-**Esforço:** S · **Prioridade:** Média · **Dificuldade:** Fácil · **Status:** Concluído
+Pausar o cronômetro automaticamente ao parar em semáforos ou cruzamentos urbanos, evitando distorções no ritmo médio.
 
-Gamificação introspectiva e controle estatístico de tênis/calçados.
-
-- [x] 10 conquistas (insígnias) calculadas dinamicamente com base no histórico de treinos
-- [x] Cadastro e gerenciamento de tênis/calçados com limite de km recomendado e barra de desgaste
-- [x] Associação automática do tênis padrão a novos treinos (gravação e importação GPX/FIT)
-- [x] Seletor de tênis na tela de detalhe do treino para alterar ou remover associação
-- [x] Abas de "Dados do Perfil", "Tênis / Equipamentos" e "Minhas Conquistas" na tela de Perfil
-- [x] Banco de dados IndexedDB atualizado para v3 com store `gear`
+- [ ] Algoritmo de detecção de velocidade mínima (< 1.5 km/h por mais de 3 segundos consecutivos)
+- [ ] Distinção clara entre Tempo Total Decorrido (Elapsed Time) e Tempo em Movimento (Moving Time)
+- [ ] Ritmo Médio baseado exclusivamente no tempo em movimento
+- [ ] Opção ativável/desativável na tela de gravação ou nas configurações do perfil
+- [ ] Feedback sonoro/vibratório sutil ao pausar e ao retomar
 
 ---
 
-## 13. Competidor Virtual / Ghost Runner Offline ✅
+### 22. Mapa de Calor Pessoal (Personal Heatmap)
+**Esforço:** M · **Prioridade:** Média · **Inspiração:** Strava Summit (Recurso Pro)
 
-**Esforço:** M · **Prioridade:** Média · **Dificuldade:** Média · **Status:** Concluído
+Visualizar todas as corridas e rotas já realizadas sobrepostas em um único mapa da cidade, revelando a intensidade das ruas mais percorridas.
 
-Correr contra o ritmo de atividades anteriores ou contra uma meta fixa.
-
-- [x] Comparar distâncias e ritmos acumulados em tempo real com o treino de referência
-- [x] Avisos de voz dinâmicos (Web Speech API / Capacitor TTS) ditando atraso/vantagem em metros ou segundos
-
----
-
-## 14. Motor de Enriquecimento e Correção de Altimetria
-
-**Esforço:** M · **Prioridade:** Baixa · **Dificuldade:** Média
-
-Melhorar e unificar dados de sensores locais.
-
-- [x] Mesclar dados de arquivos de GPS (.gpx) com dados de batimentos cardíacos (.fit) de relógios locais
-- [x] Obter altitudes corretas consultando APIs de mapeamento topográfico aberto
-- [x] Merge de HR (FIT) em atividade GPX já existente (pós-importação)
-- [x] Retry e tratamento de rate-limit na correção de altimetria
-- [x] Feedback de progresso na correção de elevação
+- [ ] Renderização local de alta performance com Leaflet.heat / Canvas Layers
+- [ ] Gradiente térmico brilhante (azul $\to$ verde $\to$ amarelo $\to$ vermelho/neon)
+- [ ] Filtros interativos: Por ano (2026, 2025, todos), Por modalidade (Corrida, Caminhada, Ciclismo) ou Por tênis
+- [ ] Modo tela cheia interativo com zoom fluido
+- [ ] 100% processado no dispositivo, garantindo privacidade absoluta dos locais de treino
 
 ---
 
-## 15. Sincronização Multidispositivo Sem Servidor ✅
+### 23. Criador de Treinos Estruturados & Intervalados (Interval Builder)
+**Esforço:** L · **Prioridade:** Média · **Inspiração:** Garmin Workouts / NRC
 
-**Esforço:** L · **Prioridade:** Média · **Dificuldade:** Alta · **Status:** Concluído
+Permitir que o corredor crie e execute treinos intervalados (tiros, fartlek, pirâmide) com avisos na tela e por voz.
 
-Manter dados atualizados em vários aparelhos sem usar um banco de dados centralizado do RunFlow.
-
-- [x] Sincronização local-first com nuvens do usuário via WebDAV (Nextcloud, ownCloud)
-- [x] Sincronização direta P2P via WebRTC DataChannel (Wi-Fi / Internet) com código de pareamento
-- [x] Motor de merge bidirecional inteligente (atividades, rotas, equipamentos e perfil)
-- [x] Painel de Sincronização na tela de Perfil com histórico e relatórios detalhados
-
----
-
-## 16. Navegação Offline e Alerta de Desvio de Rota
-
-**Esforço:** L · **Prioridade:** Baixa · **Dificuldade:** Alta
-
-Seguir rotas importadas sem conexão à internet.
-
-- [x] Store `routes` no IndexedDB (SavedRoute, RouteConfig, OffRouteState)
-- [x] Importar GPX como rota (não como atividade)
-- [x] Algoritmo de proximidade geométrica (point-to-polyline)
-- [x] Detecção de desvio de rota + alertas de voz durante gravação
-- [x] Página "Minhas Rotas" (`/rotas/`)
-- [x] Seletor de rota na tela de gravação
-- [x] Indicador visual "Na rota / Fora da rota!" durante treino
-- [x] Ferramenta de desenho de rotas no mapa (`/rotas/criar/`)
-- [x] Overlay da rota planejada no mapa de detalhe da atividade
-- [x] Link "Rotas" na navbar
-- [ ] Testes de validação completa no emulador (importar GPX, desenhar, navegar)
+- [ ] Editor visual de etapas: Aquecimento, Repetições (ex.: $6 \times 400\text{m}$ tiro @ ritmo alvo com $1\text{min}$ descanso) e Desaquecimento
+- [ ] Interface de gravação dedicada ao treino estruturado (barra de progresso da série atual, contagem regressiva)
+- [ ] Alertas sonoros (bips) e de voz anunciando a transição de cada bloco (*"Início do tiro 2 de 6. Mantenha ritmo abaixo de 4:30!"*)
+- [ ] Relatório pós-treino com análise de cumprimento de metas em cada parcial do intervalo
 
 ---
 
-## 17. Replay e Visualização da Atividade em 3D (Flyover) ✅
+### 24. Previsão de Tempo de Prova & Estimativa de VO2 Max Local
+**Esforço:** M · **Prioridade:** Baixa–Média · **Inspiração:** Garmin Connect / Runalyze
 
-**Esforço:** L · **Prioridade:** Baixa · **Dificuldade:** Alta · **Status:** Concluído
+Estimativas científicas de condicionamento e previsões para distâncias populares baseadas no histórico recente.
 
-Uma visualização premium e interativa do percurso em 3D.
-
-- [x] Renderizar o trajeto do treino em 3D (Three.js / WebGL) com dados topográficos e altimetria reais
-- [x] Três modos cinemáticos de câmera: Drone Seguidor (3ª Pessoa), Visão Aérea (Top-Down) e Órbita Livre ($360^\circ$)
-- [x] Gradiente de calor de velocidade/ritmo e elevação ao longo da rota
-- [x] Controles interativos de reprodução: Play/Pause, Scrubber (timeline) e velocidades `1x` a `20x`
-- [x] Painel HUD com telemetria em tempo real (Ritmo, Distância, Tempo, Altitude e FC)
-- [x] Alternância instantânea 2D / 3D e modo tela cheia (Fullscreen)
+- [ ] Estimativa local de VO2 Max calculada a partir do ritmo sustentado e FC cardíaca
+- [ ] Previsão de tempo para provas clássicas: **5 km**, **10 km**, **21.1 km (Meia Maratona)** e **42.2 km (Maratona)** usando a fórmula de Peter Riegel
+- [ ] Painel de "Idade de Condicionamento Físico" e curva de evolução ao longo dos meses
 
 ---
 
-## Ideias para depois do top 17
+### 25. Polimento Visual Neo-Athletic & Micro-Interações Táteis
+**Esforço:** S · **Prioridade:** Média · **Inspiração:** Apple Fitness+ / Adidas Running 2026
 
-- Modo escuro/claro configurável
-- Múltiplos perfis no mesmo aparelho
-- Planejamento de treino (ex.: plano 5K / 10K)
-- Comparar dois treinos lado a lado
-- Widget Android com resumo da semana
-- Suporte a TCX além de GPX/FIT
-- Zonas de ritmo e FC configuráveis no perfil
+Elevar o nível sensorial e visual do aplicativo com animações fluidas e feedback físico.
+
+- [ ] Feedback tátil háptico (Capacitor Haptics) nos botões de Play/Pause, fechamento de split e conquistas
+- [ ] Contador de Consistência Semanal (*Streaks*) na Home com ícone de chama animada 🔥 (ex.: "4 semanas seguidas!")
+- [ ] Efeito de confetes / celebração visual ao bater um Recorde Pessoal (PR) ou concluir um treino longo
+- [ ] Modo de alto contraste / Outdoor Sun Mode na tela de gravação para dias ensolarados
 
 ---
 
-## Ordem sugerida de implementação
+### 10. Publicação na Play Store & Release Assinado (Fase Final de Distribuição)
+**Esforço:** M · **Prioridade:** Conclusão do Ciclo
+
+- [ ] Geração de chave de assinatura `keystore` protegida
+- [ ] Configuração do Gradle para build otimizado de Release (`assembleRelease` / `bundleRelease` AAB)
+- [ ] Splash screen nativa adaptativa e ícones nos formatos Android
+- [ ] Política de privacidade (declaração de dados 100% locais sem rastreamento)
+- [ ] Pacote F-Droid / GitHub Releases como canal open-source
+
+---
+
+## 🗺️ Fluxograma de Dependências da Fase 2.0
 
 ```mermaid
-flowchart LR
-  F1[1 Exportar GPX] --> F2[2 Gráficos]
-  F2 --> F3[3 Metas semanais]
-  F3 --> F5[5 Splits]
-  F5 --> F4[4 PRs]
-  F4 --> F11[11 Wizard]
-  F11 --> F6[6 Estatísticas]
-  F6 --> F7[7 Modo treino]
-  F7 --> F8[8 Backup]
-  F8 --> F9[9 FC BLE]
-  F9 --> F10[10 Play Store]
-  F10 --> F12[12 Conquistas & Gear]
-  F12 --> F13[13 Ghost Runner]
-  F13 --> F14[14 Enriquecimento]
-  F14 --> F15[15 Cloud Sync]
-  F15 --> F16[16 Rota Offline]
-  F16 --> F17[17 Flyover 3D]
+flowchart TD
+  F18[18 Card de Compartilhamento Social] --> F25[25 Polimento Visual & Haptics]
+  F19[19 Zonas de FC & TRIMP] --> F24[24 VO2 Max & Previsão de Provas]
+  F20[20 Voice Coach / Audio Cues] --> F23[23 Treinos Intervalados]
+  F21[21 Auto-Pause Inteligente] --> F23
+  F22[22 Mapa de Calor Pessoal] --> F10[10 Play Store Release]
+  F25 --> F10
+  F24 --> F10
+  F23 --> F10
 ```
-
-| Fase | Features | Objetivo |
-|------|----------|----------|
-| **v0.2** | 1, 2 | Dados portáveis e análise visual |
-| **v0.3** | 3, 4, 5 | Engajamento e detalhe de treino |
-| **v0.4** | 11, 6, 7, 8 | Polimento, onboarding e confiança nos dados |
-| **v0.5** | 9, 10 | Hardware e distribuição |
-| **v0.6** | 12 | Gamificação e controle de equipamentos ✅ |
-| **v0.6.1** | 7 | Modo Treino fullscreen + Wake Lock ✅ |
-| **v0.6.2** | — | Otimização de Código e Desempenho (Android/Capacitor) ✅ |
-| **v0.7** | 13 | Competidor Virtual / Ghost Runner Offline ✅ |
-| **v0.7.1** | 8 | Backup e Restauração de Dados ✅ |
-| **v0.7.2** | 14 | Motor de Enriquecimento e Correção de Altimetria ✅ |
-| **v0.8** | 16 | Navegação Offline e Alerta de Desvio de Rota ✅ |
-| **v0.8.1** | 15 | Sincronização Multidispositivo Sem Servidor (P2P & WebDAV) ✅ |
-| **v0.8.2** | 17 | Replay e Visualização da Atividade em 3D (Flyover) ✅ |
-| **v0.9+** | 10 | Preparação e Publicação do Release Assinado |
-
----
 
 *Última atualização: agosto 2026 — Replay e Visualização da Atividade em 3D (Feature 17) concluída*
 
