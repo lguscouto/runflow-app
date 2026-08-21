@@ -54,6 +54,8 @@ export async function saveActivity(
     sport: parsed.sport,
     startedAt: parsed.startedAt.toISOString(),
     durationSec: parsed.durationSec,
+    movingTimeSec: parsed.movingTimeSec ?? parsed.durationSec,
+    elapsedTimeSec: parsed.elapsedTimeSec ?? parsed.durationSec,
     distanceM: parsed.distanceM,
     avgPaceSecKm: parsed.avgPaceSecKm ?? null,
     maxPaceSecKm: parsed.maxPaceSecKm ?? null,

@@ -145,7 +145,13 @@ export function toActivityDetail(stored: StoredActivity): ActivityDetail {
     timestamp: p.timestamp ? new Date(p.timestamp) : undefined,
     hr: p.hr,
   }));
-  return { ...stored, points, routeId: (stored as any).routeId || null };
+  return {
+    ...stored,
+    points,
+    movingTimeSec: (stored as any).movingTimeSec ?? stored.durationSec,
+    elapsedTimeSec: (stored as any).elapsedTimeSec ?? stored.durationSec,
+    routeId: (stored as any).routeId || null,
+  };
 }
 
 export function toActivitySummary(stored: StoredActivity): ActivitySummary {
@@ -171,6 +177,8 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     sport,
     startedAt,
     durationSec,
+    movingTimeSec: (stored as any).movingTimeSec ?? durationSec,
+    elapsedTimeSec: (stored as any).elapsedTimeSec ?? durationSec,
     distanceM,
     avgPaceSecKm,
     elevationGainM,

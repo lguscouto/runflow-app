@@ -19,9 +19,21 @@ export interface UserProfile {
   restingHr?: number;
   /** Configuração do Assistente de Voz (Voice Coach). */
   voiceCoach?: VoiceCoachConfig;
+  /** Configuração de Auto-Pause Inteligente. */
+  autoPause?: AutoPauseConfig;
   /** Idioma preferido do usuário ("pt" ou "en"). */
   language?: "pt" | "en";
   updatedAt: string;
+}
+
+export interface AutoPauseConfig {
+  enabled: boolean;
+  /** Velocidade mínima em km/h abaixo da qual o treino é auto-pausado (ex: 1.5 para corrida, 0.8 para caminhada). */
+  minSpeedKmh: number;
+  /** Segundos contínuos de baixa velocidade antes de acionar a pausa (ex: 3). */
+  pauseDelaySec: number;
+  /** Feedback sonoro/voz informando "Treino pausado automaticamente" / "Treino retomado". */
+  audioFeedback: boolean;
 }
 
 export type VoiceCoachTriggerType = "distance" | "time";
@@ -110,6 +122,8 @@ export interface ParsedActivity {
   sport: Sport;
   startedAt: Date;
   durationSec: number;
+  movingTimeSec?: number;
+  elapsedTimeSec?: number;
   distanceM: number;
   avgPaceSecKm?: number;
   maxPaceSecKm?: number;
@@ -126,6 +140,8 @@ export interface ActivitySummary {
   sport: Sport;
   startedAt: string;
   durationSec: number;
+  movingTimeSec?: number | null;
+  elapsedTimeSec?: number | null;
   distanceM: number;
   avgPaceSecKm: number | null;
   elevationGainM: number | null;

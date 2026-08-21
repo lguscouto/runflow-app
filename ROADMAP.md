@@ -38,6 +38,8 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 | **17. Replay e Flyover 3D** | Visualização imersiva 3D com WebGL/Three.js, 3 câmeras e telemetria | ✅ Concluído |
 | **18. Card de Compartilhamento Social** | Gerador em Canvas para Stories (9:16) e Feed (1:1) com temas e share nativo | ✅ Concluído |
 | **19. Zonas de FC & Carga de Treino** | Distribuição Z1-Z5, cálculo TRIMP, efeito do treino e fórmulas Tanaka/Karvonen | ✅ Concluído |
+| **20. Assistente de Voz em Tempo Real** | Audio Cues periódicos com métricas de distância, tempo, ritmo, FC e splits | ✅ Concluído |
+| **21. Auto-Pause Inteligente** | Detecção de paradas em semáforos, tempo em movimento e recálculo de ritmo | ✅ Concluído |
 
 ---
 
@@ -89,16 +91,18 @@ Feedback em áudio periódico nos fones de ouvido durante a corrida sem precisar
 
 ---
 
-### 21. Auto-Pause Inteligente & Detecção Automática de Paradas
+### 21. Auto-Pause Inteligente & Detecção Automática de Paradas — ✅ Concluído
 **Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / Garmin
 
 Pausar o cronômetro automaticamente ao parar em semáforos ou cruzamentos urbanos, evitando distorções no ritmo médio.
 
-- [ ] Algoritmo de detecção de velocidade mínima (< 1.5 km/h por mais de 3 segundos consecutivos)
-- [ ] Distinção clara entre Tempo Total Decorrido (Elapsed Time) e Tempo em Movimento (Moving Time)
-- [ ] Ritmo Médio baseado exclusivamente no tempo em movimento
-- [ ] Opção ativável/desativável na tela de gravação ou nas configurações do perfil
-- [ ] Feedback sonoro/vibratório sutil ao pausar e ao retomar
+- [x] Algoritmo de detecção de velocidade mínima (< 1.5 km/h por mais de 3 segundos consecutivos)
+- [x] Distinção clara entre Tempo Total Decorrido (Elapsed Time) e Tempo em Movimento (Moving Time)
+- [x] Ritmo Médio baseado exclusivamente no tempo em movimento
+- [x] Opção ativável/desativável na tela de gravação ou nas configurações do perfil
+- [x] Alertas sonoros / por voz ao pausar e retomar automaticamente
+- [x] Ajuste de sensibilidade de parada (Corrida 1.5 km/h, Caminhada 0.8 km/h, Parada total 0.5 km/h) e delay (2s, 3s, 5s)
+- [x] Feedback sonoro e de fala natural ao pausar e ao retomar
 
 ---
 

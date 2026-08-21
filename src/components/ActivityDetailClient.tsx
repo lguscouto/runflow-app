@@ -303,17 +303,35 @@ export function ActivityDetailClient() {
         <div className="stat-card flex gap-2">
           <Timer className="text-[var(--muted)] shrink-0 mt-1" size={18} />
           <div>
-            <p className="text-sm text-[var(--muted)]">{t("detail.duration")}</p>
-            <p className="text-xl font-bold">
-              {formatDuration(activity.durationSec)}
+            <p className="text-sm text-[var(--muted)]">
+              {activity.movingTimeSec && activity.durationSec > activity.movingTimeSec + 3
+                ? t("auto_pause.moving_time")
+                : t("detail.duration")}
             </p>
+            <p className="text-xl font-bold">
+              {formatDuration(activity.movingTimeSec || activity.durationSec)}
+            </p>
+            {activity.movingTimeSec && (activity.elapsedTimeSec || activity.durationSec) > activity.movingTimeSec + 3 && (
+              <p className="text-xs text-[var(--muted)] mt-0.5 font-mono">
+                {t("auto_pause.elapsed_time")}: {formatDuration(activity.elapsedTimeSec || activity.durationSec)}
+              </p>
+            )}
           </div>
         </div>
         <div className="stat-card">
-          <p className="text-sm text-[var(--muted)]">{t("detail.avg_pace")}</p>
+          <p className="text-sm text-[var(--muted)]">
+            {activity.movingTimeSec && activity.durationSec > activity.movingTimeSec + 3
+              ? t("auto_pause.moving_pace")
+              : t("detail.avg_pace")}
+          </p>
           <p className="text-xl font-bold">
             {formatPace(activity.avgPaceSecKm)}
           </p>
+          {activity.movingTimeSec && activity.distanceM > 0 && (activity.elapsedTimeSec || activity.durationSec) > activity.movingTimeSec + 3 && (
+            <p className="text-xs text-[var(--muted)] mt-0.5 font-mono">
+              {t("auto_pause.total_pace")}: {formatPace(((activity.elapsedTimeSec || activity.durationSec) / activity.distanceM) * 1000)}
+            </p>
+          )}
         </div>
         <div className="stat-card flex gap-2">
           <Mountain className="text-[var(--muted)] shrink-0 mt-1" size={18} />

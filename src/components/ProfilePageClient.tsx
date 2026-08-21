@@ -20,6 +20,7 @@ import {
   Heart,
   Zap,
   Headphones,
+  PauseCircle,
 } from "lucide-react";
 import {
   getUserProfile,
@@ -27,9 +28,11 @@ import {
   saveUserProfile,
 } from "@/lib/profile";
 import { calculateTanakaMaxHr } from "@/lib/hr-zones";
-import type { UserProfile, Gear, ActivitySummary, VoiceCoachConfig } from "@/lib/types";
+import type { UserProfile, Gear, ActivitySummary, VoiceCoachConfig, AutoPauseConfig } from "@/lib/types";
 import { DEFAULT_VOICE_COACH_CONFIG } from "@/lib/voice-coach";
+import { DEFAULT_AUTO_PAUSE_CONFIG } from "@/lib/auto-pause";
 import { VoiceCoachModal } from "@/components/VoiceCoachModal";
+import { AutoPauseModal } from "@/components/AutoPauseModal";
 import { useI18n } from "@/lib/i18n";
 import { listGearWithUsage, setDefaultGear, type GearWithUsage } from "@/lib/gear";
 import { putGear, removeGear, getAllStoredActivities } from "@/lib/storage";
@@ -58,6 +61,8 @@ export function ProfilePageClient() {
   const [langSelect, setLangSelect] = useState<"pt" | "en">("pt");
   const [voiceCoachConfig, setVoiceCoachConfig] = useState<VoiceCoachConfig>(DEFAULT_VOICE_COACH_CONFIG);
   const [isVoiceCoachModalOpen, setIsVoiceCoachModalOpen] = useState(false);
+  const [autoPauseConfig, setAutoPauseConfig] = useState<AutoPauseConfig>(DEFAULT_AUTO_PAUSE_CONFIG);
+  const [isAutoPauseModalOpen, setIsAutoPauseModalOpen] = useState(false);
   const { changeLanguage } = useI18n();
 
   // Common UI States
@@ -101,6 +106,9 @@ export function ProfilePageClient() {
         setLangSelect(p.language || "pt");
         if (p.voiceCoach) {
           setVoiceCoachConfig(p.voiceCoach);
+        }
+        if (p.autoPause) {
+          setAutoPauseConfig(p.autoPause);
         }
       }
 
@@ -231,6 +239,7 @@ export function ProfilePageClient() {
       restingHr: restingHr ? parseInt(restingHr, 10) : undefined,
       language: langSelect,
       voiceCoach: voiceCoachConfig,
+      autoPause: autoPauseConfig,
     };
 
     if (!parsed.name || parsed.name.length < 2) {
@@ -698,6 +707,37 @@ export function ProfilePageClient() {
                       ⚙️ {t("voice_coach.voice_settings")}
                     </button>
                   </div>
+
+                  <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)]/30 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                          autoPauseConfig.enabled
+                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                            : "bg-[var(--border)] text-[var(--muted)]"
+                        }`}
+                      >
+                        <PauseCircle size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          {t("auto_pause.title")}
+                        </p>
+                        <p className="text-xs text-[var(--muted)]">
+                          {autoPauseConfig.enabled
+                            ? `${autoPauseConfig.minSpeedKmh} km/h · ${autoPauseConfig.pauseDelaySec}s`
+                            : t("auto_pause.enable_desc")}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAutoPauseModalOpen(true)}
+                      className="btn-ghost text-xs py-1.5 px-3 border border-[var(--border)] hover:border-amber-500 text-amber-400 font-semibold shrink-0"
+                    >
+                      ⚙️ Ajustes Auto-Pause
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -1089,6 +1129,26 @@ export function ProfilePageClient() {
             setMessage({ type: "ok", text: t("voice_coach.saved") });
           } catch (e) {
             console.error("Erro ao salvar voice coach:", e);
+            setMessage({ type: "err", text: t("common.error") });
+          }
+        }}
+      />
+
+      <AutoPauseModal
+        config={autoPauseConfig}
+        isOpen={isAutoPauseModalOpen}
+        onClose={() => setIsAutoPauseModalOpen(false)}
+        onSave={async (cfg) => {
+          setAutoPauseConfig(cfg);
+          try {
+            const p = await getUserProfile();
+            await saveUserProfile({
+              ...(p || {}),
+              autoPause: cfg,
+            });
+            setMessage({ type: "ok", text: t("auto_pause.saved") });
+          } catch (e) {
+            console.error("Erro ao salvar auto pause:", e);
             setMessage({ type: "err", text: t("common.error") });
           }
         }}

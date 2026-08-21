@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { ParsedActivity, Sport, TrackPoint } from "./types";
 import { distanceFromPoints, elevationGainFromPoints, haversineM } from "./geo";
+import { computeMovingTimeFromPoints } from "./auto-pause";
 
 const MIN_ACCURACY_M = 80;
 const MIN_SEGMENT_M = 4;
@@ -32,7 +33,8 @@ export function buildRecordedActivity(
   sport: Sport,
   startedAt: Date,
   endedAt: Date,
-  points: TrackPoint[]
+  points: TrackPoint[],
+  recordedMovingSec?: number
 ): ParsedActivity {
   const durationSec = Math.max(
     1,
@@ -41,9 +43,19 @@ export function buildRecordedActivity(
   const distanceM = distanceFromPoints(points);
   const elevationGainM = elevationGainFromPoints(points);
 
+  let movingTimeSec: number;
+  if (recordedMovingSec != null && recordedMovingSec > 0) {
+    movingTimeSec = Math.min(durationSec, Math.round(recordedMovingSec));
+  } else {
+    const analysis = computeMovingTimeFromPoints(points);
+    movingTimeSec = analysis.movingTimeSec > 0 ? analysis.movingTimeSec : durationSec;
+  }
+
   let avgPaceSecKm: number | undefined;
   if (distanceM > 0) {
-    avgPaceSecKm = (durationSec / distanceM) * 1000;
+    // Ritmo médio baseado no tempo em movimento
+    const effectiveSec = movingTimeSec > 0 ? movingTimeSec : durationSec;
+    avgPaceSecKm = (effectiveSec / distanceM) * 1000;
   }
 
   const hrPoints = points.filter((p) => p.hr != null);
@@ -69,6 +81,8 @@ export function buildRecordedActivity(
     sport,
     startedAt,
     durationSec,
+    movingTimeSec,
+    elapsedTimeSec: durationSec,
     distanceM,
     avgPaceSecKm,
     elevationGainM,

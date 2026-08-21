@@ -359,6 +359,24 @@ export const translations = {
     "voice_coach.interval_5min": "A cada 5 minutos (Recomendado)",
     "voice_coach.interval_10min": "A cada 10 minutos",
 
+    // Auto-Pause (Feature 21)
+    "auto_pause.title": "Auto-Pause Inteligente",
+    "auto_pause.desc": "Pausa automaticamente o cronômetro ao parar em semáforos ou cruzamentos.",
+    "auto_pause.enable_toggle": "Ativar Auto-Pause Inteligente",
+    "auto_pause.enable_desc": "Evita distorções no ritmo médio ignorando tempo parado.",
+    "auto_pause.threshold_label": "Sensibilidade de Parada",
+    "auto_pause.threshold_running": "Corrida (abaixo de 1.5 km/h)",
+    "auto_pause.threshold_walking": "Caminhada (abaixo de 0.8 km/h)",
+    "auto_pause.threshold_strict": "Parada total (abaixo de 0.5 km/h)",
+    "auto_pause.audio_feedback": "Avisos sonoros/voz ao pausar e retomar",
+    "auto_pause.badge_paused": "Auto-pausado",
+    "auto_pause.moving_time": "Tempo em Movimento",
+    "auto_pause.elapsed_time": "Tempo Total",
+    "auto_pause.moving_pace": "Ritmo em Movimento",
+    "auto_pause.elapsed_pace": "Ritmo Bruto",
+    "auto_pause.quick_btn": "Auto-Pause",
+    "auto_pause.saved": "Configurações de Auto-Pause salvas!",
+
     // Charts
     "charts.title": "Análise do treino",
     "charts.pace_km": "Ritmo por km",
@@ -913,6 +931,24 @@ export const translations = {
     "voice_coach.interval_3min": "Every 3 minutes",
     "voice_coach.interval_5min": "Every 5 minutes (Recommended)",
     "voice_coach.interval_10min": "Every 10 minutes",
+
+    // Auto-Pause (Feature 21)
+    "auto_pause.title": "Smart Auto-Pause",
+    "auto_pause.desc": "Automatically pauses the timer when stopped at traffic lights or crossings.",
+    "auto_pause.enable_toggle": "Enable Smart Auto-Pause",
+    "auto_pause.enable_desc": "Prevents pace distortion by ignoring stationary time.",
+    "auto_pause.threshold_label": "Stop Sensitivity",
+    "auto_pause.threshold_running": "Running (below 1.5 km/h)",
+    "auto_pause.threshold_walking": "Walking (below 0.8 km/h)",
+    "auto_pause.threshold_strict": "Full stop (below 0.5 km/h)",
+    "auto_pause.audio_feedback": "Voice alerts on pause & resume",
+    "auto_pause.badge_paused": "Auto-paused",
+    "auto_pause.moving_time": "Moving Time",
+    "auto_pause.elapsed_time": "Elapsed Time",
+    "auto_pause.moving_pace": "Moving Pace",
+    "auto_pause.elapsed_pace": "Total Pace",
+    "auto_pause.quick_btn": "Auto-Pause",
+    "auto_pause.saved": "Smart Auto-Pause settings saved!",
 
     // Charts
     "charts.title": "Workout analysis",

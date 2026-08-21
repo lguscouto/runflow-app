@@ -14,7 +14,7 @@ import {
   requestLocationPermission,
   startWatchingPosition,
 } from "@/lib/location";
-import type { Sport, TrackPoint, GhostConfig, GhostStats, VoiceCoachConfig } from "@/lib/types";
+import type { Sport, TrackPoint, GhostConfig, GhostStats, VoiceCoachConfig, AutoPauseConfig } from "@/lib/types";
 import { isOnRoute, pointToPolylineDistanceM } from "@/lib/route-geo";
 import type { RouteConfig, OffRouteState, SavedRoute } from "@/lib/types";
 import { getStoredRoute } from "@/lib/storage";
@@ -27,6 +27,11 @@ import {
   speakWithConfig,
   type VoiceCoachStats,
 } from "@/lib/voice-coach";
+import {
+  DEFAULT_AUTO_PAUSE_CONFIG,
+  computeInstantSpeedKmh,
+  playAutoPauseSound,
+} from "@/lib/auto-pause";
 import { getUserProfile, saveUserProfile } from "@/lib/profile";
 import { calculateHrZones, getCurrentHrZone } from "@/lib/hr-zones";
 
@@ -38,9 +43,11 @@ export type RecorderStatus = "idle" | "recording" | "paused" | "saving";
 
 export interface RecorderStats {
   elapsedSec: number;
+  movingSec: number;
   distanceM: number;
   currentPaceSecKm: number | null;
   avgPaceSecKm: number | null;
+  isAutoPaused: boolean;
 }
 
 export function useWorkoutRecorder() {
@@ -51,9 +58,11 @@ export function useWorkoutRecorder() {
   const [points, setPoints] = useState<TrackPoint[]>([]);
   const [stats, setStats] = useState<RecorderStats>({
     elapsedSec: 0,
+    movingSec: 0,
     distanceM: 0,
     currentPaceSecKm: null,
     avgPaceSecKm: null,
+    isAutoPaused: false,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -75,6 +84,14 @@ export function useWorkoutRecorder() {
   const voiceCoachConfigRef = useRef<VoiceCoachConfig>(DEFAULT_VOICE_COACH_CONFIG);
   const userProfileRef = useRef<any>(null);
   const userHrZonesRef = useRef<any[]>([]);
+
+  // Auto-Pause States & Refs (Feature 21)
+  const [autoPauseConfig, setAutoPauseConfigState] = useState<AutoPauseConfig>(DEFAULT_AUTO_PAUSE_CONFIG);
+  const autoPauseConfigRef = useRef<AutoPauseConfig>(DEFAULT_AUTO_PAUSE_CONFIG);
+  const [isAutoPaused, setIsAutoPaused] = useState<boolean>(false);
+  const isAutoPausedRef = useRef<boolean>(false);
+  const lowSpeedCountRef = useRef<number>(0);
+  const movingSecRef = useRef<number>(0);
 
   const lastVoiceCoachDistMilestoneRef = useRef<number>(0);
   const lastVoiceCoachTimeMilestoneRef = useRef<number>(0);
@@ -115,9 +132,13 @@ export function useWorkoutRecorder() {
     voiceCoachConfigRef.current = voiceCoachConfig;
   }, [voiceCoachConfig]);
 
-  // Load Voice Coach preferences and user profile on mount
   useEffect(() => {
-    async function loadVoiceCoachPreferences() {
+    autoPauseConfigRef.current = autoPauseConfig;
+  }, [autoPauseConfig]);
+
+  // Load Voice Coach & Auto Pause preferences and user profile on mount
+  useEffect(() => {
+    async function loadUserPreferences() {
       try {
         const profile = await getUserProfile();
         userProfileRef.current = profile;
@@ -127,12 +148,16 @@ export function useWorkoutRecorder() {
             setVoiceCoachConfigState(profile.voiceCoach);
             voiceCoachConfigRef.current = profile.voiceCoach;
           }
+          if (profile.autoPause) {
+            setAutoPauseConfigState(profile.autoPause);
+            autoPauseConfigRef.current = profile.autoPause;
+          }
         }
       } catch (e) {
-        console.error("Erro ao carregar preferências de voz:", e);
+        console.error("Erro ao carregar preferências:", e);
       }
     }
-    loadVoiceCoachPreferences();
+    loadUserPreferences();
   }, []);
 
   const updateVoiceCoachConfig = useCallback(async (newConfig: VoiceCoachConfig) => {
@@ -146,6 +171,20 @@ export function useWorkoutRecorder() {
       });
     } catch (e) {
       console.error("Erro ao persistir preferências do Voice Coach:", e);
+    }
+  }, []);
+
+  const updateAutoPauseConfig = useCallback(async (newConfig: AutoPauseConfig) => {
+    setAutoPauseConfigState(newConfig);
+    autoPauseConfigRef.current = newConfig;
+    try {
+      const profile = await getUserProfile();
+      await saveUserProfile({
+        ...(profile || {}),
+        autoPause: newConfig,
+      });
+    } catch (e) {
+      console.error("Erro ao persistir preferências de Auto-Pause:", e);
     }
   }, []);
   const setRouteConfig = useCallback(async (config: RouteConfig | null) => {
@@ -205,11 +244,12 @@ export function useWorkoutRecorder() {
     }
   }, [language]);
 
-  const recomputeStats = useCallback((pts: TrackPoint[], elapsedSec: number) => {
+  const recomputeStats = useCallback((pts: TrackPoint[], elapsedSec: number, movingSec?: number, isAutoPausedNow?: boolean) => {
     const distanceM = distanceMRef.current;
+    const effectiveMovingSec = movingSec != null ? movingSec : (movingSecRef.current > 0 ? movingSecRef.current : elapsedSec);
     let avgPaceSecKm: number | null = null;
-    if (distanceM > 0 && elapsedSec > 0) {
-      avgPaceSecKm = (elapsedSec / distanceM) * 1000;
+    if (distanceM > 0 && effectiveMovingSec > 0) {
+      avgPaceSecKm = (effectiveMovingSec / distanceM) * 1000;
     }
 
     let currentPaceSecKm: number | null = null;
@@ -226,9 +266,11 @@ export function useWorkoutRecorder() {
 
     setStats({
       elapsedSec,
+      movingSec: effectiveMovingSec,
       distanceM,
       currentPaceSecKm,
       avgPaceSecKm,
+      isAutoPaused: isAutoPausedNow ?? isAutoPausedRef.current,
     });
 
     const activeConfig = ghostConfigRef.current;
@@ -380,10 +422,46 @@ export function useWorkoutRecorder() {
   useEffect(() => {
     if (status !== "recording") return;
     const tick = setInterval(() => {
-      recomputeStats(pointsRef.current, getElapsedSec());
+      const elapsed = getElapsedSec();
+      const apConfig = autoPauseConfigRef.current;
+
+      if (apConfig && apConfig.enabled && pointsRef.current.length >= 2) {
+        const speedKmh = computeInstantSpeedKmh(pointsRef.current, 3);
+        const minSpeed = apConfig.minSpeedKmh || 1.5;
+        const delay = apConfig.pauseDelaySec || 3;
+
+        if (speedKmh < minSpeed) {
+          lowSpeedCountRef.current += 1;
+          if (lowSpeedCountRef.current >= delay && !isAutoPausedRef.current) {
+            isAutoPausedRef.current = true;
+            setIsAutoPaused(true);
+            if (apConfig.audioFeedback) {
+              playAutoPauseSound(true, language);
+            }
+          }
+        } else {
+          lowSpeedCountRef.current = 0;
+          if (isAutoPausedRef.current) {
+            isAutoPausedRef.current = false;
+            setIsAutoPaused(false);
+            if (apConfig.audioFeedback) {
+              playAutoPauseSound(false, language);
+            }
+          }
+        }
+      } else {
+        isAutoPausedRef.current = false;
+        setIsAutoPaused(false);
+      }
+
+      if (!isAutoPausedRef.current) {
+        movingSecRef.current += 1;
+      }
+
+      recomputeStats(pointsRef.current, elapsed, movingSecRef.current, isAutoPausedRef.current);
     }, 1000);
     return () => clearInterval(tick);
-  }, [status, recomputeStats, getElapsedSec]);
+  }, [status, recomputeStats, getElapsedSec, language]);
 
   const addPoint = useCallback(
     (lat: number, lng: number, elevation?: number, accuracy?: number) => {
@@ -491,6 +569,12 @@ export function useWorkoutRecorder() {
       }
     }
 
+    // Reset Auto-Pause trackers
+    movingSecRef.current = 0;
+    lowSpeedCountRef.current = 0;
+    isAutoPausedRef.current = false;
+    setIsAutoPaused(false);
+
     const initial = await getCurrentPosition();
     pointsRef.current = [];
     distanceMRef.current = 0;
@@ -518,7 +602,7 @@ export function useWorkoutRecorder() {
 
     setStatus("recording");
     await startGpsWatch();
-    recomputeStats(pointsRef.current, 0);
+    recomputeStats(pointsRef.current, 0, 0, false);
     return true;
   }, [recomputeStats, startGpsWatch]);
 
@@ -555,8 +639,10 @@ export function useWorkoutRecorder() {
     }
 
     try {
-      const parsed = buildRecordedActivity(sport, startedAt, endedAt, pts);
+      const parsed = buildRecordedActivity(sport, startedAt, endedAt, pts, movingSecRef.current);
       parsed.durationSec = elapsedSec;
+      parsed.movingTimeSec = movingSecRef.current > 0 ? movingSecRef.current : elapsedSec;
+      parsed.elapsedTimeSec = elapsedSec;
       const id = await saveActivity(parsed, "recorded");
       setStatus("idle");
       pointsRef.current = [];
@@ -580,9 +666,11 @@ export function useWorkoutRecorder() {
     setError(null);
     setStats({
       elapsedSec: 0,
+      movingSec: 0,
       distanceM: 0,
       currentPaceSecKm: null,
       avgPaceSecKm: null,
+      isAutoPaused: false,
     });
     setGhostConfig(null);
     ghostConfigRef.current = null;
@@ -595,6 +683,10 @@ export function useWorkoutRecorder() {
     lastCompletedKmRef.current = 0;
     kmStartTimeSecRef.current = 0;
     latestKmSplitRef.current = null;
+    movingSecRef.current = 0;
+    lowSpeedCountRef.current = 0;
+    isAutoPausedRef.current = false;
+    setIsAutoPaused(false);
   }, [stopGpsWatch]);
 
   const connectHr = useCallback(async () => {
@@ -755,5 +847,8 @@ export function useWorkoutRecorder() {
     offRouteState,
     voiceCoachConfig,
     updateVoiceCoachConfig,
+    autoPauseConfig,
+    updateAutoPauseConfig,
+    isAutoPaused,
   };
 }

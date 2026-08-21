@@ -22,8 +22,10 @@ import {
   MapPinned,
   Mic,
   Headphones,
+  PauseCircle,
 } from "lucide-react";
 import { VoiceCoachModal } from "@/components/VoiceCoachModal";
+import { AutoPauseModal } from "@/components/AutoPauseModal";
 import { useWorkoutRecorder } from "@/hooks/useWorkoutRecorder";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { estimateActivityCalories } from "@/lib/calories";
@@ -86,6 +88,7 @@ export function RecordWorkoutClient() {
   const [routeTolerance, setRouteTolerance] = useState<number>(50);
   const [routeVoiceAlerts, setRouteVoiceAlerts] = useState<boolean>(true);
   const [isVoiceCoachModalOpen, setIsVoiceCoachModalOpen] = useState(false);
+  const [isAutoPauseModalOpen, setIsAutoPauseModalOpen] = useState(false);
 
   const {
     status,
@@ -111,6 +114,9 @@ export function RecordWorkoutClient() {
     ghostStats,
     voiceCoachConfig,
     updateVoiceCoachConfig,
+    autoPauseConfig,
+    updateAutoPauseConfig,
+    isAutoPaused,
   } = useWorkoutRecorder();
 
   const userHrZones = useMemo(() => {
@@ -377,6 +383,18 @@ export function RecordWorkoutClient() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setIsAutoPauseModalOpen(true)}
+              className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1 rounded-lg border ${
+                autoPauseConfig.enabled
+                  ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-white"
+              }`}
+              title={t("auto_pause.title")}
+            >
+              <PauseCircle size={13} />
+              <span>{autoPauseConfig.enabled ? t("auto_pause.quick_btn") : "Auto-Pause Off"}</span>
+            </button>
+            <button
               onClick={() => setIsVoiceCoachModalOpen(true)}
               className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1 rounded-lg border ${
                 voiceCoachConfig.enabled
@@ -398,23 +416,36 @@ export function RecordWorkoutClient() {
           </div>
         </div>
 
+        {/* Auto-Paused Banner in Training Mode */}
+        {stats.isAutoPaused && !isPaused && (
+          <div className="mx-6 mt-1 py-1.5 px-3 rounded-xl border border-amber-500/40 bg-amber-500/15 text-amber-300 font-bold text-xs flex items-center justify-center gap-2 animate-pulse">
+            <PauseCircle size={15} />
+            <span>{t("auto_pause.badge_paused")} (&lt; {autoPauseConfig.minSpeedKmh} km/h)</span>
+          </div>
+        )}
+
         {/* Main metrics — vertically centered */}
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
           {/* Time */}
           <div className="text-center">
-            <p className="text-xs uppercase tracking-widest text-[var(--muted)] mb-2 font-semibold">
-              {t("record.elapsed")}
+            <p className="text-xs uppercase tracking-widest text-[var(--muted)] mb-2 font-semibold flex items-center justify-center gap-1">
+              <span>{t("auto_pause.moving_time")}</span>
             </p>
             <p
               className="font-bold tabular-nums leading-none"
               style={{
                 fontSize: "clamp(3.5rem, 18vw, 6.5rem)",
-                color: isPaused ? "#f59e0b" : "#ffffff",
-                textShadow: isPaused ? "0 0 40px #f59e0b40" : "0 0 60px #ffffff20",
+                color: isPaused || stats.isAutoPaused ? "#f59e0b" : "#ffffff",
+                textShadow: isPaused || stats.isAutoPaused ? "0 0 40px #f59e0b40" : "0 0 60px #ffffff20",
               }}
             >
-              {formatDuration(stats.elapsedSec)}
+              {formatDuration(stats.movingSec || stats.elapsedSec)}
             </p>
+            {stats.elapsedSec > (stats.movingSec || 0) + 2 && (
+              <p className="text-xs text-[var(--muted)] mt-1.5 font-mono">
+                {t("auto_pause.elapsed_time")}: {formatDuration(stats.elapsedSec)}
+              </p>
+            )}
           </div>
 
           {/* Distance */}
@@ -584,6 +615,13 @@ export function RecordWorkoutClient() {
           onClose={() => setIsVoiceCoachModalOpen(false)}
           onSave={updateVoiceCoachConfig}
         />
+
+        <AutoPauseModal
+          config={autoPauseConfig}
+          isOpen={isAutoPauseModalOpen}
+          onClose={() => setIsAutoPauseModalOpen(false)}
+          onSave={updateAutoPauseConfig}
+        />
       </div>
     );
   }
@@ -612,6 +650,21 @@ export function RecordWorkoutClient() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Auto-Pause Button */}
+          <button
+            type="button"
+            onClick={() => setIsAutoPauseModalOpen(true)}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+              autoPauseConfig.enabled
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
+            }`}
+            title={t("auto_pause.title")}
+          >
+            <PauseCircle size={14} />
+            <span>{autoPauseConfig.enabled ? t("auto_pause.quick_btn") : "Auto-Pause Off"}</span>
+          </button>
+
           {/* Voice Coach Button */}
           <button
             type="button"
@@ -654,6 +707,14 @@ export function RecordWorkoutClient() {
         </div>
       )}
 
+      {/* Auto-Paused Banner during active recording */}
+      {isActive && stats.isAutoPaused && status === "recording" && (
+        <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-amber-500/40 bg-amber-500/15 text-amber-300 font-bold text-sm animate-pulse shadow-lg shadow-amber-500/10">
+          <PauseCircle size={18} />
+          <span>{t("auto_pause.badge_paused")} — Ritmo pausado automaticamente (&lt; {autoPauseConfig.minSpeedKmh} km/h)</span>
+        </div>
+      )}
+
       {isActive && (
         <>
           <LiveMapTrack points={points} follow={status === "recording"} />
@@ -663,11 +724,16 @@ export function RecordWorkoutClient() {
           <div className="grid grid-cols-2 gap-3">
             <div className="stat-card text-center py-5">
               <p className="text-xs text-[var(--muted)] uppercase tracking-wide">
-                {t("record.time")}
+                {t("auto_pause.moving_time")}
               </p>
               <p className="text-3xl font-bold tabular-nums mt-1">
-                {formatDuration(stats.elapsedSec)}
+                {formatDuration(stats.movingSec || stats.elapsedSec)}
               </p>
+              {stats.elapsedSec > (stats.movingSec || 0) + 2 && (
+                <p className="text-[11px] text-[var(--muted)] mt-1 font-mono">
+                  {t("auto_pause.elapsed_time")}: {formatDuration(stats.elapsedSec)}
+                </p>
+              )}
             </div>
             <div className="stat-card text-center py-5">
               <p className="text-xs text-[var(--muted)] uppercase tracking-wide">
@@ -684,7 +750,7 @@ export function RecordWorkoutClient() {
               </p>
             </div>
             <div className="stat-card text-center py-4">
-              <p className="text-xs text-[var(--muted)]">{t("detail.avg_pace")}</p>
+              <p className="text-xs text-[var(--muted)]">{t("auto_pause.moving_pace")}</p>
               <p className="text-xl font-semibold mt-1">
                 {formatPace(stats.avgPaceSecKm)}
               </p>
@@ -1099,6 +1165,41 @@ export function RecordWorkoutClient() {
       )}
 
       {!isActive && status !== "saving" && (
+        <div className="stat-card space-y-3 border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                  autoPauseConfig.enabled
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                    : "bg-[var(--surface-hover)] text-[var(--muted)]"
+                }`}
+              >
+                <PauseCircle size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--text)]">
+                  {t("auto_pause.title")}
+                </h3>
+                <p className="text-xs text-[var(--muted)]">
+                  {autoPauseConfig.enabled
+                    ? `${autoPauseConfig.minSpeedKmh} km/h · ${autoPauseConfig.pauseDelaySec}s`
+                    : t("auto_pause.enable_desc")}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAutoPauseModalOpen(true)}
+              className="btn-ghost text-xs py-1.5 px-3 border border-[var(--border)] hover:border-amber-500 text-amber-400 font-semibold"
+            >
+              ⚙️ Ajustes Auto-Pause
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isActive && status !== "saving" && (
         <div className="stat-card space-y-4">
           <p className="text-sm text-[var(--muted)]">{t("record.activity_type")}</p>
           <div className="flex flex-wrap gap-2">
@@ -1218,6 +1319,13 @@ export function RecordWorkoutClient() {
         isOpen={isVoiceCoachModalOpen}
         onClose={() => setIsVoiceCoachModalOpen(false)}
         onSave={updateVoiceCoachConfig}
+      />
+
+      <AutoPauseModal
+        config={autoPauseConfig}
+        isOpen={isAutoPauseModalOpen}
+        onClose={() => setIsAutoPauseModalOpen(false)}
+        onSave={updateAutoPauseConfig}
       />
     </div>
   );
