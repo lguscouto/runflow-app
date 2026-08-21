@@ -21,7 +21,9 @@ import {
   Route,
   MapPinned,
   Mic,
+  Headphones,
 } from "lucide-react";
+import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { useWorkoutRecorder } from "@/hooks/useWorkoutRecorder";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { estimateActivityCalories } from "@/lib/calories";
@@ -83,6 +85,7 @@ export function RecordWorkoutClient() {
   const [selectedRouteId, setSelectedRouteId] = useState<string>("");
   const [routeTolerance, setRouteTolerance] = useState<number>(50);
   const [routeVoiceAlerts, setRouteVoiceAlerts] = useState<boolean>(true);
+  const [isVoiceCoachModalOpen, setIsVoiceCoachModalOpen] = useState(false);
 
   const {
     status,
@@ -106,6 +109,8 @@ export function RecordWorkoutClient() {
     disconnectHr,
     ghostConfig,
     ghostStats,
+    voiceCoachConfig,
+    updateVoiceCoachConfig,
   } = useWorkoutRecorder();
 
   const userHrZones = useMemo(() => {
@@ -370,14 +375,27 @@ export function RecordWorkoutClient() {
               {isPaused && ` · ${t("record.paused")}`}
             </span>
           </div>
-          {/* Exit training mode */}
-          <button
-            onClick={() => setTrainingMode(false)}
-            className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-1 rounded-lg border border-[var(--border)] bg-white/5"
-          >
-            <Minimize2 size={12} />
-            {t("record.mode_full")}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsVoiceCoachModalOpen(true)}
+              className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1 rounded-lg border ${
+                voiceCoachConfig.enabled
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-white"
+              }`}
+              title={t("voice_coach.title")}
+            >
+              <Headphones size={13} />
+              <span>{voiceCoachConfig.enabled ? t("voice_coach.quick_btn") : "Voz Off"}</span>
+            </button>
+            <button
+              onClick={() => setTrainingMode(false)}
+              className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-1 rounded-lg border border-[var(--border)] bg-white/5"
+            >
+              <Minimize2 size={12} />
+              {t("record.mode_full")}
+            </button>
+          </div>
         </div>
 
         {/* Main metrics — vertically centered */}
@@ -559,6 +577,13 @@ export function RecordWorkoutClient() {
             {t("record.discard_btn")}
           </button>
         </div>
+
+        <VoiceCoachModal
+          config={voiceCoachConfig}
+          isOpen={isVoiceCoachModalOpen}
+          onClose={() => setIsVoiceCoachModalOpen(false)}
+          onSave={updateVoiceCoachConfig}
+        />
       </div>
     );
   }
@@ -586,17 +611,34 @@ export function RecordWorkoutClient() {
           </p>
         </div>
 
-        {/* Training Mode toggle button — only when active */}
-        {isActive && status !== "saving" && (
+        <div className="flex items-center gap-2">
+          {/* Voice Coach Button */}
           <button
-            onClick={() => setTrainingMode(true)}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold hover:bg-[var(--accent)]/20 transition-colors"
-            title={t("record.mode_training")}
+            type="button"
+            onClick={() => setIsVoiceCoachModalOpen(true)}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+              voiceCoachConfig.enabled
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
+            }`}
+            title={t("voice_coach.title")}
           >
-            <Maximize2 size={13} />
-            {t("record.mode_training")}
+            <Headphones size={14} />
+            <span>{voiceCoachConfig.enabled ? t("voice_coach.quick_btn") : "Voz Off"}</span>
           </button>
-        )}
+
+          {/* Training Mode toggle button — only when active */}
+          {isActive && status !== "saving" && (
+            <button
+              onClick={() => setTrainingMode(true)}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold hover:bg-[var(--accent)]/20 transition-colors"
+              title={t("record.mode_training")}
+            >
+              <Maximize2 size={13} />
+              {t("record.mode_training")}
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -1014,6 +1056,49 @@ export function RecordWorkoutClient() {
       )}
 
       {!isActive && status !== "saving" && (
+        <div className="stat-card space-y-3 border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                  voiceCoachConfig.enabled
+                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                    : "bg-[var(--surface-hover)] text-[var(--muted)]"
+                }`}
+              >
+                <Headphones size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--text)]">
+                  {t("voice_coach.title")}
+                </h3>
+                <p className="text-xs text-[var(--muted)]">
+                  {voiceCoachConfig.enabled
+                    ? voiceCoachConfig.triggerType === "distance"
+                      ? `${t("voice_coach.trigger_distance")}: ${
+                          voiceCoachConfig.distanceIntervalM < 1000
+                            ? `${voiceCoachConfig.distanceIntervalM} m`
+                            : `${voiceCoachConfig.distanceIntervalM / 1000} km`
+                        }`
+                      : `${t("voice_coach.trigger_time")}: ${
+                          voiceCoachConfig.timeIntervalSec / 60
+                        } min`
+                    : t("voice_coach.enable_desc")}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsVoiceCoachModalOpen(true)}
+              className="btn-ghost text-xs py-1.5 px-3 border border-[var(--border)] hover:border-[var(--accent)] text-[var(--accent)] font-semibold"
+            >
+              ⚙️ {t("voice_coach.voice_settings")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isActive && status !== "saving" && (
         <div className="stat-card space-y-4">
           <p className="text-sm text-[var(--muted)]">{t("record.activity_type")}</p>
           <div className="flex flex-wrap gap-2">
@@ -1127,6 +1212,13 @@ export function RecordWorkoutClient() {
           </button>
         )}
       </div>
+
+      <VoiceCoachModal
+        config={voiceCoachConfig}
+        isOpen={isVoiceCoachModalOpen}
+        onClose={() => setIsVoiceCoachModalOpen(false)}
+        onSave={updateVoiceCoachConfig}
+      />
     </div>
   );
 }

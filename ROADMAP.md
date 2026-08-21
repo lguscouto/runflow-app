@@ -74,16 +74,18 @@ Aprofundar a análise cardiovascular dos treinos com dados de batimentos cardía
 
 ---
 
-### 20. Assistente de Voz em Tempo Real (Audio Cues / Voice Coach)
+### 20. Assistente de Voz em Tempo Real (Audio Cues / Voice Coach) — ✅ Concluído
 **Esforço:** M · **Prioridade:** Alta · **Inspiração:** Nike Run Club / Adidas Running
 
 Feedback em áudio periódico nos fones de ouvido durante a corrida sem precisar olhar para a tela do celular.
 
-- [ ] Síntese de voz nativa e offline usando a Web Speech API / Capacitor TTS
-- [ ] Gatilho configurável: Por distância (ex.: a cada 500m, 1km, 2km) ou Por tempo (ex.: a cada 3min, 5min, 10min)
-- [ ] Métricas faladas customizáveis: *"Distância total: 4 km. Ritmo médio: 5:15 por km. Frequência cardíaca: 148 bpm."*
-- [ ] Alerta especial de split de quilômetro mais rápido do treino
-- [ ] Suporte completo aos idiomas Português (PT-BR) e Inglês (EN-US)
+- [x] Síntese de voz nativa e offline usando a Web Speech API / Capacitor TTS com engine de pronúncia natural fonética
+- [x] Gatilho configurável: Por distância (ex.: a cada 500m, 1km, 2km, 5km) ou Por tempo (ex.: a cada 1min, 2min, 3min, 5min, 10min)
+- [x] Métricas faladas customizáveis: Distância total, Tempo decorrido, Pace médio, Pace instantâneo, Split do último km, FC (bpm) e Zona de FC atual (Z1-Z5)
+- [x] Controles avançados de áudio: sliders de velocidade da fala (0.7x - 1.5x) e volume (20% - 100%)
+- [x] Botão de prévia instantânea da voz (*"Ouvir Prévia da Voz"*) para testar antes de correr
+- [x] Acesso rápido com modal na tela de gravação (modo normal e modo treino) e configurações salvas no Perfil
+- [x] Suporte completo aos idiomas Português (PT-BR) e Inglês (EN-US)
 
 ---
 

@@ -14,13 +14,21 @@ import {
   requestLocationPermission,
   startWatchingPosition,
 } from "@/lib/location";
-import type { Sport, TrackPoint, GhostConfig, GhostStats } from "@/lib/types";
+import type { Sport, TrackPoint, GhostConfig, GhostStats, VoiceCoachConfig } from "@/lib/types";
 import { isOnRoute, pointToPolylineDistanceM } from "@/lib/route-geo";
 import type { RouteConfig, OffRouteState, SavedRoute } from "@/lib/types";
 import { getStoredRoute } from "@/lib/storage";
 import { BleClient } from "@capacitor-community/bluetooth-le";
 import { Capacitor } from "@capacitor/core";
 import { useI18n } from "@/lib/i18n";
+import {
+  DEFAULT_VOICE_COACH_CONFIG,
+  buildVoiceCoachAnnouncement,
+  speakWithConfig,
+  type VoiceCoachStats,
+} from "@/lib/voice-coach";
+import { getUserProfile, saveUserProfile } from "@/lib/profile";
+import { calculateHrZones, getCurrentHrZone } from "@/lib/hr-zones";
 
 const HEART_RATE_SERVICE = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_MEASUREMENT_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
@@ -62,6 +70,18 @@ export function useWorkoutRecorder() {
   const [hrDeviceName, setHrDeviceName] = useState<string | null>(null);
   const [hrSupported, setHrSupported] = useState<boolean>(false);
 
+  // Voice Coach States & Refs
+  const [voiceCoachConfig, setVoiceCoachConfigState] = useState<VoiceCoachConfig>(DEFAULT_VOICE_COACH_CONFIG);
+  const voiceCoachConfigRef = useRef<VoiceCoachConfig>(DEFAULT_VOICE_COACH_CONFIG);
+  const userProfileRef = useRef<any>(null);
+  const userHrZonesRef = useRef<any[]>([]);
+
+  const lastVoiceCoachDistMilestoneRef = useRef<number>(0);
+  const lastVoiceCoachTimeMilestoneRef = useRef<number>(0);
+  const lastCompletedKmRef = useRef<number>(0);
+  const kmStartTimeSecRef = useRef<number>(0);
+  const latestKmSplitRef = useRef<{ km: number; paceSecKm: number } | null>(null);
+
   const startedAtRef = useRef<Date | null>(null);
   const pausedAtRef = useRef<Date | null>(null);
   const totalPausedMsRef = useRef(0);
@@ -90,6 +110,44 @@ export function useWorkoutRecorder() {
   useEffect(() => {
     ghostConfigRef.current = ghostConfig;
   }, [ghostConfig]);
+
+  useEffect(() => {
+    voiceCoachConfigRef.current = voiceCoachConfig;
+  }, [voiceCoachConfig]);
+
+  // Load Voice Coach preferences and user profile on mount
+  useEffect(() => {
+    async function loadVoiceCoachPreferences() {
+      try {
+        const profile = await getUserProfile();
+        userProfileRef.current = profile;
+        if (profile) {
+          userHrZonesRef.current = calculateHrZones(profile);
+          if (profile.voiceCoach) {
+            setVoiceCoachConfigState(profile.voiceCoach);
+            voiceCoachConfigRef.current = profile.voiceCoach;
+          }
+        }
+      } catch (e) {
+        console.error("Erro ao carregar preferências de voz:", e);
+      }
+    }
+    loadVoiceCoachPreferences();
+  }, []);
+
+  const updateVoiceCoachConfig = useCallback(async (newConfig: VoiceCoachConfig) => {
+    setVoiceCoachConfigState(newConfig);
+    voiceCoachConfigRef.current = newConfig;
+    try {
+      const profile = await getUserProfile();
+      await saveUserProfile({
+        ...(profile || {}),
+        voiceCoach: newConfig,
+      });
+    } catch (e) {
+      console.error("Erro ao persistir preferências do Voice Coach:", e);
+    }
+  }, []);
   const setRouteConfig = useCallback(async (config: RouteConfig | null) => {
     setRouteConfigState(config);
     if (config?.routeId) {
@@ -249,7 +307,65 @@ export function useWorkoutRecorder() {
     } else {
       setGhostStats(null);
     }
-  }, [speak, t]);
+
+    // Split KM Calculation
+    const currentKm = Math.floor(distanceM / 1000);
+    if (currentKm > lastCompletedKmRef.current && currentKm > 0) {
+      const kmDuration = elapsedSec - kmStartTimeSecRef.current;
+      if (kmDuration > 0) {
+        latestKmSplitRef.current = { km: currentKm, paceSecKm: kmDuration };
+      }
+      kmStartTimeSecRef.current = elapsedSec;
+      lastCompletedKmRef.current = currentKm;
+    }
+
+    // Voice Coach Periodic Announcements (Feature 20)
+    const vConfig = voiceCoachConfigRef.current;
+    if (vConfig && vConfig.enabled && statusRef.current === "recording") {
+      let shouldTriggerVoice = false;
+      if (vConfig.triggerType === "distance") {
+        const interval = vConfig.distanceIntervalM || 1000;
+        const milestone = Math.floor(distanceM / interval);
+        if (milestone > lastVoiceCoachDistMilestoneRef.current && milestone > 0) {
+          shouldTriggerVoice = true;
+          lastVoiceCoachDistMilestoneRef.current = milestone;
+        }
+      } else if (vConfig.triggerType === "time") {
+        const interval = vConfig.timeIntervalSec || 300;
+        const milestone = Math.floor(elapsedSec / interval);
+        if (milestone > lastVoiceCoachTimeMilestoneRef.current && milestone > 0) {
+          shouldTriggerVoice = true;
+          lastVoiceCoachTimeMilestoneRef.current = milestone;
+        }
+      }
+
+      if (shouldTriggerVoice) {
+        let hrZoneName: string | null = null;
+        if (currentHrRef.current && userHrZonesRef.current.length > 0) {
+          const zone = getCurrentHrZone(currentHrRef.current, userHrZonesRef.current);
+          if (zone) {
+            hrZoneName = t(zone.nameKey);
+          }
+        }
+
+        const coachStats: VoiceCoachStats = {
+          distanceM,
+          elapsedSec,
+          avgPaceSecKm,
+          currentPaceSecKm,
+          heartRate: currentHrRef.current,
+          heartRateZoneName: hrZoneName,
+          lastSplitKm: latestKmSplitRef.current?.km,
+          lastSplitPaceSecKm: latestKmSplitRef.current?.paceSecKm,
+        };
+
+        const msg = buildVoiceCoachAnnouncement(coachStats, vConfig, language);
+        if (msg) {
+          speakWithConfig(msg, vConfig, language);
+        }
+      }
+    }
+  }, [speak, t, language]);
 
   const getElapsedSec = useCallback(() => {
     if (!startedAtRef.current) return 0;
@@ -340,6 +456,13 @@ export function useWorkoutRecorder() {
     lastSpokenKmRef.current = 0;
     lastSpokenMinRef.current = 0;
     ghostRefPointsRef.current = [];
+
+    // Reset Voice Coach trackers
+    lastVoiceCoachDistMilestoneRef.current = 0;
+    lastVoiceCoachTimeMilestoneRef.current = 0;
+    lastCompletedKmRef.current = 0;
+    kmStartTimeSecRef.current = 0;
+    latestKmSplitRef.current = null;
 
     // Load past activity points if Ghost mode is activity
     if (gConfig && gConfig.mode === "activity" && gConfig.activityId) {
@@ -467,6 +590,11 @@ export function useWorkoutRecorder() {
     lastSpokenKmRef.current = 0;
     lastSpokenMinRef.current = 0;
     ghostRefPointsRef.current = [];
+    lastVoiceCoachDistMilestoneRef.current = 0;
+    lastVoiceCoachTimeMilestoneRef.current = 0;
+    lastCompletedKmRef.current = 0;
+    kmStartTimeSecRef.current = 0;
+    latestKmSplitRef.current = null;
   }, [stopGpsWatch]);
 
   const connectHr = useCallback(async () => {
@@ -625,5 +753,7 @@ export function useWorkoutRecorder() {
     routeConfig,
     setRouteConfig,
     offRouteState,
+    voiceCoachConfig,
+    updateVoiceCoachConfig,
   };
 }

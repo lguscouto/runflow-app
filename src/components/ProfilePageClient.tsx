@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Heart,
   Zap,
+  Headphones,
 } from "lucide-react";
 import {
   getUserProfile,
@@ -26,7 +27,9 @@ import {
   saveUserProfile,
 } from "@/lib/profile";
 import { calculateTanakaMaxHr } from "@/lib/hr-zones";
-import type { UserProfile, Gear, ActivitySummary } from "@/lib/types";
+import type { UserProfile, Gear, ActivitySummary, VoiceCoachConfig } from "@/lib/types";
+import { DEFAULT_VOICE_COACH_CONFIG } from "@/lib/voice-coach";
+import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { useI18n } from "@/lib/i18n";
 import { listGearWithUsage, setDefaultGear, type GearWithUsage } from "@/lib/gear";
 import { putGear, removeGear, getAllStoredActivities } from "@/lib/storage";
@@ -53,6 +56,8 @@ export function ProfilePageClient() {
   const [maxHr, setMaxHr] = useState("");
   const [restingHr, setRestingHr] = useState("");
   const [langSelect, setLangSelect] = useState<"pt" | "en">("pt");
+  const [voiceCoachConfig, setVoiceCoachConfig] = useState<VoiceCoachConfig>(DEFAULT_VOICE_COACH_CONFIG);
+  const [isVoiceCoachModalOpen, setIsVoiceCoachModalOpen] = useState(false);
   const { changeLanguage } = useI18n();
 
   // Common UI States
@@ -94,6 +99,9 @@ export function ProfilePageClient() {
         setMaxHr(p.maxHr != null ? String(p.maxHr) : "");
         setRestingHr(p.restingHr != null ? String(p.restingHr) : "");
         setLangSelect(p.language || "pt");
+        if (p.voiceCoach) {
+          setVoiceCoachConfig(p.voiceCoach);
+        }
       }
 
       // Load Gear and Activities
@@ -222,6 +230,7 @@ export function ProfilePageClient() {
       maxHr: maxHr ? parseInt(maxHr, 10) : undefined,
       restingHr: restingHr ? parseInt(restingHr, 10) : undefined,
       language: langSelect,
+      voiceCoach: voiceCoachConfig,
     };
 
     if (!parsed.name || parsed.name.length < 2) {
@@ -650,6 +659,45 @@ export function ProfilePageClient() {
                       <option value="en">🇺🇸 {t("profile.lang_en")}</option>
                     </select>
                   </div>
+
+                  <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--surface-hover)]/30 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                          voiceCoachConfig.enabled
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                            : "bg-[var(--border)] text-[var(--muted)]"
+                        }`}
+                      >
+                        <Headphones size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          {t("voice_coach.title")}
+                        </p>
+                        <p className="text-xs text-[var(--muted)]">
+                          {voiceCoachConfig.enabled
+                            ? voiceCoachConfig.triggerType === "distance"
+                              ? `${t("voice_coach.trigger_distance")}: ${
+                                  voiceCoachConfig.distanceIntervalM < 1000
+                                    ? `${voiceCoachConfig.distanceIntervalM} m`
+                                    : `${voiceCoachConfig.distanceIntervalM / 1000} km`
+                                }`
+                              : `${t("voice_coach.trigger_time")}: ${
+                                  voiceCoachConfig.timeIntervalSec / 60
+                                } min`
+                            : t("voice_coach.enable_desc")}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsVoiceCoachModalOpen(true)}
+                      className="btn-ghost text-xs py-1.5 px-3 border border-[var(--border)] hover:border-[var(--accent)] text-[var(--accent)] font-semibold shrink-0"
+                    >
+                      ⚙️ {t("voice_coach.voice_settings")}
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -1025,6 +1073,26 @@ export function ProfilePageClient() {
           <p>{message.text}</p>
         </div>
       )}
+
+      <VoiceCoachModal
+        config={voiceCoachConfig}
+        isOpen={isVoiceCoachModalOpen}
+        onClose={() => setIsVoiceCoachModalOpen(false)}
+        onSave={async (cfg) => {
+          setVoiceCoachConfig(cfg);
+          try {
+            const p = await getUserProfile();
+            await saveUserProfile({
+              ...(p || {}),
+              voiceCoach: cfg,
+            });
+            setMessage({ type: "ok", text: t("voice_coach.saved") });
+          } catch (e) {
+            console.error("Erro ao salvar voice coach:", e);
+            setMessage({ type: "err", text: t("common.error") });
+          }
+        }}
+      />
     </div>
   );
 }

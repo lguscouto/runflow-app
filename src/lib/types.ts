@@ -17,9 +17,42 @@ export interface UserProfile {
   maxHr?: number;
   /** Frequência cardíaca de repouso (bpm). */
   restingHr?: number;
+  /** Configuração do Assistente de Voz (Voice Coach). */
+  voiceCoach?: VoiceCoachConfig;
   /** Idioma preferido do usuário ("pt" ou "en"). */
   language?: "pt" | "en";
   updatedAt: string;
+}
+
+export type VoiceCoachTriggerType = "distance" | "time";
+
+export interface VoiceCoachConfig {
+  enabled: boolean;
+  triggerType: VoiceCoachTriggerType;
+  /** Intervalo em metros para gatilho por distância (ex: 500, 1000, 2000, 5000) */
+  distanceIntervalM: number;
+  /** Intervalo em segundos para gatilho por tempo (ex: 60, 120, 180, 300, 600) */
+  timeIntervalSec: number;
+  /** Falar distância total */
+  speakDistance: boolean;
+  /** Falar tempo decorrido */
+  speakTime: boolean;
+  /** Falar ritmo médio */
+  speakAvgPace: boolean;
+  /** Falar ritmo instantâneo */
+  speakCurrentPace: boolean;
+  /** Falar frequência cardíaca */
+  speakHeartRate: boolean;
+  /** Falar zona de frequência cardíaca (Z1-Z5) */
+  speakHeartRateZone: boolean;
+  /** Falar split do último km completado */
+  speakLastSplit: boolean;
+  /** Velocidade da voz (0.7 a 1.5, padrão 1.0) */
+  speechRate: number;
+  /** Tom da voz (0.8 a 1.2, padrão 1.0) */
+  speechPitch: number;
+  /** Volume da voz (0.1 a 1.0, padrão 1.0) */
+  speechVolume: number;
 }
 
 export type HRZoneId = 1 | 2 | 3 | 4 | 5;
