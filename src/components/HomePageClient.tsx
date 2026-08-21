@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Play, Upload, Zap } from "lucide-react";
+import { Play, Upload, Zap, Flame } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { ActivityList } from "@/components/ActivityList";
 import { WeeklyGoalsCard } from "@/components/WeeklyGoalsCard";
@@ -92,6 +92,13 @@ export function HomePageClient() {
         </Link>
         <Link href="/atividades/" className="btn-ghost">
           {t("home.view_all_btn")}
+        </Link>
+        <Link
+          href="/heatmap/"
+          className="btn-ghost text-orange-400 border border-orange-500/30 hover:border-orange-500/60 hover:bg-orange-500/10 transition-all"
+        >
+          <Flame size={18} className="text-orange-400 animate-pulse" />
+          {t("nav.heatmap")}
         </Link>
       </div>
 

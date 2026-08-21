@@ -42,13 +42,13 @@ export function elevationGainFromPoints(points: TrackPoint[]): number {
   return gain;
 }
 
-export function simplifyPoints(
-  points: TrackPoint[],
+export function simplifyPoints<T extends { lat: number; lng: number }>(
+  points: T[],
   maxPoints = 800
-): TrackPoint[] {
+): T[] {
   if (points.length <= maxPoints) return points;
   const step = Math.ceil(points.length / maxPoints);
-  const simplified: TrackPoint[] = [];
+  const simplified: T[] = [];
   for (let i = 0; i < points.length; i += step) {
     simplified.push(points[i]);
   }
@@ -59,7 +59,7 @@ export function simplifyPoints(
   return simplified;
 }
 
-export function boundsFromPoints(points: TrackPoint[]) {
+export function boundsFromPoints<T extends { lat: number; lng: number }>(points: T[]) {
   if (points.length === 0) {
     return { south: -23.55, west: -46.63, north: -23.55, east: -46.63 };
   }

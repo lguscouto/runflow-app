@@ -107,16 +107,20 @@ Pausar o cronômetro automaticamente ao parar em semáforos ou cruzamentos urban
 
 ---
 
-### 22. Mapa de Calor Pessoal (Personal Heatmap)
+### 22. Mapa de Calor Pessoal (Personal Heatmap) — ✅ Concluído
 **Esforço:** M · **Prioridade:** Média · **Inspiração:** Strava Summit (Recurso Pro)
 
-Visualizar todas as corridas e rotas já realizadas sobrepostas em um único mapa da cidade, revelando a intensidade das ruas mais percorridas.
+Visualizar todas as corridas e rotas já realizadas sobrepostas em um único mapa da cidade, revelando a intensidade das ruas mais percorridas (estilo Strava Heatmap Pro, 100% offline e gratuito).
 
-- [ ] Renderização local de alta performance com Leaflet.heat / Canvas Layers
-- [ ] Gradiente térmico brilhante (azul $\to$ verde $\to$ amarelo $\to$ vermelho/neon)
-- [ ] Filtros interativos: Por ano (2026, 2025, todos), Por modalidade (Corrida, Caminhada, Ciclismo) ou Por tênis
-- [ ] Modo tela cheia interativo com zoom fluido
-- [ ] 100% processado no dispositivo, garantindo privacidade absoluta dos locais de treino
+- [x] Renderização local de alta performance com Leaflet Polyline Glow Multi-camada (Outer Glow + Core Crisp) para mesclagem térmica cumulativa
+- [x] 5 temas visuais térmicos selecionáveis: *Fogo Neon*, *Ciano Cyber*, *Sunset Magenta*, *Solar Lime* e *Laranja Strava*
+- [x] 4 estilos de mapa base: *CartoDB Dark Matter*, *CartoDB Voyager (Claro)*, *OpenStreetMap Padrão* e *Satélite Esri World Imagery*
+- [x] Filtros interativos instantâneos: Por modalidade (Todas, Corrida, Caminhada, Ciclismo, Outros) e Por ano de realização
+- [x] Ajustes finos de espessura de traçado (Fino, Médio, Grosso), slider de opacidade e alternância para incluir rotas salvas
+- [x] Popups informativos ao tocar nas rotas com data, distância, ritmo, modalidade e link direto para detalhes da atividade
+- [x] Banner de telemetria com contagem de treinos renderizados, km totais mapeados e total de pontos GPS
+- [x] Modo de tela cheia (Fullscreen) e botão de recentralização inteligente com ajuste automático de limites (fitBounds)
+- [x] 100% processado no dispositivo localmente via IndexedDB/Dexie, garantindo privacidade absoluta dos locais de treino
 
 ---
 
