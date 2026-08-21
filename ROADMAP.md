@@ -175,5 +175,5 @@ flowchart TD
   F23 --> F10
 ```
 
-*Última atualização: agosto 2026 — Replay e Visualização da Atividade em 3D (Feature 17) concluída*
+*Última atualização: agosto 2026 — Assistente de Voz em Tempo Real / Voice Coach (Feature 20) concluída*
 
