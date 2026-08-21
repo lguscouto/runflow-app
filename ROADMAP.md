@@ -36,26 +36,27 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 | **15. Sincronização Multidispositivo P2P & WebDAV** | Sincronização direta por WebRTC e nuvens privadas sem servidor central | ✅ Concluído |
 | **16. Navegação Offline & Alerta de Desvio** | Alertas sonoros/visuais ao sair da rota e criador de trajetos no mapa | ✅ Concluído |
 | **17. Replay e Flyover 3D** | Visualização imersiva 3D com WebGL/Three.js, 3 câmeras e telemetria | ✅ Concluído |
+| **18. Card de Compartilhamento Social** | Gerador em Canvas para Stories (9:16) e Feed (1:1) com temas e share nativo | ✅ Concluído |
 
 ---
 
-## 🎯 Novo Roadmap: Próximas 8 Features Prioritárias (Fase 2.0)
+## 🎯 Próximas Features Prioritárias (Fase 2.0)
 
 Legenda de esforço: **S** (pequeno: 1-2 dias) · **M** (médio: 3-5 dias) · **L** (grande: 1-2 semanas)
 
 ---
 
-### 18. Gerador de Card de Compartilhamento Social (Stories & Feed)
+### 18. Gerador de Card de Compartilhamento Social (Stories & Feed) — ✅ Concluído
 **Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava / NRC
 
 Permitir que o corredor crie imagens estilizadas com os dados do treino para postar no Instagram Stories, WhatsApp, Strava ou salvar na galeria.
 
-- [ ] Motor de renderização local via HTML5 Canvas / SVG (sem envio para servidor)
-- [ ] 4 temas visuais: *Dark Cyberpunk/Neon*, *Minimalist Clean*, *Sunset Flow*, *Topo Map Contour*
-- [ ] Opção de usar o mapa traçado em gradiente ou carregar uma foto da galeria como plano de fundo
-- [ ] Exibição harmônica de dados: Distância, Ritmo Médio, Duração, Ganho de Elevação e FC Média
-- [ ] Proporções: 9:16 (Instagram Stories / WhatsApp Status) e 1:1 (Feed)
-- [ ] Botão de compartilhamento nativo via Capacitor Share / Web Share API
+- [x] Motor de renderização local via HTML5 Canvas / SVG (sem envio para servidor)
+- [x] 5 temas visuais: *Dark Cyberpunk/Neon*, *Minimalist Clean*, *Sunset Flow*, *Topo Map Contour*, *Foto da Galeria*
+- [x] Opção de usar o mapa traçado em gradiente ou carregar uma foto da galeria como plano de fundo
+- [x] Exibição harmônica de dados: Distância, Ritmo Médio, Duração, Ganho de Elevação, FC Média e Calorias
+- [x] Proporções: 9:16 (Instagram Stories / WhatsApp Status) e 1:1 (Feed)
+- [x] Botão de compartilhamento nativo via Capacitor Share / Web Share API e download PNG
 
 ---
 
