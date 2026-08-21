@@ -54,8 +54,10 @@ import { ExportGpxButton } from "@/components/ExportGpxButton";
 import { CorrectElevationButton } from "@/components/CorrectElevationButton";
 import { MergeFitButton } from "@/components/MergeFitButton";
 import { ActivitySplits } from "@/components/ActivitySplits";
+import { SocialShareCardModal } from "@/components/SocialShareCardModal";
 import { useActivityDetail } from "@/hooks/useActivities";
 import { Box, Map as MapIcon, Video } from "lucide-react";
+
 import {
   formatDate,
   formatDistance,
@@ -168,6 +170,14 @@ export function ActivityDetailClient() {
           </p>
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0">
+          <SocialShareCardModal
+            activity={activity}
+            prBadgeText={
+              prCategories.length > 0
+                ? prCategories.map((cat) => t(PR_CATEGORY_KEYS[cat])).join(", ")
+                : null
+            }
+          />
           <ExportGpxButton activity={activity} />
           {activity.points.length >= 2 && (
             <>

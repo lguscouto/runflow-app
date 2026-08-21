@@ -4,6 +4,7 @@ import type {
   ActivitySummary,
   DashboardStats,
   ParsedActivity,
+  TrackPoint,
 } from "./types";
 import { simplifyPoints } from "./geo";
 import { estimateActivityCalories } from "./calories";
@@ -121,3 +122,41 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     thisWeekActivities,
   };
 }
+
+export function createDemoActivity(): ParsedActivity {
+  const baseLat = -23.55052;
+  const baseLng = -46.633308;
+  const startedAt = new Date();
+  const durationSec = 1560; // 26 min
+  const distanceM = 5020; // 5.02 km
+  const points: TrackPoint[] = [];
+
+  const totalPoints = 60;
+  for (let i = 0; i < totalPoints; i++) {
+    const fraction = i / (totalPoints - 1);
+    const angle = fraction * Math.PI * 2;
+    const lat = baseLat + 0.009 * Math.sin(angle) + 0.003 * Math.sin(angle * 2);
+    const lng = baseLng + 0.013 * Math.cos(angle);
+    const elevation = 760 + 28 * Math.sin(fraction * Math.PI * 3);
+    const hr = 145 + Math.floor(22 * Math.sin(fraction * Math.PI * 2));
+    const timestamp = new Date(startedAt.getTime() + fraction * durationSec * 1000);
+
+    points.push({ lat, lng, elevation, hr, timestamp });
+  }
+
+  return {
+    name: "Corrida no Parque Ibirapuera",
+    sport: "running",
+    startedAt,
+    durationSec,
+    distanceM,
+    avgPaceSecKm: 311, // ~5:11 /km
+    maxPaceSecKm: 275, // ~4:35 /km
+    avgHr: 154,
+    maxHr: 172,
+    elevationGainM: 68,
+    calories: 385,
+    points,
+  };
+}
+
