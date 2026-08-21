@@ -67,6 +67,7 @@ import { MergeFitButton } from "@/components/MergeFitButton";
 import { ActivitySplits } from "@/components/ActivitySplits";
 import { SocialShareCardModal } from "@/components/SocialShareCardModal";
 import { HeartRateZonesPanel } from "@/components/HeartRateZonesPanel";
+import { StructuredWorkoutReportCard } from "@/components/StructuredWorkoutReportCard";
 import { useActivityDetail } from "@/hooks/useActivities";
 
 import {
@@ -280,6 +281,10 @@ export function ActivityDetailClient() {
       )}
 
       <ActivityCharts activity={activity} />
+
+      {activity.structuredWorkoutReport && (
+        <StructuredWorkoutReportCard report={activity.structuredWorkoutReport} />
+      )}
 
       <HeartRateZonesPanel activity={activity} />
 

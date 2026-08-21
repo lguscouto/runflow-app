@@ -1,5 +1,14 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { ActivityDetail, ActivitySummary, Sport, TrackPoint, UserProfile, Gear, SavedRoute } from "./types";
+import type {
+  ActivityDetail,
+  ActivitySummary,
+  Sport,
+  TrackPoint,
+  UserProfile,
+  Gear,
+  SavedRoute,
+  StructuredWorkout,
+} from "./types";
 
 export const PROFILE_KEY = "user";
 
@@ -8,6 +17,7 @@ export interface StoredActivity extends ActivitySummary {
   maxHr: number | null;
   notes: string | null;
   routeId?: string | null;
+  workoutId?: string | null;
   points: Array<{
     lat: number;
     lng: number;
@@ -35,10 +45,14 @@ interface RunFlowDB extends DBSchema {
     key: string;
     value: SavedRoute;
   };
+  workouts: {
+    key: string;
+    value: StructuredWorkout;
+  };
 }
 
 const DB_NAME = "runflow";
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 let dbPromise: Promise<IDBPDatabase<RunFlowDB>> | null = null;
 
@@ -62,6 +76,11 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
         }
         if (oldVersion < 4 && !database.objectStoreNames.contains("routes")) {
           database.createObjectStore("routes", {
+            keyPath: "id",
+          });
+        }
+        if (oldVersion < 5 && !database.objectStoreNames.contains("workouts")) {
+          database.createObjectStore("workouts", {
             keyPath: "id",
           });
         }
@@ -217,3 +236,31 @@ export async function removeRoute(id: string): Promise<boolean> {
   await db.delete("routes", id);
   return true;
 }
+
+// ── Structured Workouts (Feature 23) ────────────────────────────────────────
+
+export async function putWorkout(workout: StructuredWorkout): Promise<void> {
+  const db = await getStore();
+  await db.put("workouts", workout);
+}
+
+export async function getStoredWorkout(
+  id: string
+): Promise<StructuredWorkout | undefined> {
+  const db = await getStore();
+  return db.get("workouts", id);
+}
+
+export async function getAllStoredWorkouts(): Promise<StructuredWorkout[]> {
+  const db = await getStore();
+  return db.getAll("workouts");
+}
+
+export async function deleteStoredWorkout(id: string): Promise<boolean> {
+  const db = await getStore();
+  const existing = await db.get("workouts", id);
+  if (!existing) return false;
+  await db.delete("workouts", id);
+  return true;
+}
+

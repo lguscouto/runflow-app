@@ -161,6 +161,8 @@ export interface ParsedActivity {
   elevationGainM?: number;
   avgHr?: number;
   maxHr?: number;
+  workoutId?: string | null;
+  structuredWorkoutReport?: StructuredWorkoutReport | null;
   points: TrackPoint[];
 }
 
@@ -181,6 +183,8 @@ export interface ActivitySummary {
   fileName: string | null;
   gearId: string | null;
   routeId?: string | null;
+  workoutId?: string | null;
+  structuredWorkoutReport?: StructuredWorkoutReport | null;
 }
 
 export interface ActivityDetail extends ActivitySummary {
@@ -293,4 +297,83 @@ export interface WebDavConfig {
   remotePath: string;
   lastSyncedAt?: string;
 }
+
+// ── Structured Workout / Interval Builder Types (Feature 23) ───────────────
+
+export type WorkoutStepType = "warmup" | "work" | "recovery" | "cooldown";
+export type WorkoutTargetType = "distance" | "time" | "open";
+
+export interface WorkoutPaceTarget {
+  minPaceSecKm?: number; // ex: 270 (4:30/km)
+  maxPaceSecKm?: number; // ex: 300 (5:00/km)
+}
+
+export interface WorkoutStep {
+  id: string;
+  type: WorkoutStepType;
+  name?: string;
+  targetType: WorkoutTargetType;
+  targetValue: number; // metros para distance (ex: 400), segundos para time (ex: 90), 0 para open
+  paceTarget?: WorkoutPaceTarget;
+  hrZoneTarget?: HRZoneId;
+  notes?: string;
+}
+
+export interface WorkoutRepeatBlock {
+  id: string;
+  type: "repeat";
+  repeats: number; // ex: 6 vezes
+  steps: WorkoutStep[];
+}
+
+export type WorkoutItem = WorkoutStep | WorkoutRepeatBlock;
+
+export interface StructuredWorkout {
+  id: string;
+  name: string;
+  description?: string;
+  sport: Sport;
+  items: WorkoutItem[];
+  isPreset?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FlatWorkoutStep {
+  stepId: string;
+  blockId?: string;
+  stepIndex: number;
+  totalSteps: number;
+  repeatIndex?: number;
+  totalRepeats?: number;
+  step: WorkoutStep;
+}
+
+export interface ExecutedStepReport {
+  stepIndex: number;
+  name: string;
+  type: WorkoutStepType;
+  targetType: WorkoutTargetType;
+  targetValue: number;
+  paceTarget?: WorkoutPaceTarget;
+  hrZoneTarget?: HRZoneId;
+  repeatIndex?: number;
+  totalRepeats?: number;
+  durationSec: number;
+  distanceM: number;
+  avgPaceSecKm: number | null;
+  avgHr: number | null;
+  targetMet: boolean;
+}
+
+export interface StructuredWorkoutReport {
+  workoutId: string;
+  workoutName: string;
+  completedAt: string;
+  totalSteps: number;
+  completedSteps: number;
+  complianceRatePercent: number; // ex: 85%
+  steps: ExecutedStepReport[];
+}
+
 

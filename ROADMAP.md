@@ -124,15 +124,18 @@ Visualizar todas as corridas e rotas já realizadas sobrepostas em um único map
 
 ---
 
-### 23. Criador de Treinos Estruturados & Intervalados (Interval Builder)
+### 23. Criador de Treinos Estruturados & Intervalados (Interval Builder) — ✅ Concluído
 **Esforço:** L · **Prioridade:** Média · **Inspiração:** Garmin Workouts / NRC
 
 Permitir que o corredor crie e execute treinos intervalados (tiros, fartlek, pirâmide) com avisos na tela e por voz.
 
-- [ ] Editor visual de etapas: Aquecimento, Repetições (ex.: $6 \times 400\text{m}$ tiro @ ritmo alvo com $1\text{min}$ descanso) e Desaquecimento
-- [ ] Interface de gravação dedicada ao treino estruturado (barra de progresso da série atual, contagem regressiva)
-- [ ] Alertas sonoros (bips) e de voz anunciando a transição de cada bloco (*"Início do tiro 2 de 6. Mantenha ritmo abaixo de 4:30!"*)
-- [ ] Relatório pós-treino com análise de cumprimento de metas em cada parcial do intervalo
+- [x] Editor visual de etapas: Aquecimento, Repetições (ex.: $6 \times 400\text{m}$ tiro @ ritmo alvo com $1\text{min}$ descanso) e Desaquecimento
+- [x] 5 Presets Oficiais integrados: *6x 400m Clássico*, *Pirâmide 100m a 800m*, *Fartlek Urbano*, *Tempo Run 4km*, *Regenerativo Z2*
+- [x] Biblioteca de treinos com abas (*Todos*, *Oficiais*, *Meus Treinos*), criação, duplicação, edição e exclusão
+- [x] Interface de gravação dedicada ao treino estruturado (HUD com barra de progresso da série atual, contagem regressiva, ritmo instantâneo vs alvo)
+- [x] Alertas sonoros (bips 3..2..1 sintetizados via Web Audio API) e de voz anunciando a transição de cada bloco (*"Início do tiro 2 de 6. Mantenha ritmo abaixo de 4:30!"*)
+- [x] Botão de avanço manual de série (*Avançar Série / Lap*) e suporte a voltas abertas (Open Lap)
+- [x] Relatório pós-treino com análise de cumprimento de metas em cada parcial do intervalo exibido nos detalhes da atividade
 
 ---
 
@@ -185,5 +188,5 @@ flowchart TD
   F23 --> F10
 ```
 
-*Última atualização: agosto 2026 — Previsão de Tempo de Prova & Estimativa de VO2 Max Local (Feature 24) concluída*
+*Última atualização: agosto 2026 — Criador de Treinos Estruturados & Intervalados (Feature 23) concluído*
 

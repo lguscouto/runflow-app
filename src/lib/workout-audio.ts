@@ -1,0 +1,148 @@
+import type { FlatWorkoutStep, VoiceCoachConfig } from "./types";
+import { formatPaceForSpeech, speakWithConfig } from "./voice-coach";
+
+let audioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  if (!audioCtx) {
+    const AudioContextClass =
+      window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  if (audioCtx && audioCtx.state === "suspended") {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+/**
+ * Toca um bip sonoro com frequência e duração configuráveis.
+ */
+export function playWorkoutBeep(freq = 880, durationMs = 150, type: OscillatorType = "sine") {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + durationMs / 1000);
+  } catch (err) {
+    console.error("Erro ao tocar bip de treino:", err);
+  }
+}
+
+/**
+ * Bip de contagem regressiva curta (ex: 3, 2, 1).
+ */
+export function playCountdownPip() {
+  playWorkoutBeep(660, 100, "sine");
+}
+
+/**
+ * Bip agudo de início de bloco (GO!).
+ */
+export function playStartBlockChime() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    // Dois bips rápidos ascendentes
+    playWorkoutBeep(880, 120, "triangle");
+    setTimeout(() => {
+      playWorkoutBeep(1320, 200, "triangle");
+    }, 120);
+  } catch (err) {
+    console.error("Erro ao tocar chime de início:", err);
+  }
+}
+
+/**
+ * Constrói o texto falado de anúncio da transição de etapa do treino.
+ */
+export function buildStepAnnouncement(
+  flatStep: FlatWorkoutStep,
+  lang: "pt" | "en" = "pt"
+): string {
+  const { step, repeatIndex, totalRepeats } = flatStep;
+  const isPt = lang === "pt";
+
+  let stepName = step.name || "";
+  let targetStr = "";
+
+  if (step.targetType === "distance") {
+    const m = step.targetValue;
+    if (m >= 1000) {
+      const km = (m / 1000).toFixed(1).replace(".0", "").replace(".", ",");
+      targetStr = isPt ? `${km} quilômetros` : `${km} kilometers`;
+    } else {
+      targetStr = isPt ? `${m} metros` : `${m} meters`;
+    }
+  } else if (step.targetType === "time") {
+    const s = step.targetValue;
+    const min = Math.floor(s / 60);
+    const sec = s % 60;
+    if (min > 0 && sec > 0) {
+      targetStr = isPt ? `${min} minutos e ${sec} segundos` : `${min} minutes and ${sec} seconds`;
+    } else if (min > 0) {
+      targetStr = isPt ? `${min} minutos` : `${min} minutes`;
+    } else {
+      targetStr = isPt ? `${sec} segundos` : `${sec} seconds`;
+    }
+  }
+
+  let repeatPrefix = "";
+  if (repeatIndex && totalRepeats) {
+    if (step.type === "work") {
+      repeatPrefix = isPt
+        ? `Tiro ${repeatIndex} de ${totalRepeats}. `
+        : `Interval ${repeatIndex} of ${totalRepeats}. `;
+    } else if (step.type === "recovery") {
+      repeatPrefix = isPt
+        ? `Recuperação ${repeatIndex} de ${totalRepeats}. `
+        : `Recovery ${repeatIndex} of ${totalRepeats}. `;
+    }
+  } else if (!stepName) {
+    if (step.type === "warmup") stepName = isPt ? "Aquecimento" : "Warm up";
+    else if (step.type === "work") stepName = isPt ? "Tiro forte" : "Fast interval";
+    else if (step.type === "recovery") stepName = isPt ? "Recuperação" : "Recovery";
+    else if (step.type === "cooldown") stepName = isPt ? "Desaquecimento" : "Cool down";
+  }
+
+  let paceTargetStr = "";
+  if (step.paceTarget?.maxPaceSecKm) {
+    const paceSpoken = formatPaceForSpeech(step.paceTarget.maxPaceSecKm, lang);
+    paceTargetStr = isPt ? `. Ritmo alvo abaixo de ${paceSpoken}` : `. Target pace below ${paceSpoken}`;
+  }
+
+  const parts = [repeatPrefix || `${stepName}. `, targetStr, paceTargetStr].filter(Boolean);
+  return parts.join("");
+}
+
+/**
+ * Anuncia a etapa por voz usando a configuração do Voice Coach.
+ */
+export function speakWorkoutStep(
+  flatStep: FlatWorkoutStep,
+  config: VoiceCoachConfig,
+  lang: "pt" | "en" = "pt"
+) {
+  playStartBlockChime();
+  const text = buildStepAnnouncement(flatStep, lang);
+  setTimeout(() => {
+    speakWithConfig(text, config, lang);
+  }, 350);
+}

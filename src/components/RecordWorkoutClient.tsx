@@ -23,9 +23,12 @@ import {
   Mic,
   Headphones,
   PauseCircle,
+  Zap,
 } from "lucide-react";
 import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { AutoPauseModal } from "@/components/AutoPauseModal";
+import { WorkoutLibraryModal } from "@/components/WorkoutLibraryModal";
+import { StructuredWorkoutHud } from "@/components/StructuredWorkoutHud";
 import { useWorkoutRecorder } from "@/hooks/useWorkoutRecorder";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { estimateActivityCalories } from "@/lib/calories";
@@ -40,7 +43,7 @@ import {
   sportLabel,
 } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
-import type { Sport, UserProfile, ActivitySummary, GhostConfig, SavedRoute } from "@/lib/types";
+import type { Sport, UserProfile, ActivitySummary, GhostConfig, SavedRoute, StructuredWorkout } from "@/lib/types";
 import { getAllStoredRoutes } from "@/lib/storage";
 
 const LiveMapTrack = dynamic(
@@ -89,6 +92,8 @@ export function RecordWorkoutClient() {
   const [routeVoiceAlerts, setRouteVoiceAlerts] = useState<boolean>(true);
   const [isVoiceCoachModalOpen, setIsVoiceCoachModalOpen] = useState(false);
   const [isAutoPauseModalOpen, setIsAutoPauseModalOpen] = useState(false);
+  const [selectedWorkout, setSelectedWorkout] = useState<StructuredWorkout | null>(null);
+  const [isWorkoutLibraryModalOpen, setIsWorkoutLibraryModalOpen] = useState(false);
 
   const {
     status,
@@ -117,6 +122,15 @@ export function RecordWorkoutClient() {
     autoPauseConfig,
     updateAutoPauseConfig,
     isAutoPaused,
+    structuredWorkout,
+    flatSteps,
+    currentStepIndex,
+    currentWorkoutStep,
+    nextWorkoutStep,
+    stepElapsedSec,
+    stepDistanceM,
+    setStructuredWorkout,
+    skipStructuredWorkoutStep,
   } = useWorkoutRecorder();
 
   const userHrZones = useMemo(() => {
@@ -195,7 +209,7 @@ export function RecordWorkoutClient() {
     if (selectedRouteId && allRoutes.length > 0) {
       gConfig.routeId = selectedRouteId;
     }
-    await start(gConfig);
+    await start(gConfig, selectedWorkout);
   }
 
   async function handleStop() {
@@ -545,6 +559,21 @@ export function RecordWorkoutClient() {
           </div>
         </div>
 
+        {/* Structured Workout HUD in Fullscreen */}
+        {currentWorkoutStep && (
+          <div className="px-5">
+            <StructuredWorkoutHud
+              currentStep={currentWorkoutStep}
+              nextStep={nextWorkoutStep}
+              workoutName={structuredWorkout?.name || t("workout.hud_badge")}
+              stepElapsedSec={stepElapsedSec}
+              stepDistanceM={stepDistanceM}
+              currentPaceSecKm={stats.currentPaceSecKm}
+              onSkipStep={skipStructuredWorkoutStep}
+            />
+          </div>
+        )}
+
         {/* Ghost Runner comparison if active */}
         {renderGhostComparison(true)}
 
@@ -717,6 +746,18 @@ export function RecordWorkoutClient() {
 
       {isActive && (
         <>
+          {currentWorkoutStep && (
+            <StructuredWorkoutHud
+              currentStep={currentWorkoutStep}
+              nextStep={nextWorkoutStep}
+              workoutName={structuredWorkout?.name || t("workout.hud_badge")}
+              stepElapsedSec={stepElapsedSec}
+              stepDistanceM={stepDistanceM}
+              currentPaceSecKm={stats.currentPaceSecKm}
+              onSkipStep={skipStructuredWorkoutStep}
+            />
+          )}
+
           <LiveMapTrack points={points} follow={status === "recording"} />
 
           {renderGhostComparison(false)}
@@ -810,6 +851,57 @@ export function RecordWorkoutClient() {
             {status === "paused" && ` · ${t("record.paused")}`}
           </div>
         </>
+      )}
+
+      {!isActive && status !== "saving" && (
+        <div className="stat-card space-y-3 border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                <Zap size={18} />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-[var(--text)]">
+                  {t("workout.select_workout")}
+                </h3>
+                <p className="text-xs text-[var(--muted)]">
+                  {selectedWorkout ? selectedWorkout.name : t("workout.none")}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsWorkoutLibraryModalOpen(true)}
+              className="btn-ghost text-xs px-3 py-1.5 border-orange-500/30 hover:border-orange-500 text-orange-400 font-semibold flex items-center gap-1"
+            >
+              <span>{selectedWorkout ? (language === "pt" ? "Alterar" : "Change") : t("workout.library_title")}</span>
+            </button>
+          </div>
+
+          {selectedWorkout && (
+            <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/25 flex items-center justify-between text-xs">
+              <div className="space-y-0.5">
+                <p className="font-bold text-white">{selectedWorkout.name}</p>
+                {selectedWorkout.description && (
+                  <p className="text-[11px] text-[var(--muted)] line-clamp-1">
+                    {selectedWorkout.description}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedWorkout(null);
+                  setStructuredWorkout(null);
+                }}
+                className="text-xs text-[var(--muted)] hover:text-rose-400 underline ml-2"
+              >
+                {t("common.cancel")}
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {!isActive && status !== "saving" && (
@@ -1326,6 +1418,16 @@ export function RecordWorkoutClient() {
         isOpen={isAutoPauseModalOpen}
         onClose={() => setIsAutoPauseModalOpen(false)}
         onSave={updateAutoPauseConfig}
+      />
+
+      <WorkoutLibraryModal
+        isOpen={isWorkoutLibraryModalOpen}
+        onClose={() => setIsWorkoutLibraryModalOpen(false)}
+        onSelectWorkout={(w) => {
+          setSelectedWorkout(w);
+          setStructuredWorkout(w);
+        }}
+        selectedWorkoutId={selectedWorkout?.id}
       />
     </div>
   );

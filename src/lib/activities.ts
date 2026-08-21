@@ -67,6 +67,8 @@ export async function saveActivity(
     fileName: fileName ?? null,
     notes: null,
     gearId,
+    workoutId: parsed.workoutId || null,
+    structuredWorkoutReport: parsed.structuredWorkoutReport || null,
     points: points.map((p) => ({
       lat: p.lat,
       lng: p.lng,
