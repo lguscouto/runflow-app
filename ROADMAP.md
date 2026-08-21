@@ -37,6 +37,7 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 | **16. Navegação Offline & Alerta de Desvio** | Alertas sonoros/visuais ao sair da rota e criador de trajetos no mapa | ✅ Concluído |
 | **17. Replay e Flyover 3D** | Visualização imersiva 3D com WebGL/Three.js, 3 câmeras e telemetria | ✅ Concluído |
 | **18. Card de Compartilhamento Social** | Gerador em Canvas para Stories (9:16) e Feed (1:1) com temas e share nativo | ✅ Concluído |
+| **19. Zonas de FC & Carga de Treino** | Distribuição Z1-Z5, cálculo TRIMP, efeito do treino e fórmulas Tanaka/Karvonen | ✅ Concluído |
 
 ---
 
@@ -60,16 +61,16 @@ Permitir que o corredor crie imagens estilizadas com os dados do treino para pos
 
 ---
 
-### 19. Zonas de Frequência Cardíaca (Z1–Z5) & Análise de Carga de Treino
+### 19. Zonas de Frequência Cardíaca (Z1–Z5) & Análise de Carga de Treino — ✅ Concluído
 **Esforço:** M · **Prioridade:** Alta · **Inspiração:** Garmin Connect / Strava Summit
 
 Aprofundar a análise cardiovascular dos treinos com dados de batimentos cardíacos (BLE ou importados via FIT).
 
-- [ ] Configuração de FC Máxima e FC de Repouso no Perfil (com cálculo automático via Tanaka/Karvonen)
-- [ ] Distribuição de tempo e % gasto nas 5 Zonas (Z1 Recuperação, Z2 Base Aeróbica, Z3 Ritmo, Z4 Limiar, Z5 Anaeróbico)
-- [ ] Gráfico de barras horizontais colorido na tela de detalhe da atividade
-- [ ] Cálculo da Carga Cardiovascular (TRIMP - Training Impulse / Training Load)
-- [ ] Indicador de impacto do treino (ex.: "Treino Regenerativo", "Desenvolvimento Aeróbico", "Treino de Limiar")
+- [x] Configuração de FC Máxima e FC de Repouso no Perfil (com cálculo automático via Tanaka/Karvonen)
+- [x] Distribuição de tempo e % gasto nas 5 Zonas (Z1 Recuperação, Z2 Base Aeróbica, Z3 Ritmo, Z4 Limiar, Z5 Anaeróbico)
+- [x] Gráfico de barras horizontais colorido e stacked bar na tela de detalhe da atividade
+- [x] Cálculo da Carga Cardiovascular (TRIMP - Training Impulse / Training Load)
+- [x] Indicador de impacto do treino (ex.: "Treino Regenerativo", "Desenvolvimento Aeróbico", "Treino de Limiar", "Pico Anaeróbico & VO2 Max")
 
 ---
 

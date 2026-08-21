@@ -17,12 +17,15 @@ import {
   Award,
   Database,
   RefreshCw,
+  Heart,
+  Zap,
 } from "lucide-react";
 import {
   getUserProfile,
   refreshEstimatedCalories,
   saveUserProfile,
 } from "@/lib/profile";
+import { calculateTanakaMaxHr } from "@/lib/hr-zones";
 import type { UserProfile, Gear, ActivitySummary } from "@/lib/types";
 import { useI18n } from "@/lib/i18n";
 import { listGearWithUsage, setDefaultGear, type GearWithUsage } from "@/lib/gear";
@@ -47,6 +50,8 @@ export function ProfilePageClient() {
   const [weeklyDistanceKm, setWeeklyDistanceKm] = useState("");
   const [weeklyWorkouts, setWeeklyWorkouts] = useState("");
   const [prMinPaceDistanceKm, setPrMinPaceDistanceKm] = useState("");
+  const [maxHr, setMaxHr] = useState("");
+  const [restingHr, setRestingHr] = useState("");
   const [langSelect, setLangSelect] = useState<"pt" | "en">("pt");
   const { changeLanguage } = useI18n();
 
@@ -86,6 +91,8 @@ export function ProfilePageClient() {
         setWeeklyDistanceKm(p.weeklyDistanceKm != null ? String(p.weeklyDistanceKm) : "");
         setWeeklyWorkouts(p.weeklyWorkouts != null ? String(p.weeklyWorkouts) : "");
         setPrMinPaceDistanceKm(p.prMinPaceDistanceKm != null ? String(p.prMinPaceDistanceKm) : "");
+        setMaxHr(p.maxHr != null ? String(p.maxHr) : "");
+        setRestingHr(p.restingHr != null ? String(p.restingHr) : "");
         setLangSelect(p.language || "pt");
       }
 
@@ -186,6 +193,17 @@ export function ProfilePageClient() {
     }
   };
 
+  const handleCalcTanaka = () => {
+    const ageNum = parseInt(age, 10);
+    if (isNaN(ageNum) || ageNum < 10 || ageNum > 120) {
+      setMessage({ type: "err", text: t("profile.calc_tanaka_need_age") });
+      return;
+    }
+    const calcMax = calculateTanakaMaxHr(ageNum);
+    setMaxHr(String(calcMax));
+    setMessage({ type: "ok", text: `${t("profile.max_hr")}: ${calcMax} bpm (${t("profile.calc_tanaka_btn")})` });
+  };
+
   async function handleSubmitProfile(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
@@ -201,6 +219,8 @@ export function ProfilePageClient() {
       weeklyDistanceKm: weeklyDistanceKm ? parseFloat(weeklyDistanceKm) : undefined,
       weeklyWorkouts: weeklyWorkouts ? parseInt(weeklyWorkouts, 10) : undefined,
       prMinPaceDistanceKm: prMinPaceDistanceKm ? parseFloat(prMinPaceDistanceKm) : undefined,
+      maxHr: maxHr ? parseInt(maxHr, 10) : undefined,
+      restingHr: restingHr ? parseInt(restingHr, 10) : undefined,
       language: langSelect,
     };
 
@@ -234,6 +254,14 @@ export function ProfilePageClient() {
     }
     if (parsed.prMinPaceDistanceKm != null && (parsed.prMinPaceDistanceKm < 1 || parsed.prMinPaceDistanceKm > 100)) {
       setMessage({ type: "err", text: t("profile.val_min_pace") });
+      return;
+    }
+    if (parsed.maxHr != null && (parsed.maxHr < 100 || parsed.maxHr > 240)) {
+      setMessage({ type: "err", text: t("profile.val_max_hr") });
+      return;
+    }
+    if (parsed.restingHr != null && (parsed.restingHr < 30 || parsed.restingHr > 120)) {
+      setMessage({ type: "err", text: t("profile.val_resting_hr") });
       return;
     }
 
@@ -547,6 +575,56 @@ export function ProfilePageClient() {
                       onChange={(e) => setPrMinPaceDistanceKm(e.target.value)}
                       className="profile-input"
                       placeholder={t("profile.min_pace_distance_placeholder")}
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-[var(--border)] pt-5 space-y-4">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Heart size={16} className="text-rose-500" />
+                    {t("profile.heart_rate")}
+                  </h3>
+                  <p className="text-xs text-[var(--muted)]">
+                    {t("profile.heart_rate_sub")}
+                  </p>
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-sm text-[var(--muted)]">
+                        {t("profile.max_hr")}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleCalcTanaka}
+                        className="text-xs font-semibold text-[var(--accent)] hover:underline flex items-center gap-1"
+                      >
+                        <Zap size={12} />
+                        {t("profile.calc_tanaka_btn")}
+                      </button>
+                    </div>
+                    <input
+                      type="number"
+                      min={100}
+                      max={240}
+                      step={1}
+                      value={maxHr}
+                      onChange={(e) => setMaxHr(e.target.value)}
+                      className="profile-input"
+                      placeholder={t("profile.max_hr_placeholder")}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-[var(--muted)] mb-1.5">
+                      {t("profile.resting_hr")}
+                    </label>
+                    <input
+                      type="number"
+                      min={30}
+                      max={120}
+                      step={1}
+                      value={restingHr}
+                      onChange={(e) => setRestingHr(e.target.value)}
+                      className="profile-input"
+                      placeholder={t("profile.resting_hr_placeholder")}
                     />
                   </div>
                 </div>

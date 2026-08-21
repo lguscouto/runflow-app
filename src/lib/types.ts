@@ -13,10 +13,56 @@ export interface UserProfile {
   weeklyWorkouts?: number;
   /** Distância mínima em km para considerar recorde de ritmo (ex: 5). */
   prMinPaceDistanceKm?: number;
+  /** Frequência cardíaca máxima manual (bpm). */
+  maxHr?: number;
+  /** Frequência cardíaca de repouso (bpm). */
+  restingHr?: number;
   /** Idioma preferido do usuário ("pt" ou "en"). */
   language?: "pt" | "en";
   updatedAt: string;
 }
+
+export type HRZoneId = 1 | 2 | 3 | 4 | 5;
+
+export interface HeartRateZone {
+  zone: HRZoneId;
+  nameKey: string;
+  descKey: string;
+  minBpm: number;
+  maxBpm: number;
+  minPct: number;
+  maxPct: number;
+  color: string;
+  bgRgba: string;
+}
+
+export interface ZoneDurationSummary {
+  zone: HeartRateZone;
+  durationSec: number;
+  percent: number;
+}
+
+export type TrainingEffectCategory =
+  | "recovery"
+  | "aerobic_base"
+  | "tempo"
+  | "threshold"
+  | "anaerobic_vo2";
+
+export interface HeartRateZoneAnalysis {
+  maxHr: number;
+  restingHr?: number;
+  avgHr: number;
+  peakHr: number;
+  hasHeartRate: boolean;
+  totalTimeSec: number;
+  zones: ZoneDurationSummary[];
+  dominantZone: HRZoneId | null;
+  trimpScore: number;
+  trainingEffect: TrainingEffectCategory;
+  trainingLoadLabel: "light" | "moderate" | "optimal" | "extreme";
+}
+
 
 export interface TrackPoint {
   lat: number;

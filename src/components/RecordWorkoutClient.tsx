@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   ArrowLeft,
   Pause,
@@ -27,6 +27,7 @@ import { useWakeLock } from "@/hooks/useWakeLock";
 import { estimateActivityCalories } from "@/lib/calories";
 import { getUserProfile } from "@/lib/profile";
 import { listActivities } from "@/lib/activities";
+import { calculateHrZones, getCurrentHrZone } from "@/lib/hr-zones";
 import {
   formatCalories,
   formatDistance,
@@ -106,6 +107,14 @@ export function RecordWorkoutClient() {
     ghostConfig,
     ghostStats,
   } = useWorkoutRecorder();
+
+  const userHrZones = useMemo(() => {
+    return calculateHrZones(profile || undefined);
+  }, [profile]);
+
+  const currentZone = useMemo(() => {
+    return getCurrentHrZone(hrBpm, userHrZones);
+  }, [hrBpm, userHrZones]);
 
   // Fetch past activities for selector when idle
   useEffect(() => {
@@ -470,6 +479,18 @@ export function RecordWorkoutClient() {
                 >
                   {hrBpm} <span className="text-xs text-[var(--muted)] font-semibold">BPM</span>
                 </p>
+                {currentZone && (
+                  <span
+                    style={{
+                      backgroundColor: currentZone.bgRgba,
+                      color: currentZone.color,
+                      borderColor: currentZone.color,
+                    }}
+                    className="mt-1 px-2 py-0.5 rounded-full border text-[10px] font-black"
+                  >
+                    Z{currentZone.zone} • {t(currentZone.nameKey)}
+                  </span>
+                )}
               </div>
             )}
           </div>
@@ -644,14 +665,33 @@ export function RecordWorkoutClient() {
             </div>
 
             {hrBpm !== null && (
-              <div className="stat-card text-center py-4 col-span-2 flex items-center justify-center gap-3 border border-red-500/20 bg-red-500/5 animate-pulse">
-                <Heart size={20} className="text-red-400 fill-red-400 shrink-0" />
-                <div className="text-left">
-                  <p className="text-xs text-[var(--muted)]">{t("record.hr_reading")}</p>
-                  <p className="text-xl font-bold text-red-400 tabular-nums">
-                    {hrBpm} <span className="text-xs font-semibold text-[var(--muted)]">bpm</span>
-                  </p>
+              <div className="stat-card text-center py-4 col-span-2 flex items-center justify-between px-5 border border-rose-500/20 bg-rose-500/5">
+                <div className="flex items-center gap-3">
+                  <Heart size={22} className="text-rose-500 fill-rose-500 animate-pulse shrink-0" />
+                  <div className="text-left">
+                    <p className="text-xs text-[var(--muted)]">{t("record.hr_reading")}</p>
+                    <p className="text-xl font-bold text-rose-500 tabular-nums">
+                      {hrBpm} <span className="text-xs font-semibold text-[var(--muted)]">bpm</span>
+                    </p>
+                  </div>
                 </div>
+                {currentZone && (
+                  <div className="text-right">
+                    <span
+                      style={{
+                        backgroundColor: currentZone.bgRgba,
+                        color: currentZone.color,
+                        borderColor: currentZone.color,
+                      }}
+                      className="px-2.5 py-1 rounded-lg border text-xs font-bold inline-block"
+                    >
+                      Z{currentZone.zone} • {t(currentZone.nameKey)}
+                    </span>
+                    <p className="text-[10px] text-[var(--muted)] mt-0.5 max-w-[150px] truncate">
+                      {t(currentZone.descKey)}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

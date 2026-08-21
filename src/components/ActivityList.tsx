@@ -79,10 +79,6 @@ export function ActivityList({
           <Link
             key={a.id}
             href={`/atividades/ver/?id=${a.id}`}
-            onClick={(e) => {
-              e.preventDefault();
-              router.push(`/atividades/ver/?id=${a.id}`);
-            }}
             className="activity-row cursor-pointer"
           >
             <div>

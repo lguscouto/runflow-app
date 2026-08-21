@@ -55,6 +55,7 @@ import { CorrectElevationButton } from "@/components/CorrectElevationButton";
 import { MergeFitButton } from "@/components/MergeFitButton";
 import { ActivitySplits } from "@/components/ActivitySplits";
 import { SocialShareCardModal } from "@/components/SocialShareCardModal";
+import { HeartRateZonesPanel } from "@/components/HeartRateZonesPanel";
 import { useActivityDetail } from "@/hooks/useActivities";
 import { Box, Map as MapIcon, Video } from "lucide-react";
 
@@ -250,6 +251,8 @@ export function ActivityDetailClient() {
       )}
 
       <ActivityCharts activity={activity} />
+
+      <HeartRateZonesPanel activity={activity} />
 
       <ActivitySplits points={activity.points} />
 
