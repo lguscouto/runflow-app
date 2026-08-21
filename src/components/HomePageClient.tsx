@@ -12,6 +12,10 @@ import { getUserProfile } from "@/lib/profile";
 import { listActivities } from "@/lib/activities";
 import { getPersonalRecords, getPRMap, type PersonalRecords, type PRCategory } from "@/lib/prs";
 import { PersonalRecordsCard } from "@/components/PersonalRecordsCard";
+import { estimateUserVO2Max, calculateRacePredictions } from "@/lib/vo2max";
+import { VO2MaxFitnessCard } from "@/components/VO2MaxFitnessCard";
+import { RacePredictorCard } from "@/components/RacePredictorCard";
+import type { VO2MaxEstimate, RacePrediction } from "@/lib/types";
 import { useI18n } from "@/lib/i18n";
 
 export function HomePageClient() {
@@ -19,6 +23,8 @@ export function HomePageClient() {
   const { stats, recent, loading } = useDashboard();
   const [prs, setPrs] = useState<PersonalRecords | null>(null);
   const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
+  const [vo2Estimate, setVo2Estimate] = useState<VO2MaxEstimate | null>(null);
+  const [racePredictions, setRacePredictions] = useState<RacePrediction[]>([]);
   const [loadingPrs, setLoadingPrs] = useState(true);
   const [profileName, setProfileName] = useState<string | null>(null);
 
@@ -35,8 +41,15 @@ export function HomePageClient() {
         const computedPrs = getPersonalRecords(allActivities, profile);
         setPrs(computedPrs);
         setPrMap(getPRMap(allActivities, computedPrs));
+
+        // Calcular VO2 Max e Previsões de Provas
+        const estimatedVo2 = estimateUserVO2Max(allActivities, profile);
+        setVo2Estimate(estimatedVo2);
+
+        const predictions = calculateRacePredictions(allActivities, profile);
+        setRacePredictions(predictions);
       } catch (err) {
-        console.error("Erro ao calcular recordes pessoais:", err);
+        console.error("Erro ao calcular métricas de performance:", err);
       } finally {
         setLoadingPrs(false);
       }
@@ -89,7 +102,13 @@ export function HomePageClient() {
           <p className="text-sm text-[var(--muted)]">{t("home.loading_records")}</p>
         </div>
       ) : (
-        prs && <PersonalRecordsCard prs={prs} />
+        <>
+          {prs && <PersonalRecordsCard prs={prs} />}
+          {vo2Estimate && <VO2MaxFitnessCard estimate={vo2Estimate} />}
+          {racePredictions.length > 0 && (
+            <RacePredictorCard predictions={racePredictions} />
+          )}
+        </>
       )}
 
       {loading || !stats ? (

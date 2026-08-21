@@ -40,6 +40,7 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 | **19. Zonas de FC & Carga de Treino** | Distribuição Z1-Z5, cálculo TRIMP, efeito do treino e fórmulas Tanaka/Karvonen | ✅ Concluído |
 | **20. Assistente de Voz em Tempo Real** | Audio Cues periódicos com métricas de distância, tempo, ritmo, FC e splits | ✅ Concluído |
 | **21. Auto-Pause Inteligente** | Detecção de paradas em semáforos, tempo em movimento e recálculo de ritmo | ✅ Concluído |
+| **24. Previsão de Provas & VO2 Max Local** | Estimativa de VO2 Max, Idade de Condicionamento e Previsões (5K, 10K, 21K, 42K) | ✅ Concluído |
 
 ---
 
@@ -131,14 +132,15 @@ Permitir que o corredor crie e execute treinos intervalados (tiros, fartlek, pir
 
 ---
 
-### 24. Previsão de Tempo de Prova & Estimativa de VO2 Max Local
+### 24. Previsão de Tempo de Prova & Estimativa de VO2 Max Local — ✅ Concluído
 **Esforço:** M · **Prioridade:** Baixa–Média · **Inspiração:** Garmin Connect / Runalyze
 
 Estimativas científicas de condicionamento e previsões para distâncias populares baseadas no histórico recente.
 
-- [ ] Estimativa local de VO2 Max calculada a partir do ritmo sustentado e FC cardíaca
-- [ ] Previsão de tempo para provas clássicas: **5 km**, **10 km**, **21.1 km (Meia Maratona)** e **42.2 km (Maratona)** usando a fórmula de Peter Riegel
-- [ ] Painel de "Idade de Condicionamento Físico" e curva de evolução ao longo dos meses
+- [x] Estimativa local de VO2 Max calculada a partir do ritmo sustentado e FC cardíaca (Jack Daniels VDOT, Uth HR ratio, Running Economy)
+- [x] Previsão de tempo para provas clássicas: **5 km**, **10 km**, **21.1 km (Meia Maratona)** e **42.2 km (Maratona)** usando a fórmula de Peter Riegel
+- [x] Painel de "Idade de Condicionamento Físico" (Fitness Age) e medidor visual no Dashboard e no Perfil
+- [x] Pontuação de VO2 Max individual calculada e exibida nos detalhes de cada treino
 
 ---
 
@@ -179,5 +181,5 @@ flowchart TD
   F23 --> F10
 ```
 
-*Última atualização: agosto 2026 — Auto-Pause Inteligente & Detecção Automática de Paradas (Feature 21) concluída*
+*Última atualização: agosto 2026 — Previsão de Tempo de Prova & Estimativa de VO2 Max Local (Feature 24) concluída*
 

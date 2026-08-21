@@ -3,15 +3,26 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Flame, Heart, Mountain, Timer, Trophy } from "lucide-react";
+import {
+  ArrowLeft,
+  Flame,
+  Heart,
+  Mountain,
+  Timer,
+  Trophy,
+  Map as MapIcon,
+  Box,
+  Activity as ActivityIcon,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { getUserProfile } from "@/lib/profile";
 import { listActivities } from "@/lib/activities";
 import { getPersonalRecords, getActivityPRs, type PRCategory } from "@/lib/prs";
+import { calculateVO2MaxFromWorkout, classifyVO2Max } from "@/lib/vo2max";
 import { useI18n } from "@/lib/i18n";
 import { getAllStoredGear } from "@/lib/storage";
 import { associateGearToActivity } from "@/lib/gear";
-import type { Gear } from "@/lib/types";
+import type { Gear, UserProfile } from "@/lib/types";
 
 const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
   longestDistance: "prs.longest_distance",
@@ -57,7 +68,6 @@ import { ActivitySplits } from "@/components/ActivitySplits";
 import { SocialShareCardModal } from "@/components/SocialShareCardModal";
 import { HeartRateZonesPanel } from "@/components/HeartRateZonesPanel";
 import { useActivityDetail } from "@/hooks/useActivities";
-import { Box, Map as MapIcon, Video } from "lucide-react";
 
 import {
   formatDate,
@@ -112,6 +122,8 @@ export function ActivityDetailClient() {
     }
   }
 
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+
   useEffect(() => {
     if (!activity) return;
     const activityId = activity.id;
@@ -121,6 +133,9 @@ export function ActivityDetailClient() {
           getUserProfile(),
           listActivities(1000),
         ]);
+        if (profile) {
+          setUserProfile(profile);
+        }
         const prs = getPersonalRecords(allActivities, profile);
         const { isPR, categories } = getActivityPRs(activityId, prs);
         if (isPR) {
@@ -132,6 +147,20 @@ export function ActivityDetailClient() {
     }
     checkPR();
   }, [activity]);
+
+  const workoutVo2 =
+    activity && activity.sport === "running"
+      ? calculateVO2MaxFromWorkout(
+          activity.distanceM,
+          activity.movingTimeSec || activity.durationSec,
+          activity.avgHr,
+          userProfile?.maxHr
+        )
+      : null;
+
+  const vo2Classification = workoutVo2
+    ? classifyVO2Max(workoutVo2, userProfile?.age || 30)
+    : null;
 
   if (!id || notFound) {
     return (
@@ -366,6 +395,26 @@ export function ActivityDetailClient() {
               <p className="text-xl font-bold">
                 {activity.avgHr}
                 {activity.maxHr != null && ` / ${activity.maxHr}`} bpm
+              </p>
+            </div>
+          </div>
+        )}
+        {workoutVo2 && vo2Classification && (
+          <div className="stat-card flex gap-2">
+            <ActivityIcon className="shrink-0 mt-1" size={18} style={{ color: vo2Classification.color }} />
+            <div>
+              <p className="text-sm text-[var(--muted)]">{t("vo2max.workout_score")}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-xl font-bold font-mono" style={{ color: vo2Classification.color }}>
+                  {workoutVo2.toFixed(1)}
+                </p>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: vo2Classification.bgRgba, color: vo2Classification.color }}>
+                  {t(vo2Classification.labelKey)}
+                </span>
+              </div>
+              <p className="text-xs text-[var(--muted)] mt-0.5">
+                {t("vo2max.unit")}
               </p>
             </div>
           </div>

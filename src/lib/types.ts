@@ -108,6 +108,36 @@ export interface HeartRateZoneAnalysis {
   trainingLoadLabel: "light" | "moderate" | "optimal" | "extreme";
 }
 
+export type VO2MaxCategory =
+  | "superior"
+  | "excellent"
+  | "good"
+  | "fair"
+  | "poor";
+
+export interface VO2MaxEstimate {
+  vo2Max: number;
+  category: VO2MaxCategory;
+  fitnessAge: number;
+  chronologicalAge?: number;
+  method: "heart_rate_running" | "hr_ratio" | "vdot_performance" | "estimated";
+  confidence: "high" | "medium" | "low";
+  sampleCount: number;
+  calculatedAt: string;
+}
+
+export type RaceDistanceId = "5k" | "10k" | "half_marathon" | "marathon";
+
+export interface RacePrediction {
+  id: RaceDistanceId;
+  nameKey: string;
+  distanceM: number;
+  predictedTimeSec: number;
+  targetPaceSecKm: number;
+  baseActivityId?: string;
+  baseDistanceM?: number;
+}
+
 
 export interface TrackPoint {
   lat: number;

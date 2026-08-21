@@ -33,6 +33,9 @@ import { DEFAULT_VOICE_COACH_CONFIG } from "@/lib/voice-coach";
 import { DEFAULT_AUTO_PAUSE_CONFIG } from "@/lib/auto-pause";
 import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { AutoPauseModal } from "@/components/AutoPauseModal";
+import { estimateUserVO2Max, calculateRacePredictions } from "@/lib/vo2max";
+import { VO2MaxFitnessCard } from "@/components/VO2MaxFitnessCard";
+import { RacePredictorCard } from "@/components/RacePredictorCard";
 import { useI18n } from "@/lib/i18n";
 import { listGearWithUsage, setDefaultGear, type GearWithUsage } from "@/lib/gear";
 import { putGear, removeGear, getAllStoredActivities } from "@/lib/storage";
@@ -748,6 +751,20 @@ export function ProfilePageClient() {
                   {saving ? t("common.saving") : t("profile.save_btn")}
                 </button>
               </form>
+
+              {(() => {
+                const profileVo2 = estimateUserVO2Max(activities, profile);
+                const profilePredictions = calculateRacePredictions(activities, profile);
+
+                return (
+                  <>
+                    {profileVo2 && <VO2MaxFitnessCard estimate={profileVo2} />}
+                    {profilePredictions.length > 0 && (
+                      <RacePredictorCard predictions={profilePredictions} />
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
 
