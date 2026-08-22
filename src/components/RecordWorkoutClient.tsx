@@ -25,6 +25,7 @@ import {
   PauseCircle,
   Zap,
   Sun,
+  Bike,
 } from "lucide-react";
 import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { AutoPauseModal } from "@/components/AutoPauseModal";
@@ -38,6 +39,7 @@ import { listActivities } from "@/lib/activities";
 import { calculateHrZones, getCurrentHrZone } from "@/lib/hr-zones";
 import { haptics } from "@/lib/haptics";
 import { fireWorkoutCompletedConfetti } from "@/lib/confetti";
+import { listBikesWithUsage, type GearWithUsage } from "@/lib/gear";
 import {
   formatCalories,
   formatDistance,
@@ -98,6 +100,18 @@ export function RecordWorkoutClient() {
   const [selectedWorkout, setSelectedWorkout] = useState<StructuredWorkout | null>(null);
   const [isWorkoutLibraryModalOpen, setIsWorkoutLibraryModalOpen] = useState(false);
   const [isSunMode, setIsSunMode] = useState<boolean>(false);
+  const [bikes, setBikes] = useState<GearWithUsage[]>([]);
+  const [selectedBikeId, setSelectedBikeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    listBikesWithUsage().then((list) => {
+      setBikes(list);
+      const def =
+        list.find((b) => b.isDefaultCycling && b.status === "active") ||
+        list.find((b) => b.status === "active");
+      if (def) setSelectedBikeId(def.id);
+    });
+  }, []);
 
   const {
     status,
@@ -1408,6 +1422,52 @@ export function RecordWorkoutClient() {
         </div>
       )}
 
+      {!isActive && status !== "saving" && sport === "cycling" && (
+        <div className="stat-card border-amber-500/40 bg-[var(--surface)] p-4 space-y-3 shadow-md animate-in fade-in duration-300">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bike className="text-amber-400" size={20} />
+              <div>
+                <h4 className="text-xs font-bold text-white">Bicicleta do Pedal</h4>
+                <p className="text-[11px] text-[var(--muted)]">
+                  Quilometragem e desgaste mecânico serão registrados nesta bike
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/perfil/"
+              className="text-xs text-amber-400 hover:underline font-semibold flex items-center gap-1"
+            >
+              Garagem ➔
+            </Link>
+          </div>
+
+          {bikes.length === 0 ? (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center justify-between">
+              <span>Nenhuma bike na Garagem.</span>
+              <Link href="/perfil/" className="font-bold underline">
+                Cadastrar Bike
+              </Link>
+            </div>
+          ) : (
+            <select
+              value={selectedBikeId || ""}
+              onChange={(e) => {
+                haptics.light();
+                setSelectedBikeId(e.target.value);
+              }}
+              className="profile-input text-xs bg-[var(--surface-hover)] text-white border-amber-500/30 font-semibold"
+            >
+              {bikes.map((b) => (
+                <option key={b.id} value={b.id}>
+                  🚲 {b.name} {b.brand ? `(${b.brand})` : ""} · {(b.accumulatedDistanceM / 1000).toFixed(1)} km {b.isDefaultCycling ? "⭐ (Padrão)" : ""}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      )}
+
       {!isActive && status !== "saving" && (
         <div className="stat-card space-y-4">
           <p className="text-sm text-[var(--muted)]">{t("record.activity_type")}</p>
@@ -1416,7 +1476,10 @@ export function RecordWorkoutClient() {
               <button
                 key={s}
                 type="button"
-                onClick={() => setSport(s)}
+                onClick={() => {
+                  haptics.light();
+                  setSport(s);
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                   sport === s
                     ? "bg-[var(--accent)] border-[var(--accent)] text-white"

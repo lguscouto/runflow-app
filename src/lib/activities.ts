@@ -45,7 +45,18 @@ export async function saveActivity(
   const calories = await resolveCalories(parsed);
 
   const gears = await getAllStoredGear();
-  const defaultGear = gears.find((g) => g.isDefault && g.status === "active");
+  let defaultGear = null;
+  if (parsed.sport === "cycling") {
+    defaultGear =
+      gears.find((g) => g.type === "bike" && g.isDefaultCycling && g.status === "active") ||
+      gears.find((g) => g.type === "bike" && g.status === "active") ||
+      null;
+  } else {
+    defaultGear =
+      gears.find((g) => (g.type || "shoes") === "shoes" && g.isDefault && g.status === "active") ||
+      gears.find((g) => (g.type || "shoes") === "shoes" && g.status === "active") ||
+      null;
+  }
   const gearId = defaultGear ? defaultGear.id : null;
 
   const stored: StoredActivity = {

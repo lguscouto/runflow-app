@@ -29,18 +29,18 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 ---
 
 ### 1. Garagem de Bicicletas & Manutenção Preventiva (Bike Garage & Components)
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava Gear / ProBikeGarage
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava Gear / ProBikeGarage · **Status:** ✅ Concluído
 
 Evoluir o cadastro de equipamentos para uma Garagem Completa de Bicicletas com controle de desgaste de componentes mecânicos.
 
-- [ ] Cadastro de Bikes: Tipos (Speed / Road, MTB, Gravel, Urbana, E-Bike, Dobrável), Marca, Modelo, Ano, Peso da bike (kg) e Foto/Ícone
-- [ ] Rastreamento de componentes com limite de vida útil (km) e alertas preventivos:
+- [x] Cadastro de Bikes: Tipos (Speed / Road, MTB, Gravel, Urbana, E-Bike, Dobrável), Marca, Modelo, Ano, Peso da bike (kg) e Foto/Ícone
+- [x] Rastreamento de componentes com limite de vida útil (km) e alertas preventivos:
   - Corrente (ex.: alerta de troca com 2.500 km)
   - Pneus dianteiro e traseiro (ex.: 4.000 km)
   - Pastilhas/Sapatas de freio (ex.: 3.000 km)
   - Fluido / Sangria de freios e Revisão Geral (ex.: 6 meses / 5.000 km)
-- [ ] Associação da bike padrão para pedais e transferência de quilometragem automática
-- [ ] Hodômetro acumulado e histórico de manutenção por bicicleta
+- [x] Associação da bike padrão para pedais e transferência de quilometragem automática
+- [x] Hodômetro acumulado e histórico de manutenção por bicicleta
 
 ---
 

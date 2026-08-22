@@ -21,6 +21,7 @@ import {
   Zap,
   Headphones,
   PauseCircle,
+  Bike,
 } from "lucide-react";
 import {
   getUserProfile,
@@ -43,6 +44,8 @@ import { calculateAchievements, type Achievement } from "@/lib/achievements";
 import { v4 as uuidv4 } from "uuid";
 import { exportBackup, importBackup } from "@/lib/backup";
 import { SyncPanel } from "@/components/SyncPanel";
+import { BikeGarageManager } from "@/components/BikeGarageManager";
+import { haptics } from "@/lib/haptics";
 
 export function ProfilePageClient() {
   const { t, language } = useI18n();
@@ -79,6 +82,7 @@ export function ProfilePageClient() {
 
   // Gear States
   const [gears, setGears] = useState<GearWithUsage[]>([]);
+  const [gearSubTab, setGearSubTab] = useState<"bikes" | "shoes">("bikes");
   const [showAddGearForm, setShowAddGearForm] = useState(false);
   const [gearName, setGearName] = useState("");
   const [gearBrand, setGearBrand] = useState("");
@@ -311,12 +315,13 @@ export function ProfilePageClient() {
 
     const newGear: Gear = {
       id: uuidv4(),
+      type: "shoes",
       name: gearName.trim(),
       brand: gearBrand.trim() || undefined,
       initialDistanceM: initialKm * 1000,
       maxDistanceM: maxKm * 1000,
       status: "active",
-      isDefault: gears.length === 0, // Auto-default if first gear
+      isDefault: gears.filter((g) => (g.type || "shoes") === "shoes").length === 0, // Auto-default if first shoe
       createdAt: new Date().toISOString(),
     };
 
@@ -769,224 +774,320 @@ export function ProfilePageClient() {
           )}
 
           {/* TAB 2: Gear Management */}
-          {activeTab === "gear" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold">{t("gear.title")}</h2>
-                <button
-                  onClick={() => setShowAddGearForm(!showAddGearForm)}
-                  className="btn-primary py-2 px-3 text-xs"
-                >
-                  {showAddGearForm ? t("common.cancel") : (
-                    <>
-                      <Plus size={14} />
-                      {t("gear.add_btn")}
-                    </>
-                  )}
-                </button>
-              </div>
+          {activeTab === "gear" && (() => {
+            const bikesList = gears.filter((g) => g.type === "bike");
+            const shoesList = gears.filter((g) => (g.type || "shoes") === "shoes");
 
-              {showAddGearForm && (
-                <form onSubmit={handleAddGear} className="stat-card space-y-4 border-[var(--accent)]/40 bg-[var(--surface-hover)]">
-                  <h3 className="font-bold text-sm">{t("gear.add_btn")}</h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-[var(--muted)] mb-1">
-                        {t("gear.name")} *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={gearName}
-                        onChange={(e) => setGearName(e.target.value)}
-                        placeholder={t("gear.name_placeholder")}
-                        className="profile-input text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[var(--muted)] mb-1">
-                        {t("gear.brand")}
-                      </label>
-                      <input
-                        type="text"
-                        value={gearBrand}
-                        onChange={(e) => setGearBrand(e.target.value)}
-                        placeholder={t("gear.brand_placeholder")}
-                        className="profile-input text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-[var(--muted)] mb-1">
-                        {t("gear.initial_distance")}
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        value={gearInitialDistanceKm}
-                        onChange={(e) => setGearInitialDistanceKm(e.target.value)}
-                        placeholder="0.0"
-                        className="profile-input text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-[var(--muted)] mb-1">
-                        {t("gear.max_distance")}
-                      </label>
-                      <input
-                        type="number"
-                        min={100}
-                        step={50}
-                        value={gearMaxDistanceKm}
-                        onChange={(e) => setGearMaxDistanceKm(e.target.value)}
-                        placeholder="800"
-                        className="profile-input text-sm"
-                      />
-                      <span className="text-[10px] text-[var(--muted)] block mt-0.5">
-                        {t("gear.max_distance_sub")}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowAddGearForm(false)}
-                      className="btn-ghost py-1.5 px-3 text-xs"
-                    >
-                      {t("common.cancel")}
-                    </button>
-                    <button type="submit" className="btn-primary py-1.5 px-3 text-xs">
-                      {t("common.save")}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {gears.length === 0 ? (
-                <div className="stat-card text-center py-8 text-[var(--muted)]">
-                  <p>{t("gear.no_data")}</p>
+            return (
+              <div className="space-y-6">
+                {/* Segmented Sub-Tab Switch (Bikes vs Shoes) */}
+                <div className="flex p-1 bg-[var(--surface)] border border-[var(--border)] rounded-2xl max-w-md mx-auto sm:mx-0 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.light();
+                      setGearSubTab("bikes");
+                    }}
+                    className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                      gearSubTab === "bikes"
+                        ? "bg-amber-500 text-black shadow-md font-extrabold"
+                        : "text-[var(--muted)] hover:text-white"
+                    }`}
+                  >
+                    <Bike size={16} />
+                    <span>
+                      {t("profile.tab_bikes")} ({bikesList.length})
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      haptics.light();
+                      setGearSubTab("shoes");
+                    }}
+                    className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+                      gearSubTab === "shoes"
+                        ? "bg-[var(--accent)] text-white shadow-md font-extrabold"
+                        : "text-[var(--muted)] hover:text-white"
+                    }`}
+                  >
+                    <Award size={16} />
+                    <span>
+                      {t("profile.tab_shoes")} ({shoesList.length})
+                    </span>
+                  </button>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {gears.map((g) => {
-                    const maxM = g.maxDistanceM || 800000;
-                    const wearPercentage = Math.min(100, Math.round((g.accumulatedDistanceM / maxM) * 100));
-                    const wearExceeded = g.accumulatedDistanceM >= maxM;
 
-                    return (
-                      <div
-                        key={g.id}
-                        className={`stat-card flex flex-col gap-4 border transition-all ${
-                          g.status === "retired"
-                            ? "opacity-60 border-[var(--border)] bg-[var(--surface)]/50"
-                            : g.isDefault
-                            ? "border-[var(--accent)] bg-[var(--surface-hover)] shadow-md"
-                            : "border-[var(--border)]"
-                        }`}
+                {/* Sub-Tab 1: Bike Garage Manager */}
+                {gearSubTab === "bikes" && (
+                  <BikeGarageManager
+                    bikes={bikesList}
+                    onRefresh={refreshData}
+                    setMessage={setMessage}
+                  />
+                )}
+
+                {/* Sub-Tab 2: Running Shoes Manager */}
+                {gearSubTab === "shoes" && (
+                  <div className="space-y-6 animate-in fade-in duration-300">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h2 className="text-lg font-bold">{t("gear.title")}</h2>
+                        <p className="text-xs text-[var(--muted)] mt-0.5">
+                          {t("gear.subtitle")}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          haptics.light();
+                          setShowAddGearForm(!showAddGearForm);
+                        }}
+                        className="btn-primary py-2 px-3 text-xs flex items-center gap-1.5"
                       >
-                        <div className="flex justify-between items-start">
+                        {showAddGearForm ? (
+                          t("common.cancel")
+                        ) : (
+                          <>
+                            <Plus size={14} />
+                            {t("gear.add_btn")}
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {showAddGearForm && (
+                      <form
+                        onSubmit={handleAddGear}
+                        className="stat-card space-y-4 border-[var(--accent)]/40 bg-[var(--surface-hover)] shadow-lg animate-in fade-in duration-300"
+                      >
+                        <h3 className="font-bold text-sm">{t("gear.add_btn")}</h3>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-bold text-base">{g.name}</h4>
-                              {g.brand && (
-                                <span className="text-xs px-2 py-0.5 rounded bg-[var(--border)] text-[var(--muted)] font-medium">
-                                  {g.brand}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-[10px] text-[var(--muted)] mt-0.5">
-                              {t("gear.initial")}: {(g.initialDistanceM / 1000).toFixed(1)} km
-                            </p>
+                            <label className="block text-xs text-[var(--muted)] mb-1">
+                              {t("gear.name")} *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={gearName}
+                              onChange={(e) => setGearName(e.target.value)}
+                              placeholder={t("gear.name_placeholder")}
+                              className="profile-input text-sm"
+                            />
                           </div>
-
-                          <div className="flex items-center gap-1.5">
-                            {g.isDefault && g.status === "active" && (
-                              <span className="text-xs bg-[var(--accent-soft)] text-[var(--accent)] px-2 py-0.5 rounded-full font-semibold border border-[var(--accent)]/30">
-                                {t("gear.default")}
-                              </span>
-                            )}
-                            <span
-                              className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
-                                g.status === "active"
-                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                  : "bg-red-500/10 text-red-400 border border-red-500/20"
-                              }`}
-                            >
-                              {g.status === "active" ? t("gear.status_active") : t("gear.status_retired")}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Wear progression bar */}
-                        <div>
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="text-[var(--muted)] font-medium">
-                              {t("gear.wear")} ({wearPercentage}%)
-                            </span>
-                            <span className={`font-semibold ${wearExceeded ? "text-red-400" : "text-[var(--text)]"}`}>
-                              {(g.accumulatedDistanceM / 1000).toFixed(1)} / {(maxM / 1000).toFixed(0)} km
-                            </span>
-                          </div>
-                          <div className="w-full bg-[var(--bg)] h-2 rounded-full overflow-hidden border border-[var(--border)]">
-                            <div
-                              style={{ width: `${wearPercentage}%` }}
-                              className={`h-full rounded-full transition-all duration-500 ${
-                                wearExceeded ? "bg-red-500" : wearPercentage >= 80 ? "bg-amber-500" : "bg-[var(--accent)]"
-                              }`}
+                          <div>
+                            <label className="block text-xs text-[var(--muted)] mb-1">
+                              {t("gear.brand")}
+                            </label>
+                            <input
+                              type="text"
+                              value={gearBrand}
+                              onChange={(e) => setGearBrand(e.target.value)}
+                              placeholder={t("gear.brand_placeholder")}
+                              className="profile-input text-sm"
                             />
                           </div>
                         </div>
 
-                        {/* Gear Actions */}
-                        <div className="flex justify-between items-center border-t border-[var(--border)] pt-3 mt-1">
-                          <div className="flex gap-2">
-                            {g.status === "active" && !g.isDefault && (
-                              <button
-                                onClick={() => handleSetDefaultGear(g.id)}
-                                className="btn-ghost py-1 px-2.5 text-xs inline-flex items-center gap-1"
-                              >
-                                {t("gear.set_default")}
-                              </button>
-                            )}
-
-                            <button
-                              onClick={() => handleToggleGearStatus(g)}
-                              className="btn-ghost py-1 px-2.5 text-xs inline-flex items-center gap-1 hover:bg-amber-500/10"
-                            >
-                              {g.status === "active" ? (
-                                <>
-                                  <Archive size={12} />
-                                  {t("gear.retire")}
-                                </>
-                              ) : (
-                                <>
-                                  <RotateCcw size={12} />
-                                  {t("gear.activate")}
-                                </>
-                              )}
-                            </button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs text-[var(--muted)] mb-1">
+                              {t("gear.initial_distance")}
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              step={0.1}
+                              value={gearInitialDistanceKm}
+                              onChange={(e) =>
+                                setGearInitialDistanceKm(e.target.value)
+                              }
+                              placeholder="0.0"
+                              className="profile-input text-sm"
+                            />
                           </div>
+                          <div>
+                            <label className="block text-xs text-[var(--muted)] mb-1">
+                              {t("gear.max_distance")}
+                            </label>
+                            <input
+                              type="number"
+                              min={100}
+                              step={50}
+                              value={gearMaxDistanceKm}
+                              onChange={(e) =>
+                                setGearMaxDistanceKm(e.target.value)
+                              }
+                              placeholder="800"
+                              className="profile-input text-sm"
+                            />
+                            <span className="text-[10px] text-[var(--muted)] block mt-0.5">
+                              {t("gear.max_distance_sub")}
+                            </span>
+                          </div>
+                        </div>
 
+                        <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border)]">
                           <button
-                            onClick={() => handleDeleteGear(g.id)}
-                            className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
-                            title={t("gear.delete")}
+                            type="button"
+                            onClick={() => setShowAddGearForm(false)}
+                            className="btn-ghost py-1.5 px-3 text-xs"
                           >
-                            <Trash2 size={15} />
+                            {t("common.cancel")}
+                          </button>
+                          <button
+                            type="submit"
+                            className="btn-primary py-1.5 px-3 text-xs"
+                          >
+                            {t("common.save")}
                           </button>
                         </div>
+                      </form>
+                    )}
+
+                    {shoesList.length === 0 ? (
+                      <div className="stat-card text-center py-8 text-[var(--muted)] border border-dashed border-[var(--border)]">
+                        <p>{t("gear.no_data")}</p>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {shoesList.map((g) => {
+                          const maxM = g.maxDistanceM || 800000;
+                          const wearPercentage = Math.min(
+                            100,
+                            Math.round((g.accumulatedDistanceM / maxM) * 100)
+                          );
+                          const wearExceeded = g.accumulatedDistanceM >= maxM;
+
+                          return (
+                            <div
+                              key={g.id}
+                              className={`stat-card flex flex-col gap-4 border transition-all ${
+                                g.status === "retired"
+                                  ? "opacity-60 border-[var(--border)] bg-[var(--surface)]/50"
+                                  : g.isDefault
+                                  ? "border-[var(--accent)] bg-[var(--surface-hover)] shadow-md"
+                                  : "border-[var(--border)]"
+                              }`}
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-bold text-base">
+                                      {g.name}
+                                    </h4>
+                                    {g.brand && (
+                                      <span className="text-xs px-2 py-0.5 rounded bg-[var(--border)] text-[var(--muted)] font-medium">
+                                        {g.brand}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-[var(--muted)] mt-0.5">
+                                    {t("gear.initial")}:{" "}
+                                    {(g.initialDistanceM / 1000).toFixed(1)} km
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  {g.isDefault && g.status === "active" && (
+                                    <span className="text-xs bg-[var(--accent-soft)] text-[var(--accent)] px-2 py-0.5 rounded-full font-semibold border border-[var(--accent)]/30">
+                                      {t("gear.default")}
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
+                                      g.status === "active"
+                                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                        : "bg-red-500/10 text-red-400 border border-red-500/20"
+                                    }`}
+                                  >
+                                    {g.status === "active"
+                                      ? t("gear.status_active")
+                                      : t("gear.status_retired")}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Wear progression bar */}
+                              <div>
+                                <div className="flex justify-between text-xs mb-1">
+                                  <span className="text-[var(--muted)] font-medium">
+                                    {t("gear.wear")} ({wearPercentage}%)
+                                  </span>
+                                  <span
+                                    className={`font-semibold ${
+                                      wearExceeded
+                                        ? "text-red-400"
+                                        : "text-[var(--text)]"
+                                    }`}
+                                  >
+                                    {(g.accumulatedDistanceM / 1000).toFixed(1)}{" "}
+                                    / {(maxM / 1000).toFixed(0)} km
+                                  </span>
+                                </div>
+                                <div className="w-full bg-[var(--bg)] h-2 rounded-full overflow-hidden border border-[var(--border)]">
+                                  <div
+                                    style={{ width: `${wearPercentage}%` }}
+                                    className={`h-full rounded-full transition-all duration-500 ${
+                                      wearExceeded
+                                        ? "bg-red-500"
+                                        : wearPercentage >= 80
+                                        ? "bg-amber-500"
+                                        : "bg-[var(--accent)]"
+                                    }`}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Gear Actions */}
+                              <div className="flex justify-between items-center border-t border-[var(--border)] pt-3 mt-1">
+                                <div className="flex gap-2">
+                                  {g.status === "active" && !g.isDefault && (
+                                    <button
+                                      onClick={() => handleSetDefaultGear(g.id)}
+                                      className="btn-ghost py-1 px-2.5 text-xs inline-flex items-center gap-1"
+                                    >
+                                      {t("gear.set_default")}
+                                    </button>
+                                  )}
+
+                                  <button
+                                    onClick={() => handleToggleGearStatus(g)}
+                                    className="btn-ghost py-1 px-2.5 text-xs inline-flex items-center gap-1 hover:bg-amber-500/10"
+                                  >
+                                    {g.status === "active" ? (
+                                      <>
+                                        <Archive size={12} />
+                                        {t("gear.retire")}
+                                      </>
+                                    ) : (
+                                      <>
+                                        <RotateCcw size={12} />
+                                        {t("gear.activate")}
+                                      </>
+                                    )}
+                                  </button>
+                                </div>
+
+                                <button
+                                  onClick={() => handleDeleteGear(g.id)}
+                                  className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
+                                  title={t("gear.delete")}
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* TAB 3: Achievements Grid */}
           {activeTab === "achievements" && (

@@ -5,12 +5,14 @@ import { distanceFromPoints, elevationGainFromPoints, haversineM } from "./geo";
 import { computeMovingTimeFromPoints } from "./auto-pause";
 
 const MIN_ACCURACY_M = 80;
-const MIN_SEGMENT_M = 4;
-const MAX_RUN_SPEED_MS = 12; // ~43 km/h — filtra saltos GPS
+const MIN_SEGMENT_M = 3;
+const MAX_RUN_SPEED_MS = 12; // ~43 km/h para corrida/caminhada
+const MAX_CYCLING_SPEED_MS = 32; // ~115 km/h para bike (descidas rápidas)
 
 export function shouldAcceptPoint(
   points: TrackPoint[],
-  candidate: TrackPoint
+  candidate: TrackPoint,
+  sport: Sport = "running"
 ): boolean {
   if (candidate.lat == null || candidate.lng == null) return false;
 
@@ -23,7 +25,8 @@ export function shouldAcceptPoint(
       ? (candidate.timestamp.getTime() - last.timestamp.getTime()) / 1000
       : 0;
 
-  if (dt > 0 && dist / dt > MAX_RUN_SPEED_MS) return false;
+  const maxSpeedMs = sport === "cycling" ? MAX_CYCLING_SPEED_MS : MAX_RUN_SPEED_MS;
+  if (dt > 0 && dist / dt > maxSpeedMs) return false;
   if (dist < MIN_SEGMENT_M && points.length > 0) return false;
 
   return true;

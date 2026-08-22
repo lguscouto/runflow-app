@@ -70,7 +70,14 @@ export function useWorkoutRecorder() {
   const { t, language } = useI18n();
 
   const [status, setStatus] = useState<RecorderStatus>("idle");
-  const [sport, setSport] = useState<Sport>("running");
+  const [sport, setSportState] = useState<Sport>("running");
+  const sportRef = useRef<Sport>("running");
+
+  const setSport = useCallback((s: Sport) => {
+    setSportState(s);
+    sportRef.current = s;
+  }, []);
+
   const [points, setPoints] = useState<TrackPoint[]>([]);
   const [stats, setStats] = useState<RecorderStats>({
     elapsedSec: 0,
@@ -619,7 +626,7 @@ export function useWorkoutRecorder() {
         hr: currentHrRef.current ?? undefined,
       };
 
-      if (!shouldAcceptPoint(pointsRef.current, p)) {
+      if (!shouldAcceptPoint(pointsRef.current, p, sportRef.current)) {
         return;
       }
 

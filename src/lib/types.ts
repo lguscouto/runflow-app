@@ -194,14 +194,67 @@ export interface ActivityDetail extends ActivitySummary {
   points: TrackPoint[];
 }
 
+export type GearType = "shoes" | "bike";
+
+export type BikeType =
+  | "road"
+  | "mtb"
+  | "gravel"
+  | "urban"
+  | "ebike"
+  | "tt"
+  | "other";
+
+export type BikeComponentType =
+  | "chain"
+  | "front_tire"
+  | "rear_tire"
+  | "brake_pads"
+  | "tubeless_sealant"
+  | "cables"
+  | "general_service"
+  | "custom";
+
+export interface BikeComponentMaintenanceLog {
+  id: string;
+  replacedAt: string;
+  odometerKm: number;
+  notes?: string;
+}
+
+export interface BikeComponent {
+  id: string;
+  name: string;
+  type: BikeComponentType;
+  brandModel?: string;
+  /** Hodômetro da bike (em metros) no momento em que a peça foi instalada */
+  installedDistanceM: number;
+  /** Limite máximo recomendado em metros antes da próxima troca/revisão */
+  maxDistanceM: number;
+  installedAt: string;
+  lastServiceAt?: string;
+  notes?: string;
+  maintenanceHistory?: BikeComponentMaintenanceLog[];
+}
+
 export interface Gear {
   id: string;
   name: string;
   brand?: string;
+  model?: string;
+  type?: GearType; // "shoes" (default) ou "bike"
+  bikeType?: BikeType;
+  /** Peso da bike em kg (essencial para cálculo de potência em Watts) */
+  weightKg?: number;
+  /** Tamanho do aro/pneu (ex: 700x28c, 29x2.25) */
+  wheelSize?: string;
+  /** Componentes mecânicos rastreados */
+  components?: BikeComponent[];
   initialDistanceM: number;
   maxDistanceM?: number;
   status: "active" | "retired";
-  isDefault: boolean;
+  isDefault: boolean; // default para corrida
+  isDefaultCycling?: boolean; // default para ciclismo
   notes?: string;
   createdAt: string;
 }

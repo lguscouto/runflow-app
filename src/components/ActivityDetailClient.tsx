@@ -181,8 +181,13 @@ export function ActivityDetailClient() {
     return <p className="text-[var(--muted)]">{t("detail.loading")}</p>;
   }
 
+  const isCycling = activity.sport === "cycling";
   const associatedGear = allGears.find((g) => g.id === activityGearId);
-  const dropdownGears = allGears.filter((g) => g.status === "active" || g.id === activityGearId);
+  const dropdownGears = allGears.filter(
+    (g) =>
+      (g.status === "active" || g.id === activityGearId) &&
+      (isCycling ? g.type === "bike" : (g.type || "shoes") === "shoes")
+  );
 
   return (
     <div className="space-y-6">
@@ -296,16 +301,34 @@ export function ActivityDetailClient() {
       {/* Gear Selector Section */}
       <div className="stat-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-[var(--border)] bg-[var(--surface)]">
         <div className="flex items-center gap-3">
-          <span className="w-10 h-10 rounded-xl bg-[var(--accent-soft)] flex items-center justify-center text-xl shrink-0">
-            👟
+          <span
+            className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${
+              isCycling
+                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                : "bg-[var(--accent-soft)]"
+            }`}
+          >
+            {isCycling ? "🚲" : "👟"}
           </span>
           <div>
-            <h3 className="text-sm font-semibold text-[var(--muted)]">{t("detail.gear")}</h3>
-            <p className="text-base font-bold">
+            <h3 className="text-sm font-semibold text-[var(--muted)]">
+              {isCycling ? "Bicicleta Utilizada" : t("detail.gear")}
+            </h3>
+            <p className="text-base font-bold text-white">
               {associatedGear ? (
                 <>
                   {associatedGear.name}
                   {associatedGear.brand && ` (${associatedGear.brand})`}
+                  {associatedGear.weightKg != null && (
+                    <span className="text-xs text-amber-400 font-normal ml-2">
+                      · {associatedGear.weightKg} kg
+                    </span>
+                  )}
+                  {associatedGear.wheelSize && (
+                    <span className="text-xs text-[var(--muted)] font-normal ml-1">
+                      · {associatedGear.wheelSize}
+                    </span>
+                  )}
                 </>
               ) : (
                 t("detail.gear_none")
@@ -318,11 +341,14 @@ export function ActivityDetailClient() {
           <select
             value={activityGearId}
             onChange={(e) => handleGearChange(e.target.value)}
-            className="profile-input bg-[var(--bg)] text-[var(--text)] border-[var(--border)] text-sm py-1.5 px-3 max-w-[200px]"
+            className="profile-input bg-[var(--bg)] text-[var(--text)] border-[var(--border)] text-sm py-1.5 px-3 max-w-[220px]"
           >
-            <option value="">-- {t("detail.gear_select")} --</option>
+            <option value="">
+              -- {isCycling ? "Selecionar Bike" : t("detail.gear_select")} --
+            </option>
             {dropdownGears.map((g) => (
               <option key={g.id} value={g.id}>
+                {g.type === "bike" ? "🚲 " : "👟 "}
                 {g.name} {g.brand ? `(${g.brand})` : ""}
               </option>
             ))}
