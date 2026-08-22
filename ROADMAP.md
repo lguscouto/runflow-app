@@ -71,16 +71,21 @@ Transformar o smartphone em um ciclocomputador profissional para fixação no gu
 
 ---
 
-### 4. Conexão com Sensores BLE de Ciclismo (Cadência, Velocidade & Potência)
+### 4. Conexão com Sensores BLE de Ciclismo (Cadência, Velocidade & Potência) — ✅ Concluído
 **Esforço:** L · **Prioridade:** Média–Alta · **Inspiração:** Garmin Edge / Wahoo
 
-Comunicação direta com sensores Bluetooth Low Energy específicos de bicicleta sem necessidade de internet.
+Comunicação direta com sensores Bluetooth Low Energy específicos de bicicleta sem necessidade de internet via `@capacitor-community/bluetooth-le`.
 
-- [ ] Suporte ao serviço BLE padrão de **Cycling Speed and Cadence (CSCS - 0x1816)**:
-  - Sensor de Cadência de Pedivela (RPM - Rotações por Minuto)
-  - Sensor de Velocidade de Roda/Cubo (com calibração de circunferência do pneu em mm)
-- [ ] Suporte preliminar ao serviço BLE de **Cycling Power (CPS - 0x1818)** para medidores de potência (Power Meters)
-- [ ] Telemetria de cadência e potência em tempo real no HUD e gravação nos trackpoints
+- [x] Suporte ao serviço BLE padrão de **Cycling Speed and Cadence (CSCS - 0x1816)**:
+  - Sensor de Cadência de Pedivela (RPM - Rotações por Minuto) com parser stateful (`CSCParser`)
+  - Sensor de Velocidade de Roda/Cubo (com suporte a cálculo de deltas de revolução e rollover uint16/uint32)
+- [x] Suporte completo ao serviço BLE de **Cycling Power (CPS - 0x1818)** para medidores de potência (Power Meters):
+  - Potência Instantânea em Watts com parser stateful (`CyclingPowerParser`)
+  - Cadência integrada de pedivelas com medidor de potência (Crank Revolution data)
+  - Prioridade automática: Potência real do sensor > Potência estimada por física
+- [x] Cards visuais dedicados de pareamento BLE na tela de pré-gravação (somente para Ciclismo)
+- [x] Telemetria de cadência e potência em tempo real no Ciclocomputador HUD (Retrato & Paisagem) com badges de status e fonte
+- [x] Gravação e persistência de RPM e Watts nos trackpoints e resumo consolidado pós-pedal (`avgCadenceRpm`, `maxCadenceRpm`, `avgWatts`, `maxWatts`)
 
 ---
 

@@ -26,6 +26,7 @@ import {
   Zap,
   Sun,
   Bike,
+  RefreshCw,
 } from "lucide-react";
 import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { AutoPauseModal } from "@/components/AutoPauseModal";
@@ -139,6 +140,17 @@ export function RecordWorkoutClient() {
     hrSupported,
     connectHr,
     disconnectHr,
+    cscStatus,
+    cscCadenceRpm,
+    cscDeviceName,
+    connectCsc,
+    disconnectCsc,
+    powerStatus,
+    powerWatts,
+    powerDeviceName,
+    powerCadenceRpm,
+    connectPower,
+    disconnectPower,
     ghostConfig,
     ghostStats,
     voiceCoachConfig,
@@ -455,6 +467,8 @@ export function RecordWorkoutClient() {
           manualLaps={manualLaps}
           currentLapNumber={currentLapNumber}
           lastCompletedLap={lastCompletedLap}
+          cadenceRpm={cscCadenceRpm ?? powerCadenceRpm}
+          powerSource={stats.powerSource}
           onPause={handlePause}
           onResume={handleResume}
           onStop={handleStop}
@@ -1181,6 +1195,136 @@ export function RecordWorkoutClient() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Cadence Sensor (CSC) Card — Cycling Only */}
+      {!isActive && status !== "saving" && sport === "cycling" && hrSupported && (
+        <div className="stat-card space-y-4 border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center gap-2">
+            <RefreshCw size={18} className="text-cyan-400" />
+            <h3 className="text-sm font-semibold text-[var(--text)]">{t("record.csc_sensor")}</h3>
+          </div>
+          <p className="text-xs text-[var(--muted)] -mt-2">
+            {t("record.csc_sensor_sub")}
+          </p>
+
+          <div className="flex items-center justify-between gap-3 p-1">
+            {cscStatus === "disconnected" && (
+              <button
+                type="button"
+                onClick={connectCsc}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--text)] hover:bg-white/10 transition-colors"
+              >
+                <RefreshCw size={14} className="text-cyan-400" />
+                {t("record.connect_csc")}
+              </button>
+            )}
+
+            {cscStatus === "connecting" && (
+              <button
+                type="button"
+                disabled
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--muted)]"
+              >
+                <Loader2 size={14} className="animate-spin" />
+                {t("record.connecting_csc")}
+              </button>
+            )}
+
+            {cscStatus === "connected" && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                  </span>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-[var(--text)] leading-tight">
+                      {cscDeviceName}
+                    </p>
+                    <p className="text-xs text-cyan-400 font-semibold flex items-center gap-1 mt-0.5">
+                      <RefreshCw size={10} className="animate-spin" style={{ animationDuration: "2s" }} />
+                      {cscCadenceRpm !== null ? `${cscCadenceRpm} RPM` : "--- RPM"}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={disconnectCsc}
+                  className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
+                >
+                  {t("record.disconnect_csc")}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Power Meter Card — Cycling Only */}
+      {!isActive && status !== "saving" && sport === "cycling" && hrSupported && (
+        <div className="stat-card space-y-4 border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex items-center gap-2">
+            <Zap size={18} className="text-amber-400" />
+            <h3 className="text-sm font-semibold text-[var(--text)]">{t("record.power_sensor")}</h3>
+          </div>
+          <p className="text-xs text-[var(--muted)] -mt-2">
+            {t("record.power_sensor_sub")}
+          </p>
+
+          <div className="flex items-center justify-between gap-3 p-1">
+            {powerStatus === "disconnected" && (
+              <button
+                type="button"
+                onClick={connectPower}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--text)] hover:bg-white/10 transition-colors"
+              >
+                <Zap size={14} className="text-amber-400" />
+                {t("record.connect_power")}
+              </button>
+            )}
+
+            {powerStatus === "connecting" && (
+              <button
+                type="button"
+                disabled
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--muted)]"
+              >
+                <Loader2 size={14} className="animate-spin" />
+                {t("record.connecting_power")}
+              </button>
+            )}
+
+            {powerStatus === "connected" && (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                  </span>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-[var(--text)] leading-tight">
+                      {powerDeviceName}
+                    </p>
+                    <p className="text-xs text-amber-400 font-semibold flex items-center gap-1 mt-0.5">
+                      <Zap size={10} className="fill-amber-400" />
+                      {powerWatts !== null ? `${powerWatts} W` : "--- W"}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={disconnectPower}
+                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 border border-amber-500/20 bg-amber-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
+                >
+                  {t("record.disconnect_power")}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

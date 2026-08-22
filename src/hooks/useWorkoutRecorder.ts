@@ -49,6 +49,14 @@ import {
   computeInstantGradePercent,
   calculateVamMh,
 } from "@/lib/cycling-physics";
+import {
+  CSCParser,
+  CyclingPowerParser,
+  CSC_SERVICE,
+  CSC_MEASUREMENT_CHAR,
+  POWER_SERVICE,
+  POWER_MEASUREMENT_CHAR,
+} from "@/lib/ble-cycling-parsers";
 import type { BikeType } from "@/lib/types";
 import { getAllStoredGear } from "@/lib/storage";
 import { getUserProfile, saveUserProfile } from "@/lib/profile";
@@ -76,9 +84,12 @@ export interface RecorderStats {
   maxSpeedKmh: number;
   currentWatts: number;
   avgWatts: number;
+  currentCadenceRpm: number | null;
+  avgCadenceRpm: number;
   currentGradePercent: number;
   currentVamMh: number;
   isAutoPaused: boolean;
+  powerSource: "sensor" | "estimated";
 }
 
 export function useWorkoutRecorder() {
@@ -105,9 +116,12 @@ export function useWorkoutRecorder() {
     maxSpeedKmh: 0,
     currentWatts: 0,
     avgWatts: 0,
+    currentCadenceRpm: null,
+    avgCadenceRpm: 0,
     currentGradePercent: 0,
     currentVamMh: 0,
     isAutoPaused: false,
+    powerSource: "estimated" as const,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -123,6 +137,17 @@ export function useWorkoutRecorder() {
   const [hrBpm, setHrBpm] = useState<number | null>(null);
   const [hrDeviceName, setHrDeviceName] = useState<string | null>(null);
   const [hrSupported, setHrSupported] = useState<boolean>(false);
+
+  // Bluetooth Cadence (CSC) States
+  const [cscStatus, setCscStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
+  const [cscCadenceRpm, setCscCadenceRpm] = useState<number | null>(null);
+  const [cscDeviceName, setCscDeviceName] = useState<string | null>(null);
+
+  // Bluetooth Power Meter States
+  const [powerStatus, setPowerStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
+  const [powerWatts, setPowerWatts] = useState<number | null>(null);
+  const [powerDeviceName, setPowerDeviceName] = useState<string | null>(null);
+  const [powerCadenceRpm, setPowerCadenceRpm] = useState<number | null>(null);
 
   // Voice Coach States & Refs
   const [voiceCoachConfig, setVoiceCoachConfigState] = useState<VoiceCoachConfig>(DEFAULT_VOICE_COACH_CONFIG);
@@ -169,6 +194,18 @@ export function useWorkoutRecorder() {
   // Bluetooth HR Refs
   const currentHrRef = useRef<number | null>(null);
   const hrDeviceIdRef = useRef<string | null>(null);
+
+  // Bluetooth CSC Refs
+  const currentCadenceRef = useRef<number | null>(null);
+  const cscDeviceIdRef = useRef<string | null>(null);
+  const cscParserRef = useRef(new CSCParser());
+  const accumulatedCadenceRef = useRef<number[]>([]);
+
+  // Bluetooth Power Meter Refs
+  const currentPowerRef = useRef<number | null>(null);
+  const powerDeviceIdRef = useRef<string | null>(null);
+  const powerParserRef = useRef(new CyclingPowerParser());
+  const powerCadenceRef = useRef<number | null>(null);
 
   // Status and Config refs
   const statusRef = useRef<RecorderStatus>("idle");
@@ -470,7 +507,9 @@ export function useWorkoutRecorder() {
         }
       }
       const currentGradePercent = computeInstantGradePercent(pts, 30);
-      const currentWatts =
+
+      // Potência: sensor BLE > estimativa física
+      const estimatedWatts =
         sportRef.current === "cycling"
           ? calculateCyclingPower({
               speedMs: instantSpeedKmh / 3.6,
@@ -481,6 +520,12 @@ export function useWorkoutRecorder() {
             }).totalWatts
           : 0;
 
+      const hasPowerSensor = currentPowerRef.current !== null;
+      const currentWatts = hasPowerSensor
+        ? currentPowerRef.current!
+        : estimatedWatts;
+      const powerSource: "sensor" | "estimated" = hasPowerSensor ? "sensor" : "estimated";
+
       if (currentWatts > 0 && !isAutoPausedNow) {
         accumulatedWattsRef.current.push(currentWatts);
       }
@@ -489,6 +534,19 @@ export function useWorkoutRecorder() {
           ? Math.round(
               accumulatedWattsRef.current.reduce((a, b) => a + b, 0) /
                 accumulatedWattsRef.current.length
+            )
+          : 0;
+
+      // Cadência: sensor CSC > cadência do Power Meter
+      const currentCadenceRpm = currentCadenceRef.current ?? powerCadenceRef.current;
+      if (currentCadenceRpm !== null && currentCadenceRpm > 0 && !isAutoPausedNow) {
+        accumulatedCadenceRef.current.push(currentCadenceRpm);
+      }
+      const avgCadenceRpm =
+        accumulatedCadenceRef.current.length > 0
+          ? Math.round(
+              accumulatedCadenceRef.current.reduce((a, b) => a + b, 0) /
+                accumulatedCadenceRef.current.length
             )
           : 0;
 
@@ -508,9 +566,12 @@ export function useWorkoutRecorder() {
         maxSpeedKmh: Number(maxSpeedKmhRef.current.toFixed(1)),
         currentWatts,
         avgWatts,
+        currentCadenceRpm,
+        avgCadenceRpm,
         currentGradePercent: Number(currentGradePercent.toFixed(1)),
         currentVamMh,
         isAutoPaused: isAutoPausedNow ?? isAutoPausedRef.current,
+        powerSource,
       });
 
       // Structured Workout Step Progress & Completion Checks
@@ -731,6 +792,8 @@ export function useWorkoutRecorder() {
         elevation,
         timestamp: now,
         hr: currentHrRef.current ?? undefined,
+        cadence: currentCadenceRef.current ?? powerCadenceRef.current ?? undefined,
+        watts: currentPowerRef.current ?? undefined,
       };
 
       if (!shouldAcceptPoint(pointsRef.current, p, sportRef.current)) {
@@ -1018,13 +1081,17 @@ export function useWorkoutRecorder() {
       maxSpeedKmh: 0,
       currentWatts: 0,
       avgWatts: 0,
+      currentCadenceRpm: null,
+      avgCadenceRpm: 0,
       currentGradePercent: 0,
       currentVamMh: 0,
       isAutoPaused: false,
+      powerSource: "estimated",
     });
     maxSpeedKmhRef.current = 0;
     totalElevationGainRef.current = 0;
     accumulatedWattsRef.current = [];
+    accumulatedCadenceRef.current = [];
     setGhostConfig(null);
     ghostConfigRef.current = null;
     setGhostStats(null);
@@ -1198,13 +1265,233 @@ export function useWorkoutRecorder() {
     hrDeviceIdRef.current = null;
   }, []);
 
+  // ─── Cadence Sensor (CSC 0x1816) ─────────────────────────────────────────
+  const connectCsc = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    setCscStatus("connecting");
+    setError(null);
+
+    try {
+      await BleClient.initialize();
+
+      if (Capacitor.isNativePlatform()) {
+        const enabled = await BleClient.isEnabled();
+        if (!enabled) {
+          try {
+            await BleClient.requestEnable();
+          } catch (e) {
+            throw new Error("Por favor, ative o Bluetooth do aparelho.");
+          }
+        }
+      }
+
+      const device = await BleClient.requestDevice({
+        services: [CSC_SERVICE],
+      });
+
+      const deviceId = device.deviceId;
+      cscDeviceIdRef.current = deviceId;
+      setCscDeviceName(device.name || "Sensor de Cadência");
+
+      const onDisconnected = (disconnectedId: string) => {
+        if (cscDeviceIdRef.current === disconnectedId) {
+          setCscStatus("disconnected");
+          setCscCadenceRpm(null);
+          setCscDeviceName(null);
+          currentCadenceRef.current = null;
+          cscDeviceIdRef.current = null;
+          cscParserRef.current.reset();
+        }
+      };
+
+      await BleClient.connect(deviceId, onDisconnected);
+
+      await BleClient.startNotifications(
+        deviceId,
+        CSC_SERVICE,
+        CSC_MEASUREMENT_CHAR,
+        (value: DataView) => {
+          if (!value) return;
+          const data = cscParserRef.current.parse(value);
+          if (data.cadenceRpm !== null) {
+            setCscCadenceRpm(data.cadenceRpm);
+            currentCadenceRef.current = data.cadenceRpm;
+          }
+        }
+      );
+
+      setCscStatus("connected");
+    } catch (err: any) {
+      setCscStatus("disconnected");
+      setCscCadenceRpm(null);
+      setCscDeviceName(null);
+      currentCadenceRef.current = null;
+      cscDeviceIdRef.current = null;
+
+      if (
+        err.name === "NotFoundError" ||
+        err.message?.includes("User cancelled") ||
+        err.message?.includes("cancelled")
+      ) {
+        return;
+      }
+
+      setError(err instanceof Error ? err.message : "Erro ao conectar sensor de cadência.");
+    }
+  }, []);
+
+  const disconnectCsc = useCallback(async () => {
+    const deviceId = cscDeviceIdRef.current;
+    if (deviceId) {
+      try {
+        await BleClient.stopNotifications(deviceId, CSC_SERVICE, CSC_MEASUREMENT_CHAR);
+      } catch (err) {
+        console.error("Error stopping CSC notifications:", err);
+      }
+      try {
+        await BleClient.disconnect(deviceId);
+      } catch (err) {
+        console.error("Error disconnecting CSC:", err);
+      }
+    }
+    setCscStatus("disconnected");
+    setCscCadenceRpm(null);
+    setCscDeviceName(null);
+    currentCadenceRef.current = null;
+    cscDeviceIdRef.current = null;
+    cscParserRef.current.reset();
+  }, []);
+
+  // ─── Power Meter (CPS 0x1818) ────────────────────────────────────────────
+  const connectPower = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    setPowerStatus("connecting");
+    setError(null);
+
+    try {
+      await BleClient.initialize();
+
+      if (Capacitor.isNativePlatform()) {
+        const enabled = await BleClient.isEnabled();
+        if (!enabled) {
+          try {
+            await BleClient.requestEnable();
+          } catch (e) {
+            throw new Error("Por favor, ative o Bluetooth do aparelho.");
+          }
+        }
+      }
+
+      const device = await BleClient.requestDevice({
+        services: [POWER_SERVICE],
+      });
+
+      const deviceId = device.deviceId;
+      powerDeviceIdRef.current = deviceId;
+      setPowerDeviceName(device.name || "Medidor de Potência");
+
+      const onDisconnected = (disconnectedId: string) => {
+        if (powerDeviceIdRef.current === disconnectedId) {
+          setPowerStatus("disconnected");
+          setPowerWatts(null);
+          setPowerDeviceName(null);
+          setPowerCadenceRpm(null);
+          currentPowerRef.current = null;
+          powerCadenceRef.current = null;
+          powerDeviceIdRef.current = null;
+          powerParserRef.current.reset();
+        }
+      };
+
+      await BleClient.connect(deviceId, onDisconnected);
+
+      await BleClient.startNotifications(
+        deviceId,
+        POWER_SERVICE,
+        POWER_MEASUREMENT_CHAR,
+        (value: DataView) => {
+          if (!value) return;
+          const data = powerParserRef.current.parse(value);
+
+          setPowerWatts(data.instantaneousPowerWatts);
+          currentPowerRef.current = data.instantaneousPowerWatts;
+
+          // Cadência do Power Meter (se disponível)
+          if (data.cadenceRpm !== null) {
+            setPowerCadenceRpm(data.cadenceRpm);
+            powerCadenceRef.current = data.cadenceRpm;
+          }
+        }
+      );
+
+      setPowerStatus("connected");
+    } catch (err: any) {
+      setPowerStatus("disconnected");
+      setPowerWatts(null);
+      setPowerDeviceName(null);
+      setPowerCadenceRpm(null);
+      currentPowerRef.current = null;
+      powerCadenceRef.current = null;
+      powerDeviceIdRef.current = null;
+
+      if (
+        err.name === "NotFoundError" ||
+        err.message?.includes("User cancelled") ||
+        err.message?.includes("cancelled")
+      ) {
+        return;
+      }
+
+      setError(err instanceof Error ? err.message : "Erro ao conectar medidor de potência.");
+    }
+  }, []);
+
+  const disconnectPower = useCallback(async () => {
+    const deviceId = powerDeviceIdRef.current;
+    if (deviceId) {
+      try {
+        await BleClient.stopNotifications(deviceId, POWER_SERVICE, POWER_MEASUREMENT_CHAR);
+      } catch (err) {
+        console.error("Error stopping Power notifications:", err);
+      }
+      try {
+        await BleClient.disconnect(deviceId);
+      } catch (err) {
+        console.error("Error disconnecting Power:", err);
+      }
+    }
+    setPowerStatus("disconnected");
+    setPowerWatts(null);
+    setPowerDeviceName(null);
+    setPowerCadenceRpm(null);
+    currentPowerRef.current = null;
+    powerCadenceRef.current = null;
+    powerDeviceIdRef.current = null;
+    powerParserRef.current.reset();
+  }, []);
+
+  // ─── Cleanup on Unmount ──────────────────────────────────────────────────
   useEffect(() => {
     return () => {
       stopGpsWatch();
-      const deviceId = hrDeviceIdRef.current;
-      if (deviceId) {
-        BleClient.disconnect(deviceId).catch((err) => {
-          console.error("Cleanup error disconnecting GATT:", err);
+      const hrId = hrDeviceIdRef.current;
+      if (hrId) {
+        BleClient.disconnect(hrId).catch((err) => {
+          console.error("Cleanup error disconnecting HR:", err);
+        });
+      }
+      const cscId = cscDeviceIdRef.current;
+      if (cscId) {
+        BleClient.disconnect(cscId).catch((err) => {
+          console.error("Cleanup error disconnecting CSC:", err);
+        });
+      }
+      const powId = powerDeviceIdRef.current;
+      if (powId) {
+        BleClient.disconnect(powId).catch((err) => {
+          console.error("Cleanup error disconnecting Power:", err);
         });
       }
     };
@@ -1242,6 +1529,20 @@ export function useWorkoutRecorder() {
     hrSupported,
     connectHr,
     disconnectHr,
+    // BLE Cadence (CSC)
+    cscStatus,
+    cscCadenceRpm,
+    cscDeviceName,
+    connectCsc,
+    disconnectCsc,
+    // BLE Power Meter
+    powerStatus,
+    powerWatts,
+    powerDeviceName,
+    powerCadenceRpm,
+    connectPower,
+    disconnectPower,
+    // Ghost & Route
     ghostConfig,
     ghostStats,
     routeConfig,

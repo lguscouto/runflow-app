@@ -23,6 +23,7 @@ import {
   Bike as BikeIcon,
   PauseCircle,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import type {
   TrackPoint,
@@ -71,6 +72,8 @@ interface BikeComputerHudProps {
   manualLaps: ManualLap[];
   currentLapNumber: number;
   lastCompletedLap: ManualLap | null;
+  cadenceRpm?: number | null;
+  powerSource?: "sensor" | "estimated";
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
@@ -91,6 +94,8 @@ export function BikeComputerHud({
   manualLaps,
   currentLapNumber,
   lastCompletedLap,
+  cadenceRpm,
+  powerSource = "estimated",
   onPause,
   onResume,
   onStop,
@@ -99,6 +104,7 @@ export function BikeComputerHud({
   onClose,
 }: BikeComputerHudProps) {
   const { t } = useI18n();
+  const effectiveCadence = cadenceRpm ?? stats.currentCadenceRpm ?? null;
 
   // Customization States
   const [theme, setTheme] = useState<BikeHudTheme>("dark");
@@ -438,14 +444,23 @@ export function BikeComputerHud({
                 </div>
               </div>
 
-              {/* Cell 2: ESTIMATED POWER (WATTS) */}
+              {/* Cell 2: POWER (WATTS) */}
               <div
-                className={`${themeStyles.cardBg} rounded-2xl p-3 flex flex-col justify-between items-center text-center`}
+                className={`${themeStyles.cardBg} rounded-2xl p-3 flex flex-col justify-between items-center text-center relative`}
               >
-                <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
-                  <Zap size={12} className="fill-amber-400 text-amber-400" />
-                  <span>{t("bike_hud.power_watts")}</span>
-                </span>
+                <div className="w-full flex items-center justify-between px-1">
+                  <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
+                    <Zap size={12} className="fill-amber-400 text-amber-400" />
+                    <span>{t("bike_hud.power_watts")}</span>
+                  </span>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider ${
+                    powerSource === "sensor"
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                      : "bg-white/5 text-[var(--muted)] border border-white/10"
+                  }`}>
+                    {powerSource === "sensor" ? `⚡ ${t("record.power_source_sensor")}` : `📐 ${t("record.power_source_estimated")}`}
+                  </span>
+                </div>
                 <p
                   className={`font-black tabular-nums leading-none ${themeStyles.powerText}`}
                   style={{ fontSize: "clamp(2rem, 4.5vw, 3.2rem)" }}
@@ -513,15 +528,36 @@ export function BikeComputerHud({
                 </span>
               </div>
 
-              {/* Extra Cell when data_only: Heart Rate or Calories */}
+              {/* Extra Cells when data_only: Cadence, Heart Rate, Calories */}
               {layoutMode === "data_only" && (
                 <>
+                  {/* Cadence Card */}
+                  <div
+                    className={`${themeStyles.cardBg} rounded-2xl p-3 flex flex-col justify-between items-center text-center`}
+                  >
+                    <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
+                      <RefreshCw size={12} className="text-cyan-400" />
+                      <span>{t("bike_hud.cadence_label")}</span>
+                    </span>
+                    <p
+                      className="font-black tabular-nums leading-none text-cyan-400"
+                      style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
+                    >
+                      {effectiveCadence !== null ? `${effectiveCadence}` : "—"}
+                      <span className="text-xs font-normal ml-1">RPM</span>
+                    </p>
+                    <span className="text-[10px] text-[var(--muted)] font-mono">
+                      {stats.avgCadenceRpm > 0 ? `Méd: ${stats.avgCadenceRpm} RPM` : (effectiveCadence !== null ? "Sensor Conectado" : "Sem sensor")}
+                    </span>
+                  </div>
+
+                  {/* Heart Rate Card */}
                   <div
                     className={`${themeStyles.cardBg} rounded-2xl p-3 flex flex-col justify-between items-center text-center`}
                   >
                     <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
                       <Heart size={12} className="text-rose-500 fill-rose-500" />
-                      <span>{t("bike_hud.cadence")} / FC</span>
+                      <span>FC</span>
                     </span>
                     <p
                       className={`font-black tabular-nums leading-none ${themeStyles.hrText}`}
@@ -545,6 +581,7 @@ export function BikeComputerHud({
                     )}
                   </div>
 
+                  {/* Calories Card */}
                   <div
                     className={`${themeStyles.cardBg} rounded-2xl p-3 flex flex-col justify-between items-center text-center`}
                   >
@@ -639,11 +676,20 @@ export function BikeComputerHud({
 
             {/* Bottom Grid: Power & Grade/VAM */}
             <div className="grid grid-cols-2 gap-3 shrink-0">
-              <div className={`${themeStyles.cardBg} rounded-2xl p-3.5 text-center flex flex-col justify-between`}>
-                <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center justify-center gap-1`}>
-                  <Zap size={12} className="fill-amber-400 text-amber-400" />
-                  <span>{t("bike_hud.power_watts")}</span>
-                </span>
+              <div className={`${themeStyles.cardBg} rounded-2xl p-3.5 text-center flex flex-col justify-between relative`}>
+                <div className="w-full flex items-center justify-between">
+                  <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
+                    <Zap size={12} className="fill-amber-400 text-amber-400" />
+                    <span>{t("bike_hud.power_watts")}</span>
+                  </span>
+                  <span className={`text-[8px] px-1 py-0.5 rounded font-black tracking-wider ${
+                    powerSource === "sensor"
+                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                      : "bg-white/5 text-[var(--muted)] border border-white/10"
+                  }`}>
+                    {powerSource === "sensor" ? `⚡ ${t("record.power_source_sensor")}` : `📐 ${t("record.power_source_estimated")}`}
+                  </span>
+                </div>
                 <p
                   className={`font-black tabular-nums my-1 ${themeStyles.powerText}`}
                   style={{ fontSize: "clamp(1.6rem, 7vw, 2.5rem)" }}
@@ -672,25 +718,57 @@ export function BikeComputerHud({
               </div>
             </div>
 
-            {/* Heart Rate Row if Connected */}
-            {hrBpm !== null && (
-              <div
-                className={`${themeStyles.cardBg} rounded-xl px-4 py-2.5 flex items-center justify-between shrink-0`}
-              >
-                <div className="flex items-center gap-2">
-                  <Heart size={18} className="text-rose-500 fill-rose-500 animate-pulse" />
-                  <span className="text-xs font-bold text-white">{hrBpm} BPM</span>
-                </div>
-                {currentZone && (
-                  <span
-                    style={{
-                      backgroundColor: currentZone.bgRgba,
-                      color: currentZone.color,
-                    }}
-                    className="px-2.5 py-0.5 rounded-full text-xs font-black"
-                  >
-                    Z{currentZone.zone} • {t(currentZone.nameKey)}
-                  </span>
+            {/* Sensor Telemetry Row (Cadence & Heart Rate) */}
+            {(effectiveCadence !== null || hrBpm !== null) && (
+              <div className="grid grid-cols-2 gap-3 shrink-0">
+                {/* Cadence Pill */}
+                {effectiveCadence !== null ? (
+                  <div className={`${themeStyles.cardBg} rounded-xl px-3.5 py-2.5 flex items-center justify-between`}>
+                    <div className="flex items-center gap-2">
+                      <RefreshCw size={16} className="text-cyan-400 animate-spin" style={{ animationDuration: "3s" }} />
+                      <div>
+                        <p className="text-xs font-black text-cyan-400 leading-tight">{effectiveCadence} RPM</p>
+                        <p className="text-[9px] text-[var(--muted)]">{t("bike_hud.cadence_label")}</p>
+                      </div>
+                    </div>
+                    {stats.avgCadenceRpm > 0 && (
+                      <span className="text-[10px] text-[var(--muted)] font-mono">
+                        Méd: {stats.avgCadenceRpm}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className={`${themeStyles.cardBg} rounded-xl px-3.5 py-2.5 flex items-center justify-center text-xs text-[var(--muted)]`}>
+                    <span className="text-[11px]">Sem Cadência</span>
+                  </div>
+                )}
+
+                {/* Heart Rate Pill */}
+                {hrBpm !== null ? (
+                  <div className={`${themeStyles.cardBg} rounded-xl px-3.5 py-2.5 flex items-center justify-between`}>
+                    <div className="flex items-center gap-2">
+                      <Heart size={16} className="text-rose-500 fill-rose-500 animate-pulse" />
+                      <div>
+                        <p className="text-xs font-black text-white leading-tight">{hrBpm} BPM</p>
+                        <p className="text-[9px] text-[var(--muted)]">FC</p>
+                      </div>
+                    </div>
+                    {currentZone && (
+                      <span
+                        style={{
+                          backgroundColor: currentZone.bgRgba,
+                          color: currentZone.color,
+                        }}
+                        className="px-2 py-0.5 rounded-full text-[10px] font-black"
+                      >
+                        Z{currentZone.zone}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <div className={`${themeStyles.cardBg} rounded-xl px-3.5 py-2.5 flex items-center justify-center text-xs text-[var(--muted)]`}>
+                    <span className="text-[11px]">Sem Cinta FC</span>
+                  </div>
                 )}
               </div>
             )}

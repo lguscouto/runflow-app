@@ -70,6 +70,26 @@ export function buildRecordedActivity(
     maxHr = Math.max(...hrValues);
   }
 
+  // Métricas de Cadência (RPM) dos sensores BLE
+  const cadencePoints = points.filter((p) => p.cadence != null && p.cadence > 0);
+  let avgCadenceRpm: number | undefined;
+  let maxCadenceRpm: number | undefined;
+  if (cadencePoints.length > 0) {
+    const cadValues = cadencePoints.map((p) => p.cadence as number);
+    avgCadenceRpm = Math.round(cadValues.reduce((acc, v) => acc + v, 0) / cadValues.length);
+    maxCadenceRpm = Math.max(...cadValues);
+  }
+
+  // Métricas de Potência (Watts) dos sensores BLE
+  const wattsPoints = points.filter((p) => p.watts != null && p.watts > 0);
+  let avgWatts: number | undefined;
+  let maxWatts: number | undefined;
+  if (wattsPoints.length > 0) {
+    const wValues = wattsPoints.map((p) => p.watts as number);
+    avgWatts = Math.round(wValues.reduce((acc, v) => acc + v, 0) / wValues.length);
+    maxWatts = Math.max(...wValues);
+  }
+
   const sportNames: Record<Sport, string> = {
     running: "Corrida",
     walking: "Caminhada",
@@ -91,6 +111,10 @@ export function buildRecordedActivity(
     elevationGainM,
     avgHr,
     maxHr,
+    avgCadenceRpm,
+    maxCadenceRpm,
+    avgWatts,
+    maxWatts,
     points,
   };
 }
