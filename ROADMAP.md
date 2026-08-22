@@ -89,14 +89,15 @@ Comunicação direta com sensores Bluetooth Low Energy específicos de bicicleta
 
 ---
 
-### 5. Auto-Pause & Voice Coach Específicos para Ciclismo
+### 5. Auto-Pause & Voice Coach Específicos para Ciclismo ✅
 **Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / NRC
 
 Adaptação dos assistentes automáticos para a dinâmica de velocidade do ciclismo.
 
-- [ ] Perfil de sensibilidade do Auto-Pause para Bike (paradas em semáforos, cruzamentos urbanos e descidas com velocidade < 4.0 km/h a 6.0 km/h)
-- [ ] Voice Coach com intervalos estendidos para ciclismo (a cada 5 km, 10 km ou a cada 5, 10, 15 min)
-- [ ] Métricas faladas em voz natural: Velocidade média em km/h, Cadência em RPM, FC atual (bpm) e Ganho de Elevação
+- [x] Perfil de sensibilidade do Auto-Pause para Bike (paradas em semáforos, cruzamentos urbanos e descidas com velocidade < 4.0 km/h a 6.0 km/h: Ciclismo Urbano 5.0 km/h, Estrada 7.0 km/h, MTB 3.5 km/h)
+- [x] Voice Coach com intervalos estendidos para ciclismo (a cada 5 km, 10 km, 15 km, 20 km ou a cada 5, 10, 15, 20, 30 min)
+- [x] Métricas faladas em voz natural: Velocidade média e atual em km/h, Cadência em RPM, Potência em Watts, FC atual (bpm), Zona FC e Ganho de Elevação acumulado
+- [x] Avisos sonoros contextuais por modalidade ("Pedal pausado automaticamente" / "Pedal retomado")
 
 ---
 

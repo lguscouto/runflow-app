@@ -1,4 +1,4 @@
-import type { VoiceCoachConfig } from "@/lib/types";
+import type { VoiceCoachConfig, Sport } from "@/lib/types";
 
 export const DEFAULT_VOICE_COACH_CONFIG: VoiceCoachConfig = {
   enabled: true,
@@ -12,20 +12,32 @@ export const DEFAULT_VOICE_COACH_CONFIG: VoiceCoachConfig = {
   speakHeartRate: true,
   speakHeartRateZone: true,
   speakLastSplit: true,
+  speakSpeedKmh: true,
+  speakCurrentSpeedKmh: false,
+  speakCadence: true,
+  speakPowerWatts: true,
+  speakElevationGain: true,
   speechRate: 1.0,
   speechPitch: 1.0,
   speechVolume: 1.0,
 };
 
 export interface VoiceCoachStats {
+  sport?: Sport;
   distanceM: number;
   elapsedSec: number;
-  avgPaceSecKm: number | null;
+  avgPaceSecKm?: number | null;
   currentPaceSecKm?: number | null;
+  avgSpeedKmh?: number | null;
+  currentSpeedKmh?: number | null;
+  cadenceRpm?: number | null;
+  powerWatts?: number | null;
+  elevationGainM?: number | null;
   heartRate?: number | null;
   heartRateZoneName?: string | null;
   lastSplitKm?: number | null;
   lastSplitPaceSecKm?: number | null;
+  lastSplitSpeedKmh?: number | null;
 }
 
 /**
@@ -43,6 +55,55 @@ export function formatPaceForSpeech(secKm: number, lang: "pt" | "en" = "pt"): st
   } else {
     if (sec === 0) return `${min} minutes per kilometer`;
     return `${min} minutes and ${sec} seconds per kilometer`;
+  }
+}
+
+/**
+ * Converte velocidade em km/h em texto fonético natural.
+ */
+export function formatSpeedForSpeech(speedKmh: number, lang: "pt" | "en" = "pt"): string {
+  if (!speedKmh || isNaN(speedKmh) || !isFinite(speedKmh) || speedKmh <= 0) return "";
+  const rounded = speedKmh.toFixed(1);
+  if (lang === "pt") {
+    const formatted = rounded.replace(".", " vírgula ");
+    return `${formatted} quilômetros por hora`;
+  } else {
+    return `${rounded} kilometers per hour`;
+  }
+}
+
+/**
+ * Converte cadência em RPM em texto fonético natural.
+ */
+export function formatCadenceForSpeech(rpm: number, lang: "pt" | "en" = "pt"): string {
+  if (!rpm || isNaN(rpm) || !isFinite(rpm) || rpm <= 0) return "";
+  const rounded = Math.round(rpm);
+  if (lang === "pt") {
+    return `${rounded} rotações por minuto`;
+  } else {
+    return `${rounded} RPM`;
+  }
+}
+
+/**
+ * Converte potência em Watts em texto fonético natural.
+ */
+export function formatPowerForSpeech(watts: number, lang: "pt" | "en" = "pt"): string {
+  if (!watts || isNaN(watts) || !isFinite(watts) || watts <= 0) return "";
+  const rounded = Math.round(watts);
+  return `${rounded} watts`;
+}
+
+/**
+ * Converte ganho de elevação em metros em texto fonético natural.
+ */
+export function formatElevationGainForSpeech(gainM: number, lang: "pt" | "en" = "pt"): string {
+  if (!gainM || isNaN(gainM) || !isFinite(gainM) || gainM <= 0) return "";
+  const rounded = Math.round(gainM);
+  if (lang === "pt") {
+    return `${rounded} ${rounded === 1 ? "metro" : "metros"} de elevação`;
+  } else {
+    return `${rounded} ${rounded === 1 ? "meter" : "meters"} elevation gain`;
   }
 }
 
@@ -99,7 +160,7 @@ export function formatDurationForSpeech(totalSec: number, lang: "pt" | "en" = "p
 }
 
 /**
- * Monta o anúncio falado completo com base nas opções ativas do usuário.
+ * Monta o anúncio falado completo com base nas opções ativas do usuário e no esporte praticado.
  */
 export function buildVoiceCoachAnnouncement(
   stats: VoiceCoachStats,
@@ -107,6 +168,7 @@ export function buildVoiceCoachAnnouncement(
   lang: "pt" | "en" = "pt"
 ): string {
   const phrases: string[] = [];
+  const isCycling = stats.sport === "cycling";
 
   // 1. Distância
   if (config.speakDistance && stats.distanceM > 0) {
@@ -124,35 +186,88 @@ export function buildVoiceCoachAnnouncement(
     }
   }
 
-  // 3. Ritmo Médio
-  if (config.speakAvgPace && stats.avgPaceSecKm && stats.avgPaceSecKm > 0) {
-    const paceText = formatPaceForSpeech(stats.avgPaceSecKm, lang);
-    if (paceText) {
-      phrases.push(lang === "pt" ? `Ritmo médio: ${paceText}.` : `Average pace: ${paceText}.`);
+  // 3. Velocidade Média (Ciclismo) ou Ritmo Médio (Corrida/Caminhada)
+  if (isCycling) {
+    if (config.speakAvgPace !== false && stats.avgSpeedKmh && stats.avgSpeedKmh > 0) {
+      const speedText = formatSpeedForSpeech(stats.avgSpeedKmh, lang);
+      if (speedText) {
+        phrases.push(lang === "pt" ? `Velocidade média: ${speedText}.` : `Average speed: ${speedText}.`);
+      }
+    }
+  } else {
+    if (config.speakAvgPace && stats.avgPaceSecKm && stats.avgPaceSecKm > 0) {
+      const paceText = formatPaceForSpeech(stats.avgPaceSecKm, lang);
+      if (paceText) {
+        phrases.push(lang === "pt" ? `Ritmo médio: ${paceText}.` : `Average pace: ${paceText}.`);
+      }
     }
   }
 
-  // 4. Ritmo Atual (Instantâneo)
-  if (config.speakCurrentPace && stats.currentPaceSecKm && stats.currentPaceSecKm > 0) {
-    const currPaceText = formatPaceForSpeech(stats.currentPaceSecKm, lang);
-    if (currPaceText) {
-      phrases.push(lang === "pt" ? `Ritmo atual: ${currPaceText}.` : `Current pace: ${currPaceText}.`);
+  // 4. Velocidade Atual (Ciclismo) ou Ritmo Atual (Corrida/Caminhada)
+  if (isCycling) {
+    if (config.speakCurrentSpeedKmh && stats.currentSpeedKmh && stats.currentSpeedKmh > 0) {
+      const currSpeedText = formatSpeedForSpeech(stats.currentSpeedKmh, lang);
+      if (currSpeedText) {
+        phrases.push(lang === "pt" ? `Velocidade atual: ${currSpeedText}.` : `Current speed: ${currSpeedText}.`);
+      }
+    }
+  } else {
+    if (config.speakCurrentPace && stats.currentPaceSecKm && stats.currentPaceSecKm > 0) {
+      const currPaceText = formatPaceForSpeech(stats.currentPaceSecKm, lang);
+      if (currPaceText) {
+        phrases.push(lang === "pt" ? `Ritmo atual: ${currPaceText}.` : `Current pace: ${currPaceText}.`);
+      }
     }
   }
 
-  // 5. Split do Último KM (se completou 1km recentemente)
-  if (config.speakLastSplit && stats.lastSplitKm && stats.lastSplitPaceSecKm) {
-    const splitPace = formatPaceForSpeech(stats.lastSplitPaceSecKm, lang);
-    if (splitPace) {
-      phrases.push(
-        lang === "pt"
-          ? `Quilômetro ${stats.lastSplitKm} em ${splitPace}.`
-          : `Kilometer ${stats.lastSplitKm} in ${splitPace}.`
-      );
+  // 5. Split do Último KM
+  if (config.speakLastSplit && stats.lastSplitKm) {
+    if (isCycling && stats.lastSplitSpeedKmh && stats.lastSplitSpeedKmh > 0) {
+      const splitSpeed = formatSpeedForSpeech(stats.lastSplitSpeedKmh, lang);
+      if (splitSpeed) {
+        phrases.push(
+          lang === "pt"
+            ? `Quilômetro ${stats.lastSplitKm} a ${splitSpeed}.`
+            : `Kilometer ${stats.lastSplitKm} at ${splitSpeed}.`
+        );
+      }
+    } else if (stats.lastSplitPaceSecKm && stats.lastSplitPaceSecKm > 0) {
+      const splitPace = formatPaceForSpeech(stats.lastSplitPaceSecKm, lang);
+      if (splitPace) {
+        phrases.push(
+          lang === "pt"
+            ? `Quilômetro ${stats.lastSplitKm} em ${splitPace}.`
+            : `Kilometer ${stats.lastSplitKm} in ${splitPace}.`
+        );
+      }
     }
   }
 
-  // 6. Frequência Cardíaca & Zona
+  // 6. Cadência (RPM)
+  if (config.speakCadence && stats.cadenceRpm && stats.cadenceRpm > 0) {
+    const cadText = formatCadenceForSpeech(stats.cadenceRpm, lang);
+    if (cadText) {
+      phrases.push(lang === "pt" ? `Cadência: ${cadText}.` : `Cadence: ${cadText}.`);
+    }
+  }
+
+  // 7. Potência (Watts)
+  if (config.speakPowerWatts && stats.powerWatts && stats.powerWatts > 0) {
+    const powerText = formatPowerForSpeech(stats.powerWatts, lang);
+    if (powerText) {
+      phrases.push(lang === "pt" ? `Potência: ${powerText}.` : `Power: ${powerText}.`);
+    }
+  }
+
+  // 8. Ganho de Elevação
+  if (config.speakElevationGain && stats.elevationGainM && stats.elevationGainM > 0) {
+    const elevText = formatElevationGainForSpeech(stats.elevationGainM, lang);
+    if (elevText) {
+      phrases.push(lang === "pt" ? `Ganho de elevação: ${elevText}.` : `Elevation gain: ${elevText}.`);
+    }
+  }
+
+  // 9. Frequência Cardíaca & Zona
   if (stats.heartRate && stats.heartRate > 0) {
     if (config.speakHeartRate) {
       phrases.push(
@@ -216,22 +331,47 @@ export function speakWithConfig(
 /**
  * Toca uma demonstração da voz com as configurações atuais.
  */
-export function playVoiceCoachPreview(config: VoiceCoachConfig, lang: "pt" | "en" = "pt"): void {
-  const sampleStats: VoiceCoachStats = {
-    distanceM: 3000,
-    elapsedSec: 930, // 15m 30s
-    avgPaceSecKm: 310, // 5:10/km
-    currentPaceSecKm: 305,
-    heartRate: 154,
-    heartRateZoneName: lang === "pt" ? "Z3, Ritmo Moderado" : "Z3, Moderate Pace",
-    lastSplitKm: 3,
-    lastSplitPaceSecKm: 302,
-  };
+export function playVoiceCoachPreview(
+  config: VoiceCoachConfig,
+  lang: "pt" | "en" = "pt",
+  sport: Sport = "running"
+): void {
+  const isCycling = sport === "cycling";
+  const sampleStats: VoiceCoachStats = isCycling
+    ? {
+        sport: "cycling",
+        distanceM: 10000,
+        elapsedSec: 1260, // 21m 00s
+        avgSpeedKmh: 28.6,
+        currentSpeedKmh: 31.2,
+        cadenceRpm: 88,
+        powerWatts: 215,
+        elevationGainM: 140,
+        heartRate: 148,
+        heartRateZoneName: lang === "pt" ? "Z3, Ritmo Moderado" : "Z3, Moderate Pace",
+        lastSplitKm: 10,
+        lastSplitSpeedKmh: 30.5,
+      }
+    : {
+        sport: "running",
+        distanceM: 3000,
+        elapsedSec: 930, // 15m 30s
+        avgPaceSecKm: 310, // 5:10/km
+        currentPaceSecKm: 305,
+        heartRate: 154,
+        heartRateZoneName: lang === "pt" ? "Z3, Ritmo Moderado" : "Z3, Moderate Pace",
+        lastSplitKm: 3,
+        lastSplitPaceSecKm: 302,
+      };
 
   const text = buildVoiceCoachAnnouncement(sampleStats, config, lang);
   const fallback =
     lang === "pt"
-      ? "Olá corredor! Este é o teste do seu Assistente de Voz do RunFlow. Bom treino!"
+      ? isCycling
+        ? "Olá ciclista! Este é o teste do seu Assistente de Voz do RunFlow. Bom pedal!"
+        : "Olá corredor! Este é o teste do seu Assistente de Voz do RunFlow. Bom treino!"
+      : isCycling
+      ? "Hello cyclist! This is a test of your RunFlow Voice Coach. Have a great ride!"
       : "Hello runner! This is a test of your RunFlow Voice Coach. Have a great run!";
 
   speakWithConfig(text || fallback, config, lang);

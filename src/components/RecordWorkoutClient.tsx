@@ -774,6 +774,7 @@ export function RecordWorkoutClient() {
           isOpen={isVoiceCoachModalOpen}
           onClose={() => setIsVoiceCoachModalOpen(false)}
           onSave={updateVoiceCoachConfig}
+          sport={sport}
         />
 
         <AutoPauseModal
@@ -1814,6 +1815,7 @@ export function RecordWorkoutClient() {
         isOpen={isVoiceCoachModalOpen}
         onClose={() => setIsVoiceCoachModalOpen(false)}
         onSave={updateVoiceCoachConfig}
+        sport={sport}
       />
 
       <AutoPauseModal

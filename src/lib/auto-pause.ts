@@ -1,9 +1,30 @@
-import type { AutoPauseConfig, TrackPoint } from "./types";
+import type { AutoPauseConfig, TrackPoint, Sport } from "./types";
 import { haversineM } from "./geo";
+
+export const AUTO_PAUSE_THRESHOLDS = {
+  running: 1.5, // 1.5 km/h (≈ 40:00/km) — Padrão corrida
+  walking: 0.8, // 0.8 km/h (≈ 75:00/km) — Padrão caminhada
+  cycling_urban: 5.0, // 5.0 km/h — Padrão Ciclismo Urbano (semáforos e trânsito)
+  cycling_road: 7.0, // 7.0 km/h — Ciclismo de Estrada (alta velocidade)
+  cycling_mtb: 3.5, // 3.5 km/h — Ciclismo MTB/Trilha (subidas íngremes)
+  strict: 0.5, // 0.5 km/h — Parada absoluta
+} as const;
+
+export function getDefaultAutoPauseSpeed(sport: Sport): number {
+  switch (sport) {
+    case "cycling":
+      return AUTO_PAUSE_THRESHOLDS.cycling_urban;
+    case "walking":
+      return AUTO_PAUSE_THRESHOLDS.walking;
+    case "running":
+    default:
+      return AUTO_PAUSE_THRESHOLDS.running;
+  }
+}
 
 export const DEFAULT_AUTO_PAUSE_CONFIG: AutoPauseConfig = {
   enabled: true,
-  minSpeedKmh: 1.5, // 1.5 km/h (≈ 40:00/km) — padrão da indústria (Strava / Garmin)
+  minSpeedKmh: 1.5, // 1.5 km/h — padrão geral
   pauseDelaySec: 3, // 3 segundos de baixa velocidade para confirmar parada
   audioFeedback: true, // Notificar "Treino pausado automaticamente" / "Treino retomado"
 };
@@ -125,17 +146,28 @@ export function computeMovingTimeFromPoints(
 /**
  * Toca áudio ou vibração sutil ao pausar/retomar via Auto-Pause
  */
-export function playAutoPauseSound(isPaused: boolean, language = "pt") {
+export function playAutoPauseSound(isPaused: boolean, language = "pt", sport: Sport = "running") {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
   try {
-    const text = isPaused
-      ? language === "pt"
-        ? "Treino pausado automaticamente"
-        : "Workout auto-paused"
-      : language === "pt"
-      ? "Treino retomado"
-      : "Workout resumed";
+    let text = "";
+    if (sport === "cycling") {
+      text = isPaused
+        ? language === "pt"
+          ? "Pedal pausado automaticamente"
+          : "Ride auto-paused"
+        : language === "pt"
+        ? "Pedal retomado"
+        : "Ride resumed";
+    } else {
+      text = isPaused
+        ? language === "pt"
+          ? "Treino pausado automaticamente"
+          : "Workout auto-paused"
+        : language === "pt"
+        ? "Treino retomado"
+        : "Workout resumed";
+    }
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);

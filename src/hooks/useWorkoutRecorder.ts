@@ -43,6 +43,7 @@ import {
   DEFAULT_AUTO_PAUSE_CONFIG,
   computeInstantSpeedKmh,
   playAutoPauseSound,
+  getDefaultAutoPauseSpeed,
 } from "@/lib/auto-pause";
 import {
   calculateCyclingPower,
@@ -181,7 +182,7 @@ export function useWorkoutRecorder() {
   const lastVoiceCoachTimeMilestoneRef = useRef<number>(0);
   const lastCompletedKmRef = useRef<number>(0);
   const kmStartTimeSecRef = useRef<number>(0);
-  const latestKmSplitRef = useRef<{ km: number; paceSecKm: number } | null>(null);
+  const latestKmSplitRef = useRef<{ km: number; paceSecKm: number; speedKmh?: number } | null>(null);
 
   const startedAtRef = useRef<Date | null>(null);
   const pausedAtRef = useRef<Date | null>(null);
@@ -682,7 +683,12 @@ export function useWorkoutRecorder() {
       if (currentKm > lastCompletedKmRef.current && currentKm > 0) {
         const kmDuration = elapsedSec - kmStartTimeSecRef.current;
         if (kmDuration > 0) {
-          latestKmSplitRef.current = { km: currentKm, paceSecKm: kmDuration };
+          const splitSpeedKmh = (1000 / kmDuration) * 3.6;
+          latestKmSplitRef.current = {
+            km: currentKm,
+            paceSecKm: kmDuration,
+            speedKmh: splitSpeedKmh,
+          };
         }
         kmStartTimeSecRef.current = elapsedSec;
         lastCompletedKmRef.current = currentKm;
@@ -717,15 +723,35 @@ export function useWorkoutRecorder() {
             }
           }
 
+          const isBike = sportRef.current === "cycling";
+          // Compute cumulative elevation gain from points
+          let elevGainM = 0;
+          if (pointsRef.current.length > 1) {
+            for (let i = 1; i < pointsRef.current.length; i++) {
+              const ePrev = pointsRef.current[i - 1].elevation;
+              const eCurr = pointsRef.current[i].elevation;
+              if (ePrev !== undefined && eCurr !== undefined && eCurr > ePrev) {
+                elevGainM += eCurr - ePrev;
+              }
+            }
+          }
+
           const coachStats: VoiceCoachStats = {
+            sport: sportRef.current,
             distanceM,
             elapsedSec,
             avgPaceSecKm,
             currentPaceSecKm,
+            avgSpeedKmh: Number(avgSpeedKmh.toFixed(1)),
+            currentSpeedKmh: Number(instantSpeedKmh.toFixed(1)),
+            cadenceRpm: currentCadenceRef.current ?? powerCadenceRef.current ?? null,
+            powerWatts: currentPowerRef.current ?? (isBike ? currentWatts : null),
+            elevationGainM: Math.round(elevGainM),
             heartRate: currentHrRef.current,
             heartRateZoneName: hrZoneName,
             lastSplitKm: latestKmSplitRef.current?.km,
             lastSplitPaceSecKm: latestKmSplitRef.current?.paceSecKm,
+            lastSplitSpeedKmh: latestKmSplitRef.current?.speedKmh,
           };
 
           const msg = buildVoiceCoachAnnouncement(coachStats, vConfig, language);
@@ -746,7 +772,8 @@ export function useWorkoutRecorder() {
 
       if (apConfig && apConfig.enabled && pointsRef.current.length >= 2) {
         const speedKmh = computeInstantSpeedKmh(pointsRef.current, 3);
-        const minSpeed = apConfig.minSpeedKmh || 1.5;
+        const currentSport = sportRef.current;
+        const minSpeed = apConfig.minSpeedKmh || getDefaultAutoPauseSpeed(currentSport);
         const delay = apConfig.pauseDelaySec || 3;
 
         if (speedKmh < minSpeed) {
@@ -755,7 +782,7 @@ export function useWorkoutRecorder() {
             isAutoPausedRef.current = true;
             setIsAutoPaused(true);
             if (apConfig.audioFeedback) {
-              playAutoPauseSound(true, language);
+              playAutoPauseSound(true, language, currentSport);
             }
           }
         } else {
@@ -764,7 +791,7 @@ export function useWorkoutRecorder() {
             isAutoPausedRef.current = false;
             setIsAutoPaused(false);
             if (apConfig.audioFeedback) {
-              playAutoPauseSound(false, language);
+              playAutoPauseSound(false, language, currentSport);
             }
           }
         }

@@ -117,9 +117,24 @@ export function AutoPauseModal({
                 <div className="grid grid-cols-1 gap-2">
                   {[
                     {
+                      speed: 5.0,
+                      label: t("auto_pause.threshold_cycling_urban"),
+                      sub: "5.0 km/h — Recomendado para bike (semáforos e trânsito)",
+                    },
+                    {
+                      speed: 7.0,
+                      label: t("auto_pause.threshold_cycling_road"),
+                      sub: "7.0 km/h — Ideal para ciclismo de estrada e ritmo alto",
+                    },
+                    {
+                      speed: 3.5,
+                      label: t("auto_pause.threshold_cycling_mtb"),
+                      sub: "3.5 km/h — Ideal para subidas íngremes e trilhas MTB",
+                    },
+                    {
                       speed: 1.5,
                       label: t("auto_pause.threshold_running"),
-                      sub: "1.5 km/h (~40:00/km) — Padrão Strava / Garmin",
+                      sub: "1.5 km/h (~40:00/km) — Padrão corrida Strava / Garmin",
                     },
                     {
                       speed: 0.8,

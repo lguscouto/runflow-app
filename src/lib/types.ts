@@ -59,6 +59,16 @@ export interface VoiceCoachConfig {
   speakHeartRateZone: boolean;
   /** Falar split do último km completado */
   speakLastSplit: boolean;
+  /** Falar velocidade média em km/h (recomendado para ciclismo) */
+  speakSpeedKmh?: boolean;
+  /** Falar velocidade instantânea em km/h */
+  speakCurrentSpeedKmh?: boolean;
+  /** Falar cadência de pedalada em RPM */
+  speakCadence?: boolean;
+  /** Falar potência em Watts */
+  speakPowerWatts?: boolean;
+  /** Falar ganho de elevação acumulado */
+  speakElevationGain?: boolean;
   /** Velocidade da voz (0.7 a 1.5, padrão 1.0) */
   speechRate: number;
   /** Tom da voz (0.8 a 1.2, padrão 1.0) */

@@ -14,8 +14,11 @@ import {
   Activity,
   Sliders,
   Footprints,
+  Zap,
+  RefreshCw,
+  Mountain,
 } from "lucide-react";
-import type { VoiceCoachConfig } from "@/lib/types";
+import type { VoiceCoachConfig, Sport } from "@/lib/types";
 import { DEFAULT_VOICE_COACH_CONFIG, playVoiceCoachPreview } from "@/lib/voice-coach";
 import { useI18n } from "@/lib/i18n";
 
@@ -24,6 +27,7 @@ interface VoiceCoachModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (newConfig: VoiceCoachConfig) => void;
+  sport?: Sport;
 }
 
 export function VoiceCoachModal({
@@ -31,6 +35,7 @@ export function VoiceCoachModal({
   isOpen,
   onClose,
   onSave,
+  sport = "running",
 }: VoiceCoachModalProps) {
   const { t, language } = useI18n();
   const [config, setConfig] = useState<VoiceCoachConfig>({
@@ -50,10 +55,10 @@ export function VoiceCoachModal({
 
   const handlePreview = () => {
     setIsPlayingPreview(true);
-    playVoiceCoachPreview(config, language);
+    playVoiceCoachPreview(config, language, sport);
     setTimeout(() => {
       setIsPlayingPreview(false);
-    }, 4000);
+    }, 4500);
   };
 
   const handleSaveAndClose = () => {
@@ -195,6 +200,9 @@ export function VoiceCoachModal({
                       <option value={1000}>{t("voice_coach.interval_1km")}</option>
                       <option value={2000}>{t("voice_coach.interval_2km")}</option>
                       <option value={5000}>{t("voice_coach.interval_5km")}</option>
+                      <option value={10000}>{t("voice_coach.interval_10km")}</option>
+                      <option value={15000}>{t("voice_coach.interval_15km")}</option>
+                      <option value={20000}>{t("voice_coach.interval_20km")}</option>
                     </select>
                   </div>
                 ) : (
@@ -217,6 +225,9 @@ export function VoiceCoachModal({
                       <option value={180}>{t("voice_coach.interval_3min")}</option>
                       <option value={300}>{t("voice_coach.interval_5min")}</option>
                       <option value={600}>{t("voice_coach.interval_10min")}</option>
+                      <option value={900}>{t("voice_coach.interval_15min")}</option>
+                      <option value={1200}>{t("voice_coach.interval_20min")}</option>
+                      <option value={1800}>{t("voice_coach.interval_30min")}</option>
                     </select>
                   </div>
                 )}
@@ -280,7 +291,7 @@ export function VoiceCoachModal({
                     </div>
                   </div>
 
-                  {/* Avg Pace */}
+                  {/* Avg Pace / Speed */}
                   <div
                     onClick={() => handleToggle("speakAvgPace")}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
@@ -292,7 +303,9 @@ export function VoiceCoachModal({
                     <div className="flex items-center gap-2">
                       <Gauge size={16} className="text-emerald-400" />
                       <span className="text-xs font-medium">
-                        {t("voice_coach.metric_avg_pace")}
+                        {sport === "cycling"
+                          ? t("voice_coach.metric_speed_kmh")
+                          : t("voice_coach.metric_avg_pace")}
                       </span>
                     </div>
                     <div
@@ -306,11 +319,15 @@ export function VoiceCoachModal({
                     </div>
                   </div>
 
-                  {/* Instant Pace */}
+                  {/* Instant Pace / Speed */}
                   <div
-                    onClick={() => handleToggle("speakCurrentPace")}
+                    onClick={() =>
+                      handleToggle(
+                        sport === "cycling" ? "speakCurrentSpeedKmh" : "speakCurrentPace"
+                      )
+                    }
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
-                      config.speakCurrentPace
+                      (sport === "cycling" ? config.speakCurrentSpeedKmh : config.speakCurrentPace)
                         ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
@@ -318,17 +335,99 @@ export function VoiceCoachModal({
                     <div className="flex items-center gap-2">
                       <Gauge size={16} className="text-cyan-400" />
                       <span className="text-xs font-medium">
-                        {t("voice_coach.metric_current_pace")}
+                        {sport === "cycling"
+                          ? t("voice_coach.metric_current_speed_kmh")
+                          : t("voice_coach.metric_current_pace")}
                       </span>
                     </div>
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
-                        config.speakCurrentPace
+                        (sport === "cycling" ? config.speakCurrentSpeedKmh : config.speakCurrentPace)
                           ? "bg-[var(--accent)] border-[var(--accent)] text-white"
                           : "border-[var(--border)]"
                       }`}
                     >
-                      {config.speakCurrentPace && <Check size={12} />}
+                      {(sport === "cycling" ? config.speakCurrentSpeedKmh : config.speakCurrentPace) && (
+                        <Check size={12} />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Cadence (RPM) */}
+                  <div
+                    onClick={() => handleToggle("speakCadence")}
+                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                      config.speakCadence
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <RefreshCw size={16} className="text-cyan-300" />
+                      <span className="text-xs font-medium">
+                        {t("voice_coach.metric_cadence")}
+                      </span>
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded border flex items-center justify-center ${
+                        config.speakCadence
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          : "border-[var(--border)]"
+                      }`}
+                    >
+                      {config.speakCadence && <Check size={12} />}
+                    </div>
+                  </div>
+
+                  {/* Power (Watts) */}
+                  <div
+                    onClick={() => handleToggle("speakPowerWatts")}
+                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                      config.speakPowerWatts
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Zap size={16} className="text-amber-400" />
+                      <span className="text-xs font-medium">
+                        {t("voice_coach.metric_power_watts")}
+                      </span>
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded border flex items-center justify-center ${
+                        config.speakPowerWatts
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          : "border-[var(--border)]"
+                      }`}
+                    >
+                      {config.speakPowerWatts && <Check size={12} />}
+                    </div>
+                  </div>
+
+                  {/* Elevation Gain */}
+                  <div
+                    onClick={() => handleToggle("speakElevationGain")}
+                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
+                      config.speakElevationGain
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Mountain size={16} className="text-emerald-300" />
+                      <span className="text-xs font-medium">
+                        {t("voice_coach.metric_elevation_gain")}
+                      </span>
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded border flex items-center justify-center ${
+                        config.speakElevationGain
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          : "border-[var(--border)]"
+                      }`}
+                    >
+                      {config.speakElevationGain && <Check size={12} />}
                     </div>
                   </div>
 
