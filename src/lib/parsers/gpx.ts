@@ -34,6 +34,14 @@ export function parseTrackPoints(xml: string): TrackPoint[] {
       extractTag(inner, "gpxtpx:hr") ??
       extractTag(inner, "hr") ??
       inner.match(/<ns3:hr>(\d+)<\/ns3:hr>/i)?.[1];
+    const powerStr =
+      extractTag(inner, "power") ??
+      extractTag(inner, "gpxtpx:power") ??
+      extractTag(inner, "ns3:power");
+    const cadStr =
+      extractTag(inner, "cad") ??
+      extractTag(inner, "gpxtpx:cad") ??
+      extractTag(inner, "ns3:cad");
 
     points.push({
       lat,
@@ -41,6 +49,8 @@ export function parseTrackPoints(xml: string): TrackPoint[] {
       elevation: eleStr ? parseFloat(eleStr) : undefined,
       timestamp: parseGpxTime(timeStr),
       hr: hrStr ? parseInt(hrStr, 10) : undefined,
+      watts: powerStr ? parseFloat(powerStr) : undefined,
+      cadence: cadStr ? parseInt(cadStr, 10) : undefined,
     });
   }
 

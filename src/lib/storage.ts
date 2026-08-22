@@ -24,6 +24,10 @@ export interface StoredActivity extends ActivitySummary {
     elevation?: number;
     timestamp?: string;
     hr?: number;
+    watts?: number;
+    cadence?: number;
+    speedKmh?: number;
+    grade?: number;
   }>;
 }
 
@@ -163,6 +167,10 @@ export function toActivityDetail(stored: StoredActivity): ActivityDetail {
     elevation: p.elevation,
     timestamp: p.timestamp ? new Date(p.timestamp) : undefined,
     hr: p.hr,
+    watts: p.watts,
+    cadence: p.cadence,
+    speedKmh: p.speedKmh,
+    grade: p.grade,
   }));
   return {
     ...stored,
@@ -182,6 +190,15 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     durationSec,
     distanceM,
     avgPaceSecKm,
+    avgSpeedKmh,
+    maxSpeedKmh,
+    avgWatts,
+    maxWatts,
+    normalizedPowerWatts,
+    vamMh,
+    maxGradePercent,
+    avgCadenceRpm,
+    maxCadenceRpm,
     elevationGainM,
     avgHr,
     calories,
@@ -200,6 +217,15 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     elapsedTimeSec: (stored as any).elapsedTimeSec ?? durationSec,
     distanceM,
     avgPaceSecKm,
+    avgSpeedKmh: avgSpeedKmh ?? (sport === "cycling" && avgPaceSecKm ? Number((3600 / avgPaceSecKm).toFixed(1)) : null),
+    maxSpeedKmh,
+    avgWatts,
+    maxWatts,
+    normalizedPowerWatts,
+    vamMh,
+    maxGradePercent,
+    avgCadenceRpm,
+    maxCadenceRpm,
     elevationGainM,
     avgHr,
     calories,

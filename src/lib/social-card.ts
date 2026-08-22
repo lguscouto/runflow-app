@@ -3,6 +3,8 @@ import {
   formatDistance,
   formatDuration,
   formatPace,
+  formatSpeed,
+  formatSportSpeedOrPace,
   formatElevation,
   formatCalories,
   formatDate,
@@ -424,15 +426,16 @@ function drawPrimaryStats(
 ) {
   ctx.save();
 
+  const isCycling = activity.sport === "cycling";
   const colWidth = width / 3;
   const labels = options.language === "pt"
-    ? { dist: "DISTÂNCIA", dur: "TEMPO", pace: "RITMO MÉDIO" }
-    : { dist: "DISTANCE", dur: "TIME", pace: "AVG PACE" };
+    ? { dist: "DISTÂNCIA", dur: "TEMPO", pace: isCycling ? "VELOCIDADE" : "RITMO MÉDIO" }
+    : { dist: "DISTANCE", dur: "TIME", pace: isCycling ? "AVG SPEED" : "AVG PACE" };
 
   const values = {
     dist: formatDistance(activity.distanceM),
     dur: formatDuration(activity.durationSec),
-    pace: formatPace(activity.avgPaceSecKm),
+    pace: formatSportSpeedOrPace(activity.sport, activity.avgPaceSecKm, activity.avgSpeedKmh),
   };
 
   drawSingleStat(ctx, x, y, colWidth, values.dist, labels.dist, "#ff6b35");

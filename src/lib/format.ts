@@ -47,6 +47,52 @@ export function formatCalories(kcal: number | null | undefined): string {
   return `${Math.round(kcal)} kcal`;
 }
 
+export function formatSpeed(kmh: number | null | undefined): string {
+  if (kmh == null || !Number.isFinite(kmh) || kmh < 0) {
+    return "0.0 km/h";
+  }
+  return `${kmh.toFixed(1)} km/h`;
+}
+
+export function formatWatts(watts: number | null | undefined): string {
+  if (watts == null || !Number.isFinite(watts) || watts < 0) {
+    return "0 W";
+  }
+  return `${Math.round(watts)} W`;
+}
+
+export function formatGrade(percent: number | null | undefined): string {
+  if (percent == null || !Number.isFinite(percent)) {
+    return "0.0%";
+  }
+  const sign = percent > 0 ? "+" : "";
+  return `${sign}${percent.toFixed(1)}%`;
+}
+
+export function formatVam(vamMh: number | null | undefined): string {
+  if (vamMh == null || !Number.isFinite(vamMh) || vamMh <= 0) {
+    return "0 VAM";
+  }
+  return `${Math.round(vamMh)} m/h`;
+}
+
+export function formatSportSpeedOrPace(
+  sport: string,
+  secPerKm: number | null | undefined,
+  speedKmh?: number | null
+): string {
+  if (sport === "cycling") {
+    if (speedKmh != null && speedKmh > 0) {
+      return formatSpeed(speedKmh);
+    }
+    if (secPerKm != null && secPerKm > 0) {
+      return formatSpeed(3600 / secPerKm);
+    }
+    return "0.0 km/h";
+  }
+  return formatPace(secPerKm);
+}
+
 export function sportLabel(sport: string, lang: "pt" | "en" = "pt"): string {
   const labels: Record<string, Record<string, string>> = {
     pt: {

@@ -45,14 +45,15 @@ Evoluir o cadastro de equipamentos para uma Garagem Completa de Bicicletas com c
 ---
 
 ### 2. Motor de Métricas de Ciclismo (Velocidade km/h, Potência Estimada & Inclinação)
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava / GoldenCheetah
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava / GoldenCheetah · **Status:** ✅ Concluído
 
 Cálculo científico de métricas de ciclismo em tempo real e pós-treino.
 
-- [ ] Alternância automática entre Ritmo (min/km para corrida) e **Velocidade (km/h)** para ciclismo
-- [ ] Cálculo de Velocidade Instantânea, Média e Máxima em km/h com suavização por GPS
-- [ ] Estimativa de Potência em Watts ($P_{\text{total}} = P_{\text{aero}} + P_{\text{climb}} + P_{\text{rolling}}$) baseada no peso combinado (ciclista + bike), velocidade, inclinação e coeficiente aerodinâmico
-- [ ] VAM (Velocidade Ascensional Média em m/h) e cálculo de inclinação percentual do terreno (% grade)
+- [x] Alternância automática entre Ritmo (min/km para corrida) e **Velocidade (km/h)** para ciclismo
+- [x] Cálculo de Velocidade Instantânea, Média e Máxima em km/h com suavização por GPS
+- [x] Estimativa de Potência em Watts ($P_{\text{total}} = P_{\text{aero}} + P_{\text{climb}} + P_{\text{rolling}}$) baseada no peso combinado (ciclista + bike), velocidade, inclinação e coeficiente aerodinâmico
+- [x] VAM (Velocidade Ascensional Média em m/h) e cálculo de inclinação percentual do terreno (% grade)
+- [x] Potência Normalizada (NP™ de Coggan) e gráficos dedicados de Velocidade e Potência por elevação/distância
 
 ---
 

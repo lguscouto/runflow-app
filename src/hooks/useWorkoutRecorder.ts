@@ -43,6 +43,13 @@ import {
   computeInstantSpeedKmh,
   playAutoPauseSound,
 } from "@/lib/auto-pause";
+import {
+  calculateCyclingPower,
+  computeInstantGradePercent,
+  calculateVamMh,
+} from "@/lib/cycling-physics";
+import type { BikeType } from "@/lib/types";
+import { getAllStoredGear } from "@/lib/storage";
 import { getUserProfile, saveUserProfile } from "@/lib/profile";
 import { calculateHrZones, getCurrentHrZone } from "@/lib/hr-zones";
 import { flattenWorkoutItems, evaluateStepTargetMet } from "@/lib/structured-workout";
@@ -63,6 +70,13 @@ export interface RecorderStats {
   distanceM: number;
   currentPaceSecKm: number | null;
   avgPaceSecKm: number | null;
+  currentSpeedKmh: number;
+  avgSpeedKmh: number;
+  maxSpeedKmh: number;
+  currentWatts: number;
+  avgWatts: number;
+  currentGradePercent: number;
+  currentVamMh: number;
   isAutoPaused: boolean;
 }
 
@@ -85,6 +99,13 @@ export function useWorkoutRecorder() {
     distanceM: 0,
     currentPaceSecKm: null,
     avgPaceSecKm: null,
+    currentSpeedKmh: 0,
+    avgSpeedKmh: 0,
+    maxSpeedKmh: 0,
+    currentWatts: 0,
+    avgWatts: 0,
+    currentGradePercent: 0,
+    currentVamMh: 0,
     isAutoPaused: false,
   });
   const [error, setError] = useState<string | null>(null);
@@ -157,6 +178,14 @@ export function useWorkoutRecorder() {
   const lastSpokenMinRef = useRef<number>(0);
   const ghostRefPointsRef = useRef<{ elapsedSec: number; cumDistanceM: number }[]>([]);
 
+  // Cycling Physics Refs
+  const riderWeightRef = useRef<number>(75);
+  const bikeWeightRef = useRef<number>(9.0);
+  const bikeTypeRef = useRef<BikeType>("road");
+  const maxSpeedKmhRef = useRef<number>(0);
+  const totalElevationGainRef = useRef<number>(0);
+  const accumulatedWattsRef = useRef<number[]>([]);
+
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
@@ -184,6 +213,9 @@ export function useWorkoutRecorder() {
         const profile = await getUserProfile();
         userProfileRef.current = profile;
         if (profile) {
+          if (profile.weightKg) {
+            riderWeightRef.current = profile.weightKg;
+          }
           userHrZonesRef.current = calculateHrZones(profile);
           if (profile.voiceCoach) {
             setVoiceCoachConfigState(profile.voiceCoach);
@@ -193,6 +225,15 @@ export function useWorkoutRecorder() {
             setAutoPauseConfigState(profile.autoPause);
             autoPauseConfigRef.current = profile.autoPause;
           }
+        }
+
+        const gears = await getAllStoredGear();
+        const defaultBike =
+          gears.find((g) => g.type === "bike" && g.isDefaultCycling && g.status === "active") ||
+          gears.find((g) => g.type === "bike" && g.status === "active");
+        if (defaultBike) {
+          if (defaultBike.weightKg) bikeWeightRef.current = defaultBike.weightKg;
+          if (defaultBike.bikeType) bikeTypeRef.current = defaultBike.bikeType;
         }
       } catch (e) {
         console.error("Erro ao carregar preferências:", e);
@@ -397,12 +438,68 @@ export function useWorkoutRecorder() {
         }
       }
 
+      // Speed & Cycling Metrics
+      const instantSpeedKmh = computeInstantSpeedKmh(pts);
+      if (instantSpeedKmh > maxSpeedKmhRef.current && instantSpeedKmh < 120) {
+        maxSpeedKmhRef.current = instantSpeedKmh;
+      }
+      const avgSpeedKmh =
+        distanceM > 0 && effectiveMovingSec > 0
+          ? (distanceM / effectiveMovingSec) * 3.6
+          : 0;
+
+      // Elevation Gain & Grade %
+      if (pts.length >= 2) {
+        const lastP = pts[pts.length - 1];
+        const prevP = pts[pts.length - 2];
+        if (lastP.elevation != null && prevP.elevation != null) {
+          const elevDelta = lastP.elevation - prevP.elevation;
+          if (elevDelta > 0 && !isAutoPausedNow) {
+            totalElevationGainRef.current += elevDelta;
+          }
+        }
+      }
+      const currentGradePercent = computeInstantGradePercent(pts, 30);
+      const currentWatts =
+        sportRef.current === "cycling"
+          ? calculateCyclingPower({
+              speedMs: instantSpeedKmh / 3.6,
+              gradePercent: currentGradePercent,
+              riderMassKg: riderWeightRef.current,
+              bikeMassKg: bikeWeightRef.current,
+              bikeType: bikeTypeRef.current,
+            }).totalWatts
+          : 0;
+
+      if (currentWatts > 0 && !isAutoPausedNow) {
+        accumulatedWattsRef.current.push(currentWatts);
+      }
+      const avgWatts =
+        accumulatedWattsRef.current.length > 0
+          ? Math.round(
+              accumulatedWattsRef.current.reduce((a, b) => a + b, 0) /
+                accumulatedWattsRef.current.length
+            )
+          : 0;
+
+      const currentVamMh = calculateVamMh(
+        totalElevationGainRef.current,
+        effectiveMovingSec
+      );
+
       setStats({
         elapsedSec,
         movingSec: effectiveMovingSec,
         distanceM,
         currentPaceSecKm,
         avgPaceSecKm,
+        currentSpeedKmh: Number(instantSpeedKmh.toFixed(1)),
+        avgSpeedKmh: Number(avgSpeedKmh.toFixed(1)),
+        maxSpeedKmh: Number(maxSpeedKmhRef.current.toFixed(1)),
+        currentWatts,
+        avgWatts,
+        currentGradePercent: Number(currentGradePercent.toFixed(1)),
+        currentVamMh,
         isAutoPaused: isAutoPausedNow ?? isAutoPausedRef.current,
       });
 
@@ -906,8 +1003,18 @@ export function useWorkoutRecorder() {
       distanceM: 0,
       currentPaceSecKm: null,
       avgPaceSecKm: null,
+      currentSpeedKmh: 0,
+      avgSpeedKmh: 0,
+      maxSpeedKmh: 0,
+      currentWatts: 0,
+      avgWatts: 0,
+      currentGradePercent: 0,
+      currentVamMh: 0,
       isAutoPaused: false,
     });
+    maxSpeedKmhRef.current = 0;
+    totalElevationGainRef.current = 0;
+    accumulatedWattsRef.current = [];
     setGhostConfig(null);
     ghostConfigRef.current = null;
     setGhostStats(null);

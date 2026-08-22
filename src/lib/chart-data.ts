@@ -190,3 +190,121 @@ export function computePaceSeries(
   for (let i = 0; i < raw.length; i += step) sampled.push(raw[i]);
   return sampled;
 }
+
+export interface SpeedKmPoint {
+  km: number;
+  speedKmh: number;
+}
+
+/** Velocidade média por quilômetro completo (km/h). */
+export function computeSpeedByKm(
+  activity: ActivityDetail,
+  cumDist?: number[]
+): SpeedKmPoint[] {
+  const points = ensureTimestamps(
+    activity.points,
+    activity.startedAt,
+    activity.durationSec
+  );
+  if (points.length < 2) return [];
+
+  const cum = cumDist ?? cumulativeDistances(points);
+  const totalKm = cum[cum.length - 1] / 1000;
+  if (totalKm < 0.3) return [];
+
+  const fullKm = Math.floor(totalKm);
+  const result: SpeedKmPoint[] = [];
+
+  for (let km = 1; km <= fullKm; km++) {
+    const startM = (km - 1) * 1000;
+    const endM = km * 1000;
+    let segStart: TrackPoint | null = null;
+    let segEnd: TrackPoint | null = null;
+
+    for (let i = 0; i < points.length; i++) {
+      if (cum[i] >= startM && !segStart) segStart = points[i];
+      if (cum[i] >= endM) {
+        segEnd = points[i];
+        break;
+      }
+    }
+    if (!segStart || !segEnd?.timestamp || !segStart.timestamp) continue;
+
+    const dt =
+      (segEnd.timestamp.getTime() - segStart.timestamp.getTime()) / 1000;
+    const dist = endM - startM;
+    if (dt > 0 && dist > 0) {
+      const speedKmh = (dist / dt) * 3.6;
+      result.push({ km, speedKmh: Number(speedKmh.toFixed(1)) });
+    }
+  }
+
+  return result;
+}
+
+/** Velocidade ao longo da distância (km/h). */
+export function computeSpeedSeries(
+  activity: ActivityDetail,
+  maxPoints = 120,
+  cumDist?: number[]
+): ChartPoint[] {
+  const points = ensureTimestamps(
+    activity.points,
+    activity.startedAt,
+    activity.durationSec
+  );
+  if (points.length < 3) return [];
+
+  const cum = cumDist ?? cumulativeDistances(points);
+  const raw: ChartPoint[] = [];
+
+  for (let i = 2; i < points.length; i++) {
+    const dt =
+      (points[i].timestamp!.getTime() -
+        points[i - 2].timestamp!.getTime()) /
+      1000;
+    const dist = cum[i] - cum[i - 2];
+    if (dt > 1 && dist > 5) {
+      const speedKmh = (dist / dt) * 3.6;
+      if (speedKmh >= 0 && speedKmh <= 120) {
+        raw.push({ x: cum[i] / 1000, y: Number(speedKmh.toFixed(1)) });
+      }
+    }
+  }
+
+  if (raw.length <= maxPoints) return raw;
+  const step = Math.ceil(raw.length / maxPoints);
+  const sampled: ChartPoint[] = [];
+  for (let i = 0; i < raw.length; i += step) sampled.push(raw[i]);
+  return sampled;
+}
+
+/** Potência em Watts ao longo da distância. */
+export function computePowerSeries(
+  activity: ActivityDetail,
+  maxPoints = 120,
+  cumDist?: number[]
+): ChartPoint[] {
+  const all = activity.points;
+  const cum = cumDist ?? cumulativeDistances(all);
+  const series: ChartPoint[] = [];
+
+  for (let i = 0; i < all.length; i++) {
+    const w = all[i].watts;
+    if (w != null && Number.isFinite(w) && w >= 0) {
+      series.push({ x: cum[i] / 1000, y: Math.round(w) });
+    }
+  }
+
+  if (series.length < 2) return [];
+  if (series.length <= maxPoints) return series;
+
+  const step = Math.ceil(series.length / maxPoints);
+  const sampled: ChartPoint[] = [];
+  for (let i = 0; i < series.length; i += step) {
+    sampled.push(series[i]);
+  }
+  const last = series[series.length - 1];
+  if (sampled[sampled.length - 1] !== last) sampled.push(last);
+  return sampled;
+}

@@ -9,6 +9,7 @@ import type {
 import { simplifyPoints } from "./geo";
 import { estimateActivityCalories } from "./calories";
 import { getUserProfile } from "./profile";
+import { computeCyclingActivityStats } from "./cycling-physics";
 import {
   getAllStoredActivities,
   getStoredActivity,
@@ -43,6 +44,7 @@ export async function saveActivity(
   const id = uuidv4();
   const points = simplifyPoints(parsed.points, 1200);
   const calories = await resolveCalories(parsed);
+  const profile = await getUserProfile();
 
   const gears = await getAllStoredGear();
   let defaultGear = null;
@@ -59,6 +61,34 @@ export async function saveActivity(
   }
   const gearId = defaultGear ? defaultGear.id : null;
 
+  // Se for ciclismo, calcula métricas físicas científicas agregadas caso ainda não existam
+  let cyclingStats: ReturnType<typeof computeCyclingActivityStats> | null = null;
+  if (parsed.sport === "cycling") {
+    cyclingStats = computeCyclingActivityStats(
+      points,
+      parsed.movingTimeSec || parsed.durationSec,
+      profile?.weightKg,
+      defaultGear?.weightKg,
+      defaultGear?.bikeType
+    );
+  }
+
+  const avgSpeedKmh =
+    parsed.avgSpeedKmh ??
+    cyclingStats?.avgSpeedKmh ??
+    (parsed.distanceM > 0 && parsed.durationSec > 0
+      ? Number(((parsed.distanceM / parsed.durationSec) * 3.6).toFixed(1))
+      : null);
+
+  const maxSpeedKmh = parsed.maxSpeedKmh ?? cyclingStats?.maxSpeedKmh ?? null;
+  const avgWatts = parsed.avgWatts ?? cyclingStats?.avgWatts ?? null;
+  const maxWatts = parsed.maxWatts ?? cyclingStats?.maxWatts ?? null;
+  const normalizedPowerWatts = parsed.normalizedPowerWatts ?? cyclingStats?.normalizedPowerWatts ?? null;
+  const vamMh = parsed.vamMh ?? cyclingStats?.vamMh ?? null;
+  const maxGradePercent = parsed.maxGradePercent ?? cyclingStats?.maxGradePercent ?? null;
+  const avgCadenceRpm = parsed.avgCadenceRpm ?? null;
+  const maxCadenceRpm = parsed.maxCadenceRpm ?? null;
+
   const stored: StoredActivity = {
     id,
     name: parsed.name,
@@ -70,6 +100,15 @@ export async function saveActivity(
     distanceM: parsed.distanceM,
     avgPaceSecKm: parsed.avgPaceSecKm ?? null,
     maxPaceSecKm: parsed.maxPaceSecKm ?? null,
+    avgSpeedKmh,
+    maxSpeedKmh,
+    avgWatts,
+    maxWatts,
+    normalizedPowerWatts,
+    vamMh,
+    maxGradePercent,
+    avgCadenceRpm,
+    maxCadenceRpm,
     calories,
     elevationGainM: parsed.elevationGainM ?? null,
     avgHr: parsed.avgHr ?? null,
@@ -80,12 +119,16 @@ export async function saveActivity(
     gearId,
     workoutId: parsed.workoutId || null,
     structuredWorkoutReport: parsed.structuredWorkoutReport || null,
-    points: points.map((p) => ({
+    points: points.map((p, idx) => ({
       lat: p.lat,
       lng: p.lng,
       elevation: p.elevation,
       timestamp: p.timestamp?.toISOString(),
       hr: p.hr,
+      watts: p.watts ?? (cyclingStats && cyclingStats.powerSeriesWatts[idx] != null ? cyclingStats.powerSeriesWatts[idx] : undefined),
+      cadence: p.cadence,
+      speedKmh: p.speedKmh,
+      grade: p.grade,
     })),
   };
 

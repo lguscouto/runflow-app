@@ -63,12 +63,16 @@ export function parseFit(
         const latDeg = Math.abs(lat) > 90 ? (lat * 180) / Math.pow(2, 31) : lat;
         const lngDeg = Math.abs(lng) > 180 ? (lng * 180) / Math.pow(2, 31) : lng;
 
+        const speedVal = num(r.enhanced_speed ?? r.speed);
         points.push({
           lat: latDeg,
           lng: lngDeg,
           elevation: num(r.altitude ?? r.enhanced_altitude) ?? undefined,
           timestamp: fitTimestampToDate(num(r.timestamp)),
           hr: num(r.heart_rate) ?? undefined,
+          watts: num(r.power) ?? undefined,
+          cadence: num(r.cadence) ?? undefined,
+          speedKmh: speedVal != null ? (speedVal < 40 ? speedVal * 3.6 : speedVal) : undefined,
         });
       }
 
@@ -115,24 +119,42 @@ export function parseFit(
         avgPaceSecKm = (durationSec / distanceM) * 1000;
       }
 
+      const rawAvgSpeed = num(session.avg_speed ?? session.enhanced_avg_speed);
+      const avgSpeedKmh = rawAvgSpeed != null ? (rawAvgSpeed < 40 ? rawAvgSpeed * 3.6 : rawAvgSpeed) : (distanceM > 0 && durationSec > 0 ? (distanceM / durationSec) * 3.6 : undefined);
+
+      const rawMaxSpeed = num(session.max_speed ?? session.enhanced_max_speed);
+      const maxSpeedKmh = rawMaxSpeed != null ? (rawMaxSpeed < 40 ? rawMaxSpeed * 3.6 : rawMaxSpeed) : undefined;
+
+      const avgWatts = num(session.avg_power);
+      const maxWatts = num(session.max_power);
+      const normalizedPowerWatts = num(session.normalized_power);
+      const avgCadenceRpm = num(session.avg_cadence);
+      const maxCadenceRpm = num(session.max_cadence);
+
       const sport = mapSport(
         String(session.sport ?? session.sub_sport ?? "")
       );
-      const name =
-        String(session.workout_name ?? fileName.replace(/\.fit$/i, "")) ||
-        "Treino importado";
+
+      const calories = num(session.total_calories);
 
       resolve({
-        name,
+        name: fileName.replace(/\.fit$/i, ""),
         sport,
         startedAt,
         durationSec,
         distanceM,
         avgPaceSecKm,
+        avgSpeedKmh: avgSpeedKmh != null ? Number(avgSpeedKmh.toFixed(1)) : undefined,
+        maxSpeedKmh: maxSpeedKmh != null ? Number(maxSpeedKmh.toFixed(1)) : undefined,
+        avgWatts,
+        maxWatts,
+        normalizedPowerWatts,
+        avgCadenceRpm,
+        maxCadenceRpm,
+        calories,
         elevationGainM,
         avgHr: avgHr ? Math.round(avgHr) : undefined,
         maxHr: maxHr ? Math.round(maxHr) : undefined,
-        calories: num(session.total_calories),
         points,
       });
     });

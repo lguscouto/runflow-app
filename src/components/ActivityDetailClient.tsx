@@ -13,6 +13,8 @@ import {
   Map as MapIcon,
   Box,
   Activity as ActivityIcon,
+  Zap,
+  Gauge,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getUserProfile } from "@/lib/profile";
@@ -79,6 +81,11 @@ import {
   formatCalories,
   formatElevation,
   formatPace,
+  formatSpeed,
+  formatWatts,
+  formatGrade,
+  formatVam,
+  formatSportSpeedOrPace,
   sportLabel,
 } from "@/lib/format";
 
@@ -296,7 +303,7 @@ export function ActivityDetailClient() {
 
       <HeartRateZonesPanel activity={activity} />
 
-      <ActivitySplits points={activity.points} />
+      <ActivitySplits points={activity.points} sport={activity.sport} />
 
       {/* Gear Selector Section */}
       <div className="stat-card flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-[var(--border)] bg-[var(--surface)]">
@@ -383,18 +390,33 @@ export function ActivityDetailClient() {
         </div>
         <div className="stat-card">
           <p className="text-sm text-[var(--muted)]">
-            {activity.movingTimeSec && activity.durationSec > activity.movingTimeSec + 3
+            {isCycling
+              ? t("detail.avg_speed")
+              : activity.movingTimeSec && activity.durationSec > activity.movingTimeSec + 3
               ? t("auto_pause.moving_pace")
               : t("detail.avg_pace")}
           </p>
           <p className="text-xl font-bold">
-            {formatPace(activity.avgPaceSecKm)}
+            {isCycling
+              ? formatSpeed(
+                  activity.avgSpeedKmh ??
+                    (activity.avgPaceSecKm ? 3600 / activity.avgPaceSecKm : null)
+                )
+              : formatPace(activity.avgPaceSecKm)}
           </p>
-          {activity.movingTimeSec && activity.distanceM > 0 && (activity.elapsedTimeSec || activity.durationSec) > activity.movingTimeSec + 3 && (
+          {isCycling && activity.maxSpeedKmh != null && (
             <p className="text-xs text-[var(--muted)] mt-0.5 font-mono">
-              {t("auto_pause.total_pace")}: {formatPace(((activity.elapsedTimeSec || activity.durationSec) / activity.distanceM) * 1000)}
+              {t("detail.max_speed")}: {formatSpeed(activity.maxSpeedKmh)}
             </p>
           )}
+          {!isCycling &&
+            activity.movingTimeSec &&
+            activity.distanceM > 0 &&
+            (activity.elapsedTimeSec || activity.durationSec) > activity.movingTimeSec + 3 && (
+              <p className="text-xs text-[var(--muted)] mt-0.5 font-mono">
+                {t("auto_pause.total_pace")}: {formatPace(((activity.elapsedTimeSec || activity.durationSec) / activity.distanceM) * 1000)}
+              </p>
+            )}
         </div>
         <div className="stat-card flex gap-2">
           <Mountain className="text-[var(--muted)] shrink-0 mt-1" size={18} />
@@ -405,6 +427,43 @@ export function ActivityDetailClient() {
             </p>
           </div>
         </div>
+
+        {/* Cycling Specific Cards: Power & VAM */}
+        {isCycling && (
+          <>
+            <div className="stat-card flex gap-2 border-amber-500/20 bg-amber-500/5">
+              <Zap className="text-amber-400 shrink-0 mt-1 fill-amber-400" size={18} />
+              <div>
+                <p className="text-sm text-amber-400 font-bold">{t("detail.avg_watts")}</p>
+                <p className="text-xl font-bold text-amber-300">
+                  {formatWatts(activity.avgWatts)}
+                </p>
+                <p className="text-xs text-[var(--muted)] mt-0.5 font-mono">
+                  {activity.normalizedPowerWatts
+                    ? `NP: ${formatWatts(activity.normalizedPowerWatts)}`
+                    : activity.maxWatts
+                    ? `Máx: ${formatWatts(activity.maxWatts)}`
+                    : "Estimada por física"}
+                </p>
+              </div>
+            </div>
+            <div className="stat-card flex gap-2 border-emerald-500/20 bg-emerald-500/5">
+              <Gauge className="text-emerald-400 shrink-0 mt-1" size={18} />
+              <div>
+                <p className="text-sm text-emerald-400 font-bold">{t("detail.vam")}</p>
+                <p className="text-xl font-bold text-emerald-300">
+                  {activity.vamMh ? formatVam(activity.vamMh) : "—"}
+                </p>
+                {activity.maxGradePercent != null && (
+                  <p className="text-xs text-[var(--muted)] mt-0.5 font-mono">
+                    {t("detail.max_grade")}: {formatGrade(activity.maxGradePercent)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
         <div className="stat-card flex gap-2">
           <Flame className="text-orange-400 shrink-0 mt-1" size={18} />
           <div>

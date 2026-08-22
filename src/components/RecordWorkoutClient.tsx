@@ -45,6 +45,11 @@ import {
   formatDistance,
   formatDuration,
   formatPace,
+  formatSpeed,
+  formatWatts,
+  formatGrade,
+  formatVam,
+  formatSportSpeedOrPace,
   sportLabel,
 } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
@@ -558,17 +563,19 @@ export function RecordWorkoutClient() {
             </p>
           </div>
 
-          {/* Pace row: current + average */}
+          {/* Pace / Speed row: current + average */}
           <div className="flex gap-8 justify-center">
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
-                {t("record.current_pace")}
+                {sport === "cycling" ? t("record.current_speed") : t("record.current_pace")}
               </p>
               <p
                 className="font-bold tabular-nums"
                 style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: "#f0f4f8" }}
               >
-                {formatPace(stats.currentPaceSecKm)}
+                {sport === "cycling"
+                  ? formatSpeed(stats.currentSpeedKmh)
+                  : formatPace(stats.currentPaceSecKm)}
               </p>
             </div>
             <div
@@ -577,16 +584,50 @@ export function RecordWorkoutClient() {
             />
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
-                {t("detail.avg_pace")}
+                {sport === "cycling" ? t("record.avg_speed") : t("detail.avg_pace")}
               </p>
               <p
                 className="font-bold tabular-nums"
                 style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: "#8b9bb4" }}
               >
-                {formatPace(stats.avgPaceSecKm)}
+                {sport === "cycling"
+                  ? formatSpeed(stats.avgSpeedKmh)
+                  : formatPace(stats.avgPaceSecKm)}
               </p>
             </div>
           </div>
+
+          {/* Cycling Power & Grade Row */}
+          {sport === "cycling" && (
+            <div className="flex gap-8 justify-center items-center py-1 px-4 rounded-2xl bg-white/5 border border-white/10">
+              <div className="text-center">
+                <p className="text-[10px] uppercase tracking-widest text-amber-400 mb-0.5 font-bold flex items-center justify-center gap-1">
+                  <Zap size={12} className="fill-amber-400" />
+                  <span>{t("record.estimated_power")}</span>
+                </p>
+                <p className="text-xl font-bold tabular-nums text-amber-300">
+                  {formatWatts(stats.currentWatts)}{" "}
+                  <span className="text-xs font-normal text-[var(--muted)]">
+                    (Méd: {formatWatts(stats.avgWatts)})
+                  </span>
+                </p>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div className="text-center">
+                <p className="text-[10px] uppercase tracking-widest text-emerald-400 mb-0.5 font-bold flex items-center justify-center gap-1">
+                  <span>⛰️ {t("record.current_grade")}</span>
+                </p>
+                <p className="text-xl font-bold tabular-nums text-emerald-300">
+                  {formatGrade(stats.currentGradePercent)}{" "}
+                  {stats.currentVamMh > 0 && (
+                    <span className="text-xs font-normal text-[var(--muted)]">
+                      ({formatVam(stats.currentVamMh)})
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Calories & Heart Rate */}
           <div className="flex gap-8 justify-center items-center">
@@ -916,17 +957,54 @@ export function RecordWorkoutClient() {
               </p>
             </div>
             <div className="stat-card text-center py-4">
-              <p className="text-xs text-[var(--muted)]">{t("record.current_pace")}</p>
+              <p className="text-xs text-[var(--muted)]">
+                {sport === "cycling" ? t("record.current_speed") : t("record.current_pace")}
+              </p>
               <p className="text-xl font-semibold mt-1">
-                {formatPace(stats.currentPaceSecKm)}
+                {sport === "cycling"
+                  ? formatSpeed(stats.currentSpeedKmh)
+                  : formatPace(stats.currentPaceSecKm)}
               </p>
             </div>
             <div className="stat-card text-center py-4">
-              <p className="text-xs text-[var(--muted)]">{t("auto_pause.moving_pace")}</p>
+              <p className="text-xs text-[var(--muted)]">
+                {sport === "cycling" ? t("record.avg_speed") : t("auto_pause.moving_pace")}
+              </p>
               <p className="text-xl font-semibold mt-1">
-                {formatPace(stats.avgPaceSecKm)}
+                {sport === "cycling"
+                  ? formatSpeed(stats.avgSpeedKmh)
+                  : formatPace(stats.avgPaceSecKm)}
               </p>
             </div>
+
+            {sport === "cycling" && (
+              <>
+                <div className="stat-card text-center py-4 border-amber-500/20 bg-amber-500/5">
+                  <p className="text-xs text-amber-400 font-bold flex items-center justify-center gap-1">
+                    <Zap size={13} className="fill-amber-400" />
+                    <span>{t("record.estimated_power")}</span>
+                  </p>
+                  <p className="text-xl font-bold mt-1 text-amber-300 tabular-nums">
+                    {formatWatts(stats.currentWatts)}
+                  </p>
+                  <p className="text-[11px] text-[var(--muted)] mt-0.5">
+                    Média: {formatWatts(stats.avgWatts)}
+                  </p>
+                </div>
+                <div className="stat-card text-center py-4 border-emerald-500/20 bg-emerald-500/5">
+                  <p className="text-xs text-emerald-400 font-bold flex items-center justify-center gap-1">
+                    <span>⛰️ {t("record.current_grade")}</span>
+                  </p>
+                  <p className="text-xl font-bold mt-1 text-emerald-300 tabular-nums">
+                    {formatGrade(stats.currentGradePercent)}
+                  </p>
+                  <p className="text-[11px] text-[var(--muted)] mt-0.5">
+                    {stats.currentVamMh > 0 ? formatVam(stats.currentVamMh) : "Plano"}
+                  </p>
+                </div>
+              </>
+            )}
+
             <div className="stat-card text-center py-4 col-span-2">
               <p className="text-xs text-[var(--muted)]">
                 {t("detail.calories")} ({t("detail.calories_source_profile").toLowerCase()})

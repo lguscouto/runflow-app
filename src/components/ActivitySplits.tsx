@@ -1,16 +1,17 @@
 "use client";
 
 import React from "react";
-import type { TrackPoint } from "@/lib/types";
+import type { Sport, TrackPoint } from "@/lib/types";
 import { calculateSplits } from "@/lib/splits";
-import { formatDuration, formatPace } from "@/lib/format";
+import { formatDuration, formatPace, formatSpeed, formatWatts } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 
 interface ActivitySplitsProps {
   points: TrackPoint[];
+  sport?: Sport;
 }
 
-export function ActivitySplits({ points }: ActivitySplitsProps) {
+export function ActivitySplits({ points, sport = "running" }: ActivitySplitsProps) {
   const { t } = useI18n();
   const splits = calculateSplits(points);
 
@@ -18,7 +19,9 @@ export function ActivitySplits({ points }: ActivitySplitsProps) {
     return null;
   }
 
+  const isCycling = sport === "cycling";
   const hasHr = splits.some((s) => s.avgHr != null);
+  const hasWatts = isCycling && splits.some((s) => s.avgWatts != null && s.avgWatts > 0);
   const hasElevation = splits.some((s) => s.elevationGainM > 0.5);
 
   function formatSplitIndex(km: number): string {
@@ -43,7 +46,14 @@ export function ActivitySplits({ points }: ActivitySplitsProps) {
             <tr className="border-b border-[var(--border)] text-[var(--muted)]">
               <th className="px-4 py-3 font-semibold w-24">{t("splits.lap")}</th>
               <th className="px-4 py-3 font-semibold">{t("record.time")}</th>
-              <th className="px-4 py-3 font-semibold">{t("splits.pace")}</th>
+              <th className="px-4 py-3 font-semibold">
+                {isCycling ? t("splits.speed") : t("splits.pace")}
+              </th>
+              {hasWatts && (
+                <th className="px-4 py-3 font-semibold text-amber-400">
+                  {t("splits.watts")}
+                </th>
+              )}
               {hasElevation && (
                 <th className="px-4 py-3 font-semibold">{t("splits.elevation")}</th>
               )}
@@ -70,9 +80,19 @@ export function ActivitySplits({ points }: ActivitySplitsProps) {
                   <td className="px-4 py-3">
                     {formatDuration(split.durationSec)}
                   </td>
-                  <td className="px-4 py-3">
-                    {formatPace(split.paceSecKm)}
+                  <td className="px-4 py-3 font-medium">
+                    {isCycling
+                      ? formatSpeed(
+                          split.speedKmh ??
+                            (split.paceSecKm ? 3600 / split.paceSecKm : null)
+                        )
+                      : formatPace(split.paceSecKm)}
                   </td>
+                  {hasWatts && (
+                    <td className="px-4 py-3 font-medium text-amber-400">
+                      {formatWatts(split.avgWatts)}
+                    </td>
+                  )}
                   {hasElevation && (
                     <td className="px-4 py-3">
                       {split.elevationGainM > 0.5

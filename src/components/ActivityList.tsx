@@ -10,6 +10,7 @@ import {
   formatDuration,
   formatCalories,
   formatPace,
+  formatSportSpeedOrPace,
   sportLabel,
 } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
@@ -105,7 +106,7 @@ export function ActivityList({
                   {formatDistance(a.distanceM)}
                 </p>
                 <p className="text-sm text-[var(--muted)]">
-                  {formatDuration(a.durationSec)} · {formatPace(a.avgPaceSecKm)}
+                  {formatDuration(a.durationSec)} · {formatSportSpeedOrPace(a.sport, a.avgPaceSecKm, a.avgSpeedKmh)}
                   {a.calories != null && a.calories > 0 && (
                     <> · {formatCalories(a.calories)}</>
                   )}

@@ -145,6 +145,14 @@ export interface TrackPoint {
   elevation?: number;
   timestamp?: Date;
   hr?: number;
+  /** Potência mecânica em Watts (nativo de sensor ou calculado por física) */
+  watts?: number;
+  /** Cadência em RPM */
+  cadence?: number;
+  /** Velocidade instantânea em km/h */
+  speedKmh?: number;
+  /** Inclinação do terreno (% grade) */
+  grade?: number;
 }
 
 export interface ParsedActivity {
@@ -157,6 +165,15 @@ export interface ParsedActivity {
   distanceM: number;
   avgPaceSecKm?: number;
   maxPaceSecKm?: number;
+  avgSpeedKmh?: number;
+  maxSpeedKmh?: number;
+  avgWatts?: number;
+  maxWatts?: number;
+  normalizedPowerWatts?: number;
+  vamMh?: number;
+  maxGradePercent?: number;
+  avgCadenceRpm?: number;
+  maxCadenceRpm?: number;
   calories?: number;
   elevationGainM?: number;
   avgHr?: number;
@@ -176,6 +193,15 @@ export interface ActivitySummary {
   elapsedTimeSec?: number | null;
   distanceM: number;
   avgPaceSecKm: number | null;
+  avgSpeedKmh?: number | null;
+  maxSpeedKmh?: number | null;
+  avgWatts?: number | null;
+  maxWatts?: number | null;
+  normalizedPowerWatts?: number | null;
+  vamMh?: number | null;
+  maxGradePercent?: number | null;
+  avgCadenceRpm?: number | null;
+  maxCadenceRpm?: number | null;
   elevationGainM: number | null;
   avgHr: number | null;
   calories: number | null;
