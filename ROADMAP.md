@@ -1,192 +1,170 @@
 # RunFlow — Roadmap & Benchmark de Mercado
 
-Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da categoria (**Strava**, **Adidas Running / Runtastic**, **Nike Run Club - NRC** e **Garmin Connect**), mantendo o compromisso central do RunFlow: **100% offline, local-first, gratuito e com privacidade total de dados**.
+Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da categoria (**Strava**, **Garmin Connect / Edge**, **Wahoo Fitness**, **Komoot**, **Nike Run Club - NRC** e **Bikemap**), mantendo o compromisso central do RunFlow: **100% offline, local-first, gratuito e com privacidade total de dados**.
 
 ---
 
-## 🏆 Benchmark de Mercado & Tendências (2025–2026)
+## 🏆 Benchmark de Mercado & Tendências — Ciclismo & Multi-Esporte (2025–2026)
 
-| Aplicativo | Pontos Fortes em UI/UX & Features | O que o RunFlow pode aprender / superar |
+| Aplicativo | Pontos Fortes em UI/UX & Ciclismo | O que o RunFlow oferece / supera |
 |---|---|---|
-| **Strava** | • Cards de compartilhamento social belíssimos<br>• Heatmaps pessoais sobrepostos<br>• Análise detalhada de ritmo e segmentos | • No Strava, Heatmaps e análises profundas são pagos ($$$). No RunFlow, tudo é 100% gratuito e local.<br>• Compartilhamento visual direto para Instagram Stories sem marcas forçadas. |
-| **Adidas Running** | • Gamificação com streaks de chamas 🔥<br>• Treinos intervalados guiados com áudio<br>• Design clean com foco no botão de início | • Feedback tátil e sonoro durante o treino.<br>• Contador visual de consistência semanal na Home. |
-| **Nike Run Club (NRC)** | • Foco em superar a si mesmo (Past Self)<br>• Feedback de voz (Audio Cues) fluido e motivador<br>• Planos de treino estruturados e gratuitos | • Avisos por voz configuráveis (tempo/distância/FC/pace).<br>• Previsões de prova e metas claras de evolução. |
-| **Garmin Connect** | • Zonas de Frequência Cardíaca (Z1-Z5) detalhadas<br>• Carga de treino cardiovascular (TRIMP/Stress)<br>• Estimativa de VO2 Max e previsão de provas (5K, 10K, 21K, 42K) | • Trazer a profundidade métrica dos relógios Garmin direto para o celular sem precisar de hardware caro ou nuvem proprietária. |
+| **Strava** | • Métricas de velocidade em km/h e potência estimada<br>• Cadastro de Bikes e componentes<br>• Heatmaps e Segmentos | • No Strava, recursos analíticos e heatmaps são pagos ($$$). No RunFlow, tudo é 100% gratuito e local.<br>• Cards de Stories sem marcas de paywall. |
+| **Garmin Connect / Edge** | • Sensores BLE de Cadência (RPM) e Potência (Watts)<br>• Zonas de Potência (Coggan) e Zonas de FC (Z1-Z5)<br>• Análise de subidas em tempo real (ClimbPro) | • Transformar qualquer smartphone em um ciclocomputador GPS completo com sensores BLE sem exigir aparelhos caros. |
+| **Wahoo Fitness & Cadence** | • Tela de Ciclocomputador limpa com números grandes<br>• Modo Paisagem (Landscape) para suporte de guidão<br>• Avisos de voz configuráveis para ciclismo | • HUD de alto contraste (Outdoor Sun Mode) otimizado para sol direto no guidão da bicicleta. |
+| **Komoot & Bikemap** | • Perfil altimétrico de elevação da rota<br>• Alertas de manutenção preventiva de bike por quilometragem | • Gestão completa da garagem de bikes com histórico de desgaste de corrente, pneus e pastilhas. |
 
 ---
 
-## 🚀 Status das Features Implementadas (Top 1–17)
+## 📊 Status Geral do Projeto (Fases Anteriores Concluídas)
 
-| Feature | Descrição | Status |
+| Fase | Descrição | Status |
 |---|---|---|
-| **1. Exportar treinos em GPX** | Download direto e compartilhamento nativo no Android | ✅ Concluído |
-| **2. Gráficos de ritmo, elevação e FC** | Gráficos interativos com hover e dados detalhados | ✅ Concluído |
-| **3. Metas semanais e progresso** | Metas de distância e quantidade com barras de progresso | ✅ Concluído |
-| **4. Recordes pessoais (PRs)** | Troféus automáticos para melhores marcas (ritmo, distância, duração) | ✅ Concluído |
-| **5. Splits por km** | Parciais de tempo, ritmo e elevação quilômetro a quilômetro | ✅ Concluído |
-| **Extra: Internacionalização (PT & EN)** | Suporte completo a múltiplos idiomas com troca instantânea | ✅ Concluído |
-| **6. Histórico e estatísticas avançadas** | Painel acumulado anual com filtros por período e esporte | ✅ Concluído |
-| **7. Modo treino com tela escura** | Interface de alta visibilidade com Screen Wake Lock | ✅ Concluído |
-| **8. Backup e restauração de dados** | Exportação e importação de JSON completo sem perdas | ✅ Concluído |
-| **9. Integração com FC ao vivo (BLE)** | Conexão com cintas cardíacas e smartwatches via Bluetooth LE | ✅ Concluído |
-| **11. Assistente Wizard de Onboarding** | Configuração guiada em 3 passos no primeiro acesso | ✅ Concluído |
-| **12. Conquistas & Analytics de Tênis** | 10 insígnias dinâmicas e controle de desgaste de calçados | ✅ Concluído |
-| **13. Competidor Virtual (Ghost Runner)** | Comparação em tempo real com atividades anteriores e alertas TTS | ✅ Concluído |
-| **14. Correção e Enriquecimento Topográfico** | Merge de altimetria aberta e junção de GPX com FC de FITs | ✅ Concluído |
-| **15. Sincronização Multidispositivo P2P & WebDAV** | Sincronização direta por WebRTC e nuvens privadas sem servidor central | ✅ Concluído |
-| **16. Navegação Offline & Alerta de Desvio** | Alertas sonoros/visuais ao sair da rota e criador de trajetos no mapa | ✅ Concluído |
-| **17. Replay e Flyover 3D** | Visualização imersiva 3D com WebGL/Three.js, 3 câmeras e telemetria | ✅ Concluído |
-| **18. Card de Compartilhamento Social** | Gerador em Canvas para Stories (9:16) e Feed (1:1) com temas e share nativo | ✅ Concluído |
-| **19. Zonas de FC & Carga de Treino** | Distribuição Z1-Z5, cálculo TRIMP, efeito do treino e fórmulas Tanaka/Karvonen | ✅ Concluído |
-| **20. Assistente de Voz em Tempo Real** | Audio Cues periódicos com métricas de distância, tempo, ritmo, FC e splits | ✅ Concluído |
-| **21. Auto-Pause Inteligente** | Detecção de paradas em semáforos, tempo em movimento e recálculo de ritmo | ✅ Concluído |
-| **24. Previsão de Provas & VO2 Max Local** | Estimativa de VO2 Max, Idade de Condicionamento e Previsões (5K, 10K, 21K, 42K) | ✅ Concluído |
+| **Fase 1.0: Core do App** | Importação GPX/FIT, Altimetria, Splits, PRs, Gráficos, BLE HR, Metas, Dashboard Anual | ✅ 100% Concluído |
+| **Fase 2.0: Avançada** | Sincronização P2P/WebDAV, Navegação Offline, Flyover 3D, Card Social, Voice Coach, Auto-Pause, Heatmap Térmico, Treinos Intervalados, VO2 Max, Micro-Interações Táteis & Modo Sol | ✅ 100% Concluído |
 
 ---
 
-## 🎯 Próximas Features Prioritárias (Fase 2.0)
-
-Legenda de esforço: **S** (pequeno: 1-2 dias) · **M** (médio: 3-5 dias) · **L** (grande: 1-2 semanas)
+# 🚴 Fase 3.0: Ecossistema de Ciclismo & Publicação (10 Etapas)
 
 ---
 
-### 18. Gerador de Card de Compartilhamento Social (Stories & Feed) — ✅ Concluído
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava / NRC
+### 1. Garagem de Bicicletas & Manutenção Preventiva (Bike Garage & Components)
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava Gear / ProBikeGarage
 
-Permitir que o corredor crie imagens estilizadas com os dados do treino para postar no Instagram Stories, WhatsApp, Strava ou salvar na galeria.
+Evoluir o cadastro de equipamentos para uma Garagem Completa de Bicicletas com controle de desgaste de componentes mecânicos.
 
-- [x] Motor de renderização local via HTML5 Canvas / SVG (sem envio para servidor)
-- [x] 5 temas visuais: *Dark Cyberpunk/Neon*, *Minimalist Clean*, *Sunset Flow*, *Topo Map Contour*, *Foto da Galeria*
-- [x] Opção de usar o mapa traçado em gradiente ou carregar uma foto da galeria como plano de fundo
-- [x] Exibição harmônica de dados: Distância, Ritmo Médio, Duração, Ganho de Elevação, FC Média e Calorias
-- [x] Proporções: 9:16 (Instagram Stories / WhatsApp Status) e 1:1 (Feed)
-- [x] Botão de compartilhamento nativo via Capacitor Share / Web Share API e download PNG
-
----
-
-### 19. Zonas de Frequência Cardíaca (Z1–Z5) & Análise de Carga de Treino — ✅ Concluído
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Garmin Connect / Strava Summit
-
-Aprofundar a análise cardiovascular dos treinos com dados de batimentos cardíacos (BLE ou importados via FIT).
-
-- [x] Configuração de FC Máxima e FC de Repouso no Perfil (com cálculo automático via Tanaka/Karvonen)
-- [x] Distribuição de tempo e % gasto nas 5 Zonas (Z1 Recuperação, Z2 Base Aeróbica, Z3 Ritmo, Z4 Limiar, Z5 Anaeróbico)
-- [x] Gráfico de barras horizontais colorido e stacked bar na tela de detalhe da atividade
-- [x] Cálculo da Carga Cardiovascular (TRIMP - Training Impulse / Training Load)
-- [x] Indicador de impacto do treino (ex.: "Treino Regenerativo", "Desenvolvimento Aeróbico", "Treino de Limiar", "Pico Anaeróbico & VO2 Max")
+- [ ] Cadastro de Bikes: Tipos (Speed / Road, MTB, Gravel, Urbana, E-Bike, Dobrável), Marca, Modelo, Ano, Peso da bike (kg) e Foto/Ícone
+- [ ] Rastreamento de componentes com limite de vida útil (km) e alertas preventivos:
+  - Corrente (ex.: alerta de troca com 2.500 km)
+  - Pneus dianteiro e traseiro (ex.: 4.000 km)
+  - Pastilhas/Sapatas de freio (ex.: 3.000 km)
+  - Fluido / Sangria de freios e Revisão Geral (ex.: 6 meses / 5.000 km)
+- [ ] Associação da bike padrão para pedais e transferência de quilometragem automática
+- [ ] Hodômetro acumulado e histórico de manutenção por bicicleta
 
 ---
 
-### 20. Assistente de Voz em Tempo Real (Audio Cues / Voice Coach) — ✅ Concluído
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Nike Run Club / Adidas Running
+### 2. Motor de Métricas de Ciclismo (Velocidade km/h, Potência Estimada & Inclinação)
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava / GoldenCheetah
 
-Feedback em áudio periódico nos fones de ouvido durante a corrida sem precisar olhar para a tela do celular.
+Cálculo científico de métricas de ciclismo em tempo real e pós-treino.
 
-- [x] Síntese de voz nativa e offline usando a Web Speech API / Capacitor TTS com engine de pronúncia natural fonética
-- [x] Gatilho configurável: Por distância (ex.: a cada 500m, 1km, 2km, 5km) ou Por tempo (ex.: a cada 1min, 2min, 3min, 5min, 10min)
-- [x] Métricas faladas customizáveis: Distância total, Tempo decorrido, Pace médio, Pace instantâneo, Split do último km, FC (bpm) e Zona de FC atual (Z1-Z5)
-- [x] Controles avançados de áudio: sliders de velocidade da fala (0.7x - 1.5x) e volume (20% - 100%)
-- [x] Botão de prévia instantânea da voz (*"Ouvir Prévia da Voz"*) para testar antes de correr
-- [x] Acesso rápido com modal na tela de gravação (modo normal e modo treino) e configurações salvas no Perfil
-- [x] Suporte completo aos idiomas Português (PT-BR) e Inglês (EN-US)
+- [ ] Alternância automática entre Ritmo (min/km para corrida) e **Velocidade (km/h)** para ciclismo
+- [ ] Cálculo de Velocidade Instantânea, Média e Máxima em km/h com suavização por GPS
+- [ ] Estimativa de Potência em Watts ($P_{\text{total}} = P_{\text{aero}} + P_{\text{climb}} + P_{\text{rolling}}$) baseada no peso combinado (ciclista + bike), velocidade, inclinação e coeficiente aerodinâmico
+- [ ] VAM (Velocidade Ascensional Média em m/h) e cálculo de inclinação percentual do terreno (% grade)
 
 ---
 
-### 21. Auto-Pause Inteligente & Detecção Automática de Paradas — ✅ Concluído
-**Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / Garmin
+### 3. Ciclocomputador & HUD de Guidão (Bike Computer HUD & Modo Paisagem)
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Wahoo Elemnt / Garmin Edge / Cadence
 
-Pausar o cronômetro automaticamente ao parar em semáforos ou cruzamentos urbanos, evitando distorções no ritmo médio.
+Transformar o smartphone em um ciclocomputador profissional para fixação no guidão da bicicleta.
 
-- [x] Algoritmo de detecção de velocidade mínima (< 1.5 km/h por mais de 3 segundos consecutivos)
-- [x] Distinção clara entre Tempo Total Decorrido (Elapsed Time) e Tempo em Movimento (Moving Time)
-- [x] Ritmo Médio baseado exclusivamente no tempo em movimento
-- [x] Opção ativável/desativável na tela de gravação ou nas configurações do perfil
-- [x] Alertas sonoros / por voz ao pausar e retomar automaticamente
-- [x] Ajuste de sensibilidade de parada (Corrida 1.5 km/h, Caminhada 0.8 km/h, Parada total 0.5 km/h) e delay (2s, 3s, 5s)
-- [x] Feedback sonoro e de fala natural ao pausar e ao retomar
+- [ ] Interface de gravação de ciclismo com campos customizáveis e tipografia extra grande
+- [ ] Suporte nativo ao **Modo Paisagem (Horizontal / Landscape)** com ajuste de layout para suportes de guidão (QuadLock / Garmin)
+- [ ] Botões táteis aumentados para fácil acionamento durante a pedalada (mesmo com luvas de ciclismo)
+- [ ] Compatibilidade integrada com o **Modo Sol (Outdoor Sun Mode)** de altíssimo contraste
 
 ---
 
-### 22. Mapa de Calor Pessoal (Personal Heatmap) — ✅ Concluído
-**Esforço:** M · **Prioridade:** Média · **Inspiração:** Strava Summit (Recurso Pro)
+### 4. Conexão com Sensores BLE de Ciclismo (Cadência, Velocidade & Potência)
+**Esforço:** L · **Prioridade:** Média–Alta · **Inspiração:** Garmin Edge / Wahoo
 
-Visualizar todas as corridas e rotas já realizadas sobrepostas em um único mapa da cidade, revelando a intensidade das ruas mais percorridas (estilo Strava Heatmap Pro, 100% offline e gratuito).
+Comunicação direta com sensores Bluetooth Low Energy específicos de bicicleta sem necessidade de internet.
 
-- [x] Renderização local de alta performance com Leaflet Polyline Glow Multi-camada (Outer Glow + Core Crisp) para mesclagem térmica cumulativa
-- [x] 5 temas visuais térmicos selecionáveis: *Fogo Neon*, *Ciano Cyber*, *Sunset Magenta*, *Solar Lime* e *Laranja Strava*
-- [x] 4 estilos de mapa base: *CartoDB Dark Matter*, *CartoDB Voyager (Claro)*, *OpenStreetMap Padrão* e *Satélite Esri World Imagery*
-- [x] Filtros interativos instantâneos: Por modalidade (Todas, Corrida, Caminhada, Ciclismo, Outros) e Por ano de realização
-- [x] Ajustes finos de espessura de traçado (Fino, Médio, Grosso), slider de opacidade e alternância para incluir rotas salvas
-- [x] Popups informativos ao tocar nas rotas com data, distância, ritmo, modalidade e link direto para detalhes da atividade
-- [x] Banner de telemetria com contagem de treinos renderizados, km totais mapeados e total de pontos GPS
-- [x] Modo de tela cheia (Fullscreen) e botão de recentralização inteligente com ajuste automático de limites (fitBounds)
-- [x] 100% processado no dispositivo localmente via IndexedDB/Dexie, garantindo privacidade absoluta dos locais de treino
+- [ ] Suporte ao serviço BLE padrão de **Cycling Speed and Cadence (CSCS - 0x1816)**:
+  - Sensor de Cadência de Pedivela (RPM - Rotações por Minuto)
+  - Sensor de Velocidade de Roda/Cubo (com calibração de circunferência do pneu em mm)
+- [ ] Suporte preliminar ao serviço BLE de **Cycling Power (CPS - 0x1818)** para medidores de potência (Power Meters)
+- [ ] Telemetria de cadência e potência em tempo real no HUD e gravação nos trackpoints
 
 ---
 
-### 23. Criador de Treinos Estruturados & Intervalados (Interval Builder) — ✅ Concluído
-**Esforço:** L · **Prioridade:** Média · **Inspiração:** Garmin Workouts / NRC
+### 5. Auto-Pause & Voice Coach Específicos para Ciclismo
+**Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / NRC
 
-Permitir que o corredor crie e execute treinos intervalados (tiros, fartlek, pirâmide) com avisos na tela e por voz.
+Adaptação dos assistentes automáticos para a dinâmica de velocidade do ciclismo.
 
-- [x] Editor visual de etapas: Aquecimento, Repetições (ex.: $6 \times 400\text{m}$ tiro @ ritmo alvo com $1\text{min}$ descanso) e Desaquecimento
-- [x] 5 Presets Oficiais integrados: *6x 400m Clássico*, *Pirâmide 100m a 800m*, *Fartlek Urbano*, *Tempo Run 4km*, *Regenerativo Z2*
-- [x] Biblioteca de treinos com abas (*Todos*, *Oficiais*, *Meus Treinos*), criação, duplicação, edição e exclusão
-- [x] Interface de gravação dedicada ao treino estruturado (HUD com barra de progresso da série atual, contagem regressiva, ritmo instantâneo vs alvo)
-- [x] Alertas sonoros (bips 3..2..1 sintetizados via Web Audio API) e de voz anunciando a transição de cada bloco (*"Início do tiro 2 de 6. Mantenha ritmo abaixo de 4:30!"*)
-- [x] Botão de avanço manual de série (*Avançar Série / Lap*) e suporte a voltas abertas (Open Lap)
-- [x] Relatório pós-treino com análise de cumprimento de metas em cada parcial do intervalo exibido nos detalhes da atividade
+- [ ] Perfil de sensibilidade do Auto-Pause para Bike (paradas em semáforos, cruzamentos urbanos e descidas com velocidade < 4.0 km/h a 6.0 km/h)
+- [ ] Voice Coach com intervalos estendidos para ciclismo (a cada 5 km, 10 km ou a cada 5, 10, 15 min)
+- [ ] Métricas faladas em voz natural: Velocidade média em km/h, Cadência em RPM, FC atual (bpm) e Ganho de Elevação
 
 ---
 
-### 24. Previsão de Tempo de Prova & Estimativa de VO2 Max Local — ✅ Concluído
-**Esforço:** M · **Prioridade:** Baixa–Média · **Inspiração:** Garmin Connect / Runalyze
+### 6. Análise de Subidas & Perfil de Altimetria ao Vivo (ClimbPro / Live Elevation)
+**Esforço:** M · **Prioridade:** Média · **Inspiração:** Garmin ClimbPro / Hammerhead Karoo
 
-Estimativas científicas de condicionamento e previsões para distâncias populares baseadas no histórico recente.
+Visualização da altimetria da rota durante a pedalada para gerenciamento de esforço em subidas.
 
-- [x] Estimativa local de VO2 Max calculada a partir do ritmo sustentado e FC cardíaca (Jack Daniels VDOT, Uth HR ratio, Running Economy)
-- [x] Previsão de tempo para provas clássicas: **5 km**, **10 km**, **21.1 km (Meia Maratona)** e **42.2 km (Maratona)** usando a fórmula de Peter Riegel
-- [x] Painel de "Idade de Condicionamento Físico" (Fitness Age) e medidor visual no Dashboard e no Perfil
-- [x] Pontuação de VO2 Max individual calculada e exibida nos detalhes de cada treino
-
----
-
-### 25. Polimento Visual Neo-Athletic & Micro-Interações Táteis — ✅ Concluído
-**Esforço:** S · **Prioridade:** Média · **Inspiração:** Apple Fitness+ / Adidas Running 2026
-
-Elevar o nível sensorial e visual do aplicativo com animações fluidas e feedback físico.
-
-- [x] Feedback tátil háptico nativo (`@capacitor/haptics` com fallback para Web Vibration API) nos botões de Play/Pause, Lap, Conquistas e ações do usuário
-- [x] Contador de Consistência Semanal (*Streaks*) na Home com ícone de chama animada 🔥 (ex.: "33 semanas seguidas! Lenda do Asfalto 🏆") e matriz visual de 7 dias (S..D)
-- [x] Efeito de confetes / celebração visual comemorativa (`canvas-confetti`) ao bater um Recorde Pessoal (PR) ou concluir um treino
-- [x] Modo de alto contraste / Outdoor Sun Mode (☀️ Modo Sol) na tela de gravação para máxima legibilidade sob luz solar direta
+- [ ] Algoritmo de detecção e classificação de subidas por categoria (Cat 4, Cat 3, Cat 2, Cat 1, HC) usando o índice de esforço de subida
+- [ ] Mini display de perfil de elevação ao vivo na tela de gravação com marcador de posição atual
+- [ ] Alertas visuais e sonoros ao iniciar uma subida categorizada (*"Início da subida: 1.8 km @ 6.5% de inclinação"*)
 
 ---
 
-### 10. Publicação na Play Store & Release Assinado (Fase Final de Distribuição)
-**Esforço:** M · **Prioridade:** Conclusão do Ciclo
+### 7. Treinos Estruturados de Ciclismo & Zonas de Potência (Watts / FTP / Coggan)
+**Esforço:** M · **Prioridade:** Média · **Inspiração:** TrainerRoad / TrainingPeaks / Zwift
 
-- [ ] Geração de chave de assinatura `keystore` protegida
-- [ ] Configuração do Gradle para build otimizado de Release (`assembleRelease` / `bundleRelease` AAB)
-- [ ] Splash screen nativa adaptativa e ícones nos formatos Android
-- [ ] Política de privacidade (declaração de dados 100% locais sem rastreamento)
-- [ ] Pacote F-Droid / GitHub Releases como canal open-source
+Treinos intervalados orientados a potência (Watts) e cadência (RPM).
+
+- [ ] Configuração de FTP (Functional Threshold Power em Watts) no perfil do ciclista
+- [ ] 7 Zonas de Potência clássicas de Andrew Coggan (Z1 Recuperação Ativa até Z7 Potência Neuromuscular)
+- [ ] Presets de treinos intervalados de ciclismo: *Sprints de Cadência (High Cadence Drills)*, *Tiros VO2 Max (3x 3min)*, *Sweet Spot (2x 15min)* e *Resistência Z2*
 
 ---
 
-## 🗺️ Fluxograma de Dependências da Fase 2.0
+### 8. Gráficos Avançados & Análise Pós-Pedal (Power Curve, Cadence & Altimetria)
+**Esforço:** M · **Prioridade:** Média · **Inspiração:** Strava Summit / Intervals.icu
+
+Aprofundamento analítico na tela de detalhes de treinos de ciclismo.
+
+- [ ] Gráficos interativos sincronizados de Velocidade (km/h), Elevação (m), Cadência (RPM) e Potência (Watts)
+- [ ] Distribuição de tempo em Zonas de Potência (Z1–Z7) e Zonas de FC (Z1–Z5)
+- [ ] Recordes Pessoais (PRs) exclusivos de Ciclismo: Maior Distância, Maior Velocidade Média, Velocidade Máxima, Maior Altimetria e Melhor Potência
+- [ ] Curva de Potência Crítica (Melhores Esforços de Potência: 5s, 30s, 1min, 5min, 20min, 60min)
+
+---
+
+### 9. Cards Sociais & Heatmap Térmico Dedicados para Ciclismo
+**Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / Instagram
+
+Celebração visual e mapeamento térmico de rotas de pedal.
+
+- [ ] Cards de compartilhamento social (Stories 9:16 e Feed 1:1) com layout e dados específicos de ciclismo (Velocidade Média km/h, Máx km/h, Altimetria, Foto da Bike)
+- [ ] Filtro dedicado no Mapa de Calor Pessoal (Heatmap) para visualizar exclusivamente a malha viária pedalada
+
+---
+
+### 10. Publicação na Play Store & Release Final Assinado (Fase Final de Distribuição)
+**Esforço:** M · **Prioridade:** Conclusão do Ciclo de Lançamento
+
+Preparação de produção para distribuição pública do RunFlow como app multi-esporte de corrida e ciclismo.
+
+- [ ] Geração de chave de assinatura `keystore` criptografada para builds de produção
+- [ ] Configuração do Gradle para build de **Android App Bundle (`.aab`)** otimizado com Proguard/R8 para a Google Play Store
+- [ ] Geração de APK de Release assinado para download direto (GitHub Releases / F-Droid)
+- [ ] Ícones adaptativos em alta resolução (Adaptive Icons para Android 13+) e splash screen nativa
+- [ ] Documento formal de Política de Privacidade Local-First (declaração de dados 100% locais sem telemetria externa)
+
+---
+
+## 🗺️ Fluxograma de Dependências da Fase 3.0
 
 ```mermaid
 flowchart TD
-  F18[18 Card de Compartilhamento Social] --> F25[25 Polimento Visual & Haptics]
-  F19[19 Zonas de FC & TRIMP] --> F24[24 VO2 Max & Previsão de Provas]
-  F20[20 Voice Coach / Audio Cues] --> F23[23 Treinos Intervalados]
-  F21[21 Auto-Pause Inteligente] --> F23
-  F22[22 Mapa de Calor Pessoal] --> F10[10 Play Store Release]
-  F25 --> F10
-  F24 --> F10
-  F23 --> F10
+  E1[1 Garagem de Bikes & Peças] --> E2[2 Métricas de Ciclismo km/h e Watts]
+  E2 --> E3[3 Ciclocomputador HUD & Landscape]
+  E2 --> E4[4 Sensores BLE Cadência & Potência]
+  E3 --> E5[5 Auto-Pause & Voice Coach Ciclismo]
+  E3 --> E6[6 Análise de Subidas ClimbPro]
+  E4 --> E7[7 Treinos por Potência FTP & Coggan]
+  E2 --> E8[8 Gráficos Pós-Pedal & PRs de Ciclismo]
+  E8 --> E9[9 Cards Sociais & Heatmap Ciclismo]
+  E7 --> E10[10 Play Store & Release Assinado]
+  E9 --> E10
+  E6 --> E10
+  E5 --> E10
 ```
 
-*Última atualização: agosto 2026 — Polimento Visual Neo-Athletic & Micro-Interações Táteis (Feature 25) concluído*
-
+*Última atualização: agosto 2026 — Início da Fase 3.0: Ecossistema de Ciclismo & Lançamento*
