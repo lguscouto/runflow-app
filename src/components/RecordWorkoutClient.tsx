@@ -24,6 +24,7 @@ import {
   Headphones,
   PauseCircle,
   Zap,
+  Sun,
 } from "lucide-react";
 import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { AutoPauseModal } from "@/components/AutoPauseModal";
@@ -35,6 +36,8 @@ import { estimateActivityCalories } from "@/lib/calories";
 import { getUserProfile } from "@/lib/profile";
 import { listActivities } from "@/lib/activities";
 import { calculateHrZones, getCurrentHrZone } from "@/lib/hr-zones";
+import { haptics } from "@/lib/haptics";
+import { fireWorkoutCompletedConfetti } from "@/lib/confetti";
 import {
   formatCalories,
   formatDistance,
@@ -94,6 +97,7 @@ export function RecordWorkoutClient() {
   const [isAutoPauseModalOpen, setIsAutoPauseModalOpen] = useState(false);
   const [selectedWorkout, setSelectedWorkout] = useState<StructuredWorkout | null>(null);
   const [isWorkoutLibraryModalOpen, setIsWorkoutLibraryModalOpen] = useState(false);
+  const [isSunMode, setIsSunMode] = useState<boolean>(false);
 
   const {
     status,
@@ -209,14 +213,18 @@ export function RecordWorkoutClient() {
     if (selectedRouteId && allRoutes.length > 0) {
       gConfig.routeId = selectedRouteId;
     }
+    haptics.heavy();
     await start(gConfig, selectedWorkout);
   }
 
   async function handleStop() {
     if (!confirmStop) {
+      haptics.warning();
       setConfirmStop(true);
       return;
     }
+    haptics.success();
+    fireWorkoutCompletedConfetti();
     setTrainingMode(false);
     const id = await stop();
     if (id) {
@@ -224,17 +232,46 @@ export function RecordWorkoutClient() {
     }
   }
 
+  function handlePause() {
+    haptics.medium();
+    pause();
+  }
+
+  function handleResume() {
+    haptics.heavy();
+    resume();
+  }
+
+  function handleSkipStep() {
+    haptics.medium();
+    skipStructuredWorkoutStep();
+  }
+
   function handleCancelActive() {
+    haptics.warning();
     if (
       isActive &&
       !confirm(t("record.discard_confirm"))
     ) {
       return;
     }
+    haptics.error();
     setTrainingMode(false);
     reset();
     setConfirmStop(false);
   }
+
+  const sunModeStyles = isSunMode
+    ? ({
+        "--bg": "#ffffff",
+        "--surface": "#f4f4f5",
+        "--text": "#000000",
+        "--muted": "#27272a",
+        "--border": "#000000",
+        "--accent": "#ea580c",
+        "--accent-soft": "rgba(234, 88, 12, 0.15)",
+      } as React.CSSProperties)
+    : undefined;
 
   const renderGhostComparison = (isFullscreen: boolean) => {
     if (!ghostConfig || ghostConfig.mode === "disabled" || !ghostStats) return null;
@@ -379,8 +416,10 @@ export function RecordWorkoutClient() {
     const isPaused = status === "paused";
     return (
       <div
-        className="fixed inset-0 z-50 flex flex-col"
-        style={{ background: "#050810" }}
+        className={`fixed inset-0 z-50 flex flex-col transition-colors ${
+          isSunMode ? "bg-white text-black font-semibold" : "bg-[#050810] text-[var(--text)]"
+        }`}
+        style={isSunMode ? sunModeStyles : { background: "#050810" }}
       >
         {/* Top status bar */}
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
@@ -396,8 +435,28 @@ export function RecordWorkoutClient() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {/* Sun Mode button in Fullscreen */}
             <button
-              onClick={() => setIsAutoPauseModalOpen(true)}
+              onClick={() => {
+                haptics.light();
+                setIsSunMode(!isSunMode);
+              }}
+              className={`flex items-center gap-1 text-xs transition-all px-2 py-1 rounded-lg border font-bold ${
+                isSunMode
+                  ? "border-amber-400 bg-amber-400 text-black shadow"
+                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-white"
+              }`}
+              title={t("outdoor_mode.tooltip")}
+            >
+              <Sun size={12} className={isSunMode ? "text-black fill-black" : "text-amber-400"} />
+              <span>{t("outdoor_mode.toggle_btn")}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                haptics.light();
+                setIsAutoPauseModalOpen(true);
+              }}
               className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1 rounded-lg border ${
                 autoPauseConfig.enabled
                   ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
@@ -409,7 +468,10 @@ export function RecordWorkoutClient() {
               <span>{autoPauseConfig.enabled ? t("auto_pause.quick_btn") : "Auto-Pause Off"}</span>
             </button>
             <button
-              onClick={() => setIsVoiceCoachModalOpen(true)}
+              onClick={() => {
+                haptics.light();
+                setIsVoiceCoachModalOpen(true);
+              }}
               className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1 rounded-lg border ${
                 voiceCoachConfig.enabled
                   ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
@@ -421,7 +483,10 @@ export function RecordWorkoutClient() {
               <span>{voiceCoachConfig.enabled ? t("voice_coach.quick_btn") : "Voz Off"}</span>
             </button>
             <button
-              onClick={() => setTrainingMode(false)}
+              onClick={() => {
+                haptics.light();
+                setTrainingMode(false);
+              }}
               className="flex items-center gap-1.5 text-xs text-[var(--muted)] hover:text-[var(--text)] transition-colors px-2 py-1 rounded-lg border border-[var(--border)] bg-white/5"
             >
               <Minimize2 size={12} />
@@ -569,7 +634,7 @@ export function RecordWorkoutClient() {
               stepElapsedSec={stepElapsedSec}
               stepDistanceM={stepDistanceM}
               currentPaceSecKm={stats.currentPaceSecKm}
-              onSkipStep={skipStructuredWorkoutStep}
+              onSkipStep={handleSkipStep}
             />
           </div>
         )}
@@ -583,7 +648,7 @@ export function RecordWorkoutClient() {
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={pause}
+                onClick={handlePause}
                 className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base border border-[var(--border)] bg-white/5 text-[var(--text)] active:scale-95 transition-transform"
               >
                 <Pause size={20} />
@@ -608,7 +673,7 @@ export function RecordWorkoutClient() {
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={resume}
+                onClick={handleResume}
                 className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base bg-[var(--accent)] text-white active:scale-95 transition-transform"
               >
                 <Play size={20} fill="currentColor" />
@@ -657,7 +722,12 @@ export function RecordWorkoutClient() {
 
   // ─── FULL VIEW (layout normal) ──────────────────────────────────────────────
   return (
-    <div className="space-y-6 -mt-2">
+    <div
+      style={sunModeStyles}
+      className={`space-y-6 -mt-2 transition-colors ${
+        isSunMode ? "bg-white text-black font-semibold rounded-2xl p-4 -m-2 border-2 border-black" : ""
+      }`}
+    >
       {!isActive && (
         <Link
           href="/"
@@ -666,6 +736,26 @@ export function RecordWorkoutClient() {
           <ArrowLeft size={14} />
           {t("common.back")}
         </Link>
+      )}
+
+      {/* Sun Mode Active Banner */}
+      {isSunMode && (
+        <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-amber-400 text-black font-bold text-xs shadow-md border border-black">
+          <div className="flex items-center gap-1.5">
+            <Sun size={16} className="fill-black text-black" />
+            <span>{t("outdoor_mode.active_banner")}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              haptics.light();
+              setIsSunMode(false);
+            }}
+            className="underline text-[11px] uppercase tracking-wider font-extrabold"
+          >
+            {t("common.cancel")}
+          </button>
+        </div>
       )}
 
       <div className="flex items-start justify-between gap-3">
@@ -679,10 +769,31 @@ export function RecordWorkoutClient() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Sun Mode Toggle Button */}
+          <button
+            type="button"
+            onClick={() => {
+              haptics.light();
+              setIsSunMode(!isSunMode);
+            }}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+              isSunMode
+                ? "border-amber-400 bg-amber-400 text-black shadow font-bold"
+                : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
+            }`}
+            title={t("outdoor_mode.tooltip")}
+          >
+            <Sun size={14} className={isSunMode ? "text-black fill-black" : "text-amber-400"} />
+            <span>{t("outdoor_mode.toggle_btn")}</span>
+          </button>
+
           {/* Auto-Pause Button */}
           <button
             type="button"
-            onClick={() => setIsAutoPauseModalOpen(true)}
+            onClick={() => {
+              haptics.light();
+              setIsAutoPauseModalOpen(true);
+            }}
             className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
               autoPauseConfig.enabled
                 ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
@@ -697,7 +808,10 @@ export function RecordWorkoutClient() {
           {/* Voice Coach Button */}
           <button
             type="button"
-            onClick={() => setIsVoiceCoachModalOpen(true)}
+            onClick={() => {
+              haptics.light();
+              setIsVoiceCoachModalOpen(true);
+            }}
             className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
               voiceCoachConfig.enabled
                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
@@ -712,7 +826,10 @@ export function RecordWorkoutClient() {
           {/* Training Mode toggle button — only when active */}
           {isActive && status !== "saving" && (
             <button
-              onClick={() => setTrainingMode(true)}
+              onClick={() => {
+                haptics.light();
+                setTrainingMode(true);
+              }}
               className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold hover:bg-[var(--accent)]/20 transition-colors"
               title={t("record.mode_training")}
             >
@@ -754,7 +871,7 @@ export function RecordWorkoutClient() {
               stepElapsedSec={stepElapsedSec}
               stepDistanceM={stepDistanceM}
               currentPaceSecKm={stats.currentPaceSecKm}
-              onSkipStep={skipStructuredWorkoutStep}
+              onSkipStep={handleSkipStep}
             />
           )}
 
@@ -1343,7 +1460,7 @@ export function RecordWorkoutClient() {
             <button
               type="button"
               className="btn-ghost flex-1 justify-center py-4"
-              onClick={pause}
+              onClick={handlePause}
             >
               <Pause size={22} />
               {t("record.pause_btn")}
@@ -1368,7 +1485,7 @@ export function RecordWorkoutClient() {
             <button
               type="button"
               className="btn-primary flex-1 justify-center py-4"
-              onClick={resume}
+              onClick={handleResume}
             >
               <Play size={22} fill="currentColor" />
               {t("record.resume_btn")}

@@ -69,6 +69,8 @@ import { SocialShareCardModal } from "@/components/SocialShareCardModal";
 import { HeartRateZonesPanel } from "@/components/HeartRateZonesPanel";
 import { StructuredWorkoutReportCard } from "@/components/StructuredWorkoutReportCard";
 import { useActivityDetail } from "@/hooks/useActivities";
+import { firePRConfetti } from "@/lib/confetti";
+import { haptics } from "@/lib/haptics";
 
 import {
   formatDate,
@@ -141,6 +143,7 @@ export function ActivityDetailClient() {
         const { isPR, categories } = getActivityPRs(activityId, prs);
         if (isPR) {
           setPrCategories(categories);
+          firePRConfetti();
         }
       } catch (err) {
         console.error("Erro ao verificar PR do treino:", err);

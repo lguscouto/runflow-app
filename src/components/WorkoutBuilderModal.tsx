@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import {
@@ -31,6 +31,7 @@ import {
 import { formatDistance, formatDuration } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { putWorkout } from "@/lib/storage";
+import { haptics } from "@/lib/haptics";
 
 interface WorkoutBuilderModalProps {
   isOpen: boolean;
@@ -136,6 +137,7 @@ export function WorkoutBuilderModal({
   }
 
   function handleRemoveItem(index: number) {
+    haptics.warning();
     const updated = [...items];
     updated.splice(index, 1);
     setItems(updated);
@@ -148,6 +150,7 @@ export function WorkoutBuilderModal({
     ) {
       return;
     }
+    haptics.light();
     const updated = [...items];
     const targetIdx = direction === "up" ? index - 1 : index + 1;
     const temp = updated[index];
@@ -174,6 +177,7 @@ export function WorkoutBuilderModal({
   }
 
   function handleAddStepToRepeat(blockIndex: number) {
+    haptics.light();
     const updated = [...items];
     const block = updated[blockIndex] as WorkoutRepeatBlock;
     const newStep: WorkoutStep = {
@@ -183,14 +187,23 @@ export function WorkoutBuilderModal({
       targetType: "distance",
       targetValue: 400,
     };
-    block.steps = [...block.steps, newStep];
+    updated[blockIndex] = {
+      ...block,
+      steps: [...block.steps, newStep],
+    };
     setItems(updated);
   }
 
   function handleRemoveSubstep(blockIndex: number, subIndex: number) {
+    haptics.warning();
     const updated = [...items];
     const block = updated[blockIndex] as WorkoutRepeatBlock;
-    block.steps.splice(subIndex, 1);
+    const updatedSteps = [...block.steps];
+    updatedSteps.splice(subIndex, 1);
+    updated[blockIndex] = {
+      ...block,
+      steps: updatedSteps,
+    };
     setItems(updated);
   }
 
@@ -201,16 +214,23 @@ export function WorkoutBuilderModal({
   ) {
     const updated = [...items];
     const block = updated[blockIndex] as WorkoutRepeatBlock;
-    block.steps[subIndex] = { ...block.steps[subIndex], ...partial };
+    const updatedSteps = [...block.steps];
+    updatedSteps[subIndex] = { ...updatedSteps[subIndex], ...partial };
+    updated[blockIndex] = {
+      ...block,
+      steps: updatedSteps,
+    };
     setItems(updated);
   }
 
   async function handleSave() {
     if (!name.trim()) {
+      haptics.error();
       setErrorMsg(language === "en" ? "Please enter a workout name." : "Por favor, informe o nome do treino.");
       return;
     }
     if (items.length === 0) {
+      haptics.error();
       setErrorMsg(language === "en" ? "Add at least one step to the workout." : "Adicione pelo menos uma etapa ao treino.");
       return;
     }
@@ -228,9 +248,11 @@ export function WorkoutBuilderModal({
 
     try {
       await putWorkout(newWorkout);
+      haptics.success();
       onSaved(newWorkout);
       onClose();
     } catch (err) {
+      haptics.error();
       console.error("Erro ao salvar treino:", err);
       setErrorMsg(language === "en" ? "Failed to save workout." : "Erro ao salvar treino.");
     }

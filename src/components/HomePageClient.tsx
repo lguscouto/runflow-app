@@ -12,15 +12,17 @@ import { getUserProfile } from "@/lib/profile";
 import { listActivities } from "@/lib/activities";
 import { getPersonalRecords, getPRMap, type PersonalRecords, type PRCategory } from "@/lib/prs";
 import { PersonalRecordsCard } from "@/components/PersonalRecordsCard";
+import { ConsistencyStreakCard } from "@/components/ConsistencyStreakCard";
 import { estimateUserVO2Max, calculateRacePredictions } from "@/lib/vo2max";
 import { VO2MaxFitnessCard } from "@/components/VO2MaxFitnessCard";
 import { RacePredictorCard } from "@/components/RacePredictorCard";
-import type { VO2MaxEstimate, RacePrediction } from "@/lib/types";
+import type { VO2MaxEstimate, RacePrediction, ActivitySummary } from "@/lib/types";
 import { useI18n } from "@/lib/i18n";
 
 export function HomePageClient() {
   const { t } = useI18n();
   const { stats, recent, loading } = useDashboard();
+  const [activitiesList, setActivitiesList] = useState<ActivitySummary[]>([]);
   const [prs, setPrs] = useState<PersonalRecords | null>(null);
   const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
   const [vo2Estimate, setVo2Estimate] = useState<VO2MaxEstimate | null>(null);
@@ -35,6 +37,7 @@ export function HomePageClient() {
           getUserProfile(),
           listActivities(1000),
         ]);
+        setActivitiesList(allActivities);
         if (profile?.name) {
           setProfileName(profile.name);
         }
@@ -103,6 +106,8 @@ export function HomePageClient() {
       </div>
 
       <WeeklyGoalsCard />
+
+      <ConsistencyStreakCard activities={activitiesList} />
 
       {loadingPrs ? (
         <div className="stat-card">

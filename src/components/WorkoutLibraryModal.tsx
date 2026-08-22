@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -25,6 +25,7 @@ import {
 } from "@/lib/structured-workout";
 import { formatDistance, formatDuration } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
+import { haptics } from "@/lib/haptics";
 import { WorkoutBuilderModal } from "./WorkoutBuilderModal";
 
 interface WorkoutLibraryModalProps {
@@ -74,6 +75,7 @@ export function WorkoutLibraryModal({
 
   async function handleDelete(id: string, e: React.MouseEvent) {
     e.stopPropagation();
+    haptics.warning();
     if (confirm(t("workout.delete_confirm"))) {
       await deleteStoredWorkout(id);
       await loadCustomWorkouts();
@@ -85,6 +87,7 @@ export function WorkoutLibraryModal({
 
   async function handleDuplicate(workout: StructuredWorkout, e: React.MouseEvent) {
     e.stopPropagation();
+    haptics.success();
     const copy: StructuredWorkout = {
       ...workout,
       id: `workout_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -99,6 +102,7 @@ export function WorkoutLibraryModal({
 
   function handleEdit(workout: StructuredWorkout, e: React.MouseEvent) {
     e.stopPropagation();
+    haptics.light();
     setEditingWorkout(workout);
     setIsBuilderOpen(true);
   }
@@ -108,22 +112,23 @@ export function WorkoutLibraryModal({
       <div className="fixed inset-0 z-[1050] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
         <div className="relative w-full max-w-2xl bg-[#0f141c] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between bg-[#161b22]/70 shrink-0">
+          <div className="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between gap-3 bg-[#121720]">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
-                <Flame size={20} />
+              <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                <Zap size={20} />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-bold text-white leading-tight">
-                  {t("workout.library_title")}
-                </h2>
-                <p className="text-xs text-[var(--muted)]">{t("workout.subtitle")}</p>
+                <h3 className="text-base font-bold text-white">{t("workout.library_title")}</h3>
+                <p className="text-xs text-[var(--muted)]">{t("workout.library_subtitle")}</p>
               </div>
             </div>
             <button
               type="button"
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-[var(--muted)] hover:text-white hover:bg-white/10 transition-colors"
+              onClick={() => {
+                haptics.light();
+                onClose();
+              }}
+              className="p-2 rounded-xl text-[var(--muted)] hover:text-white hover:bg-white/5 transition-colors"
             >
               <X size={18} />
             </button>
@@ -134,7 +139,10 @@ export function WorkoutLibraryModal({
             <div className="flex items-center gap-1 bg-[#161b22] p-1 rounded-xl border border-[var(--border)] text-xs">
               <button
                 type="button"
-                onClick={() => setFilterTab("all")}
+                onClick={() => {
+                  haptics.light();
+                  setFilterTab("all");
+                }}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
                   filterTab === "all"
                     ? "bg-[var(--accent)] text-white shadow"
@@ -145,7 +153,10 @@ export function WorkoutLibraryModal({
               </button>
               <button
                 type="button"
-                onClick={() => setFilterTab("presets")}
+                onClick={() => {
+                  haptics.light();
+                  setFilterTab("presets");
+                }}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
                   filterTab === "presets"
                     ? "bg-[var(--accent)] text-white shadow"
@@ -156,7 +167,10 @@ export function WorkoutLibraryModal({
               </button>
               <button
                 type="button"
-                onClick={() => setFilterTab("custom")}
+                onClick={() => {
+                  haptics.light();
+                  setFilterTab("custom");
+                }}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
                   filterTab === "custom"
                     ? "bg-[var(--accent)] text-white shadow"
@@ -170,6 +184,7 @@ export function WorkoutLibraryModal({
             <button
               type="button"
               onClick={() => {
+                haptics.light();
                 setEditingWorkout(null);
                 setIsBuilderOpen(true);
               }}
@@ -185,6 +200,7 @@ export function WorkoutLibraryModal({
             {/* Free Run Option */}
             <div
               onClick={() => {
+                haptics.medium();
                 onSelectWorkout(null);
                 onClose();
               }}
@@ -220,6 +236,7 @@ export function WorkoutLibraryModal({
                 <div
                   key={workout.id}
                   onClick={() => {
+                    haptics.medium();
                     onSelectWorkout(workout);
                     onClose();
                   }}

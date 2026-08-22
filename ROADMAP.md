@@ -151,15 +151,15 @@ Estimativas científicas de condicionamento e previsões para distâncias popula
 
 ---
 
-### 25. Polimento Visual Neo-Athletic & Micro-Interações Táteis
+### 25. Polimento Visual Neo-Athletic & Micro-Interações Táteis — ✅ Concluído
 **Esforço:** S · **Prioridade:** Média · **Inspiração:** Apple Fitness+ / Adidas Running 2026
 
 Elevar o nível sensorial e visual do aplicativo com animações fluidas e feedback físico.
 
-- [ ] Feedback tátil háptico (Capacitor Haptics) nos botões de Play/Pause, fechamento de split e conquistas
-- [ ] Contador de Consistência Semanal (*Streaks*) na Home com ícone de chama animada 🔥 (ex.: "4 semanas seguidas!")
-- [ ] Efeito de confetes / celebração visual ao bater um Recorde Pessoal (PR) ou concluir um treino longo
-- [ ] Modo de alto contraste / Outdoor Sun Mode na tela de gravação para dias ensolarados
+- [x] Feedback tátil háptico nativo (`@capacitor/haptics` com fallback para Web Vibration API) nos botões de Play/Pause, Lap, Conquistas e ações do usuário
+- [x] Contador de Consistência Semanal (*Streaks*) na Home com ícone de chama animada 🔥 (ex.: "33 semanas seguidas! Lenda do Asfalto 🏆") e matriz visual de 7 dias (S..D)
+- [x] Efeito de confetes / celebração visual comemorativa (`canvas-confetti`) ao bater um Recorde Pessoal (PR) ou concluir um treino
+- [x] Modo de alto contraste / Outdoor Sun Mode (☀️ Modo Sol) na tela de gravação para máxima legibilidade sob luz solar direta
 
 ---
 
@@ -188,5 +188,5 @@ flowchart TD
   F23 --> F10
 ```
 
-*Última atualização: agosto 2026 — Criador de Treinos Estruturados & Intervalados (Feature 23) concluído*
+*Última atualização: agosto 2026 — Polimento Visual Neo-Athletic & Micro-Interações Táteis (Feature 25) concluído*
 

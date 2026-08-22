@@ -701,6 +701,35 @@ export const translations = {
     "workout.save_success": "Treino salvo com sucesso!",
     "workout.delete_confirm": "Tem certeza que deseja excluir este treino?",
     "workout.hud_badge": "TREINO ESTRUTURADO",
+
+    // Streaks & Consistency (Feature 25)
+    "streaks.title": "Consistência Semanal",
+    "streaks.weeks_count": "{count} semanas seguidas",
+    "streaks.single_week": "1 semana seguida",
+    "streaks.longest_record": "Melhor sequência: {count} sem.",
+    "streaks.keep_flame_alive": "Treine esta semana para manter a chama acesa!",
+    "streaks.week_done": "Meta semanal garantida! 🔥",
+    "streaks.level_start": "Início de Jornada",
+    "streaks.level_warm": "Em Aquecimento 🔥",
+    "streaks.level_fire": "Em Chamas 🔥🔥",
+    "streaks.level_blaze": "Mestre do Ritmo ⚡",
+    "streaks.level_legend": "Lenda do Asfalto 🏆",
+    "streaks.this_week_workouts": "{count} treino(s) esta semana",
+    "streaks.days_mon": "S",
+    "streaks.days_tue": "T",
+    "streaks.days_wed": "Q",
+    "streaks.days_thu": "Q",
+    "streaks.days_fri": "S",
+    "streaks.days_sat": "S",
+    "streaks.days_sun": "D",
+
+    // Outdoor Sun Mode (Feature 25)
+    "outdoor_mode.toggle_btn": "Modo Sol",
+    "outdoor_mode.active_banner": "☀️ Modo Sol Ativo (Alto Contraste)",
+    "outdoor_mode.tooltip": "Máxima legibilidade sob sol forte",
+
+    // Haptic Feedback
+    "haptics.label": "Feedback Tátil",
   },
   en: {
     // Nav / Layout
@@ -1397,6 +1426,35 @@ export const translations = {
     "workout.save_success": "Workout saved successfully!",
     "workout.delete_confirm": "Are you sure you want to delete this workout?",
     "workout.hud_badge": "STRUCTURED WORKOUT",
+
+    // Streaks & Consistency (Feature 25)
+    "streaks.title": "Weekly Consistency",
+    "streaks.weeks_count": "{count} weeks streak",
+    "streaks.single_week": "1 week streak",
+    "streaks.longest_record": "Best streak: {count} wks",
+    "streaks.keep_flame_alive": "Workout this week to keep the flame burning!",
+    "streaks.week_done": "Weekly goal secured! 🔥",
+    "streaks.level_start": "Journey Begins",
+    "streaks.level_warm": "Warming Up 🔥",
+    "streaks.level_fire": "On Fire 🔥🔥",
+    "streaks.level_blaze": "Pace Master ⚡",
+    "streaks.level_legend": "Road Legend 🏆",
+    "streaks.this_week_workouts": "{count} workout(s) this week",
+    "streaks.days_mon": "M",
+    "streaks.days_tue": "T",
+    "streaks.days_wed": "W",
+    "streaks.days_thu": "T",
+    "streaks.days_fri": "F",
+    "streaks.days_sat": "S",
+    "streaks.days_sun": "S",
+
+    // Outdoor Sun Mode (Feature 25)
+    "outdoor_mode.toggle_btn": "Sun Mode",
+    "outdoor_mode.active_banner": "☀️ Outdoor Sun Mode (High Contrast)",
+    "outdoor_mode.tooltip": "Max contrast for direct sunlight",
+
+    // Haptic Feedback
+    "haptics.label": "Haptic Feedback",
   },
 };
 
