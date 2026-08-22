@@ -58,14 +58,16 @@ Cálculo científico de métricas de ciclismo em tempo real e pós-treino.
 ---
 
 ### 3. Ciclocomputador & HUD de Guidão (Bike Computer HUD & Modo Paisagem)
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Wahoo Elemnt / Garmin Edge / Cadence
+**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Wahoo Elemnt / Garmin Edge / Cadence · **Status:** ✅ Concluído
 
 Transformar o smartphone em um ciclocomputador profissional para fixação no guidão da bicicleta.
 
-- [ ] Interface de gravação de ciclismo com campos customizáveis e tipografia extra grande
-- [ ] Suporte nativo ao **Modo Paisagem (Horizontal / Landscape)** com ajuste de layout para suportes de guidão (QuadLock / Garmin)
-- [ ] Botões táteis aumentados para fácil acionamento durante a pedalada (mesmo com luvas de ciclismo)
-- [ ] Compatibilidade integrada com o **Modo Sol (Outdoor Sun Mode)** de altíssimo contraste
+- [x] Interface de gravação de ciclismo com campos de alta legibilidade e tipografia extra grande
+- [x] Suporte nativo ao **Modo Paisagem (Horizontal / Landscape)** e Modo Retrato com rotação dinâmica e mini-mapa split
+- [x] Botões táteis aumentados (Glove Bar 64px+) para fácil acionamento durante a pedalada (mesmo com luvas de ciclismo)
+- [x] Compatibilidade integrada com 3 temas: **☀️ Modo Sol (Outdoor E-Ink)**, **🌙 Modo Noite (AMOLED Dark)** e **⚡ Modo Neo**
+- [x] Modo Bloqueio de Toque (Proteção contra Suor e Chuva) com destravamento por pressão sustentada de 1.5s
+- [x] Suporte a Voltas Manuais (Manual Laps) com exibição de banner instantâneo e estatísticas da volta
 
 ---
 

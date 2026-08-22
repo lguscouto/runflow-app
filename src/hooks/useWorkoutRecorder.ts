@@ -25,6 +25,7 @@ import type {
   FlatWorkoutStep,
   ExecutedStepReport,
   StructuredWorkoutReport,
+  ManualLap,
 } from "@/lib/types";
 import { isOnRoute, pointToPolylineDistanceM } from "@/lib/route-geo";
 import type { RouteConfig, OffRouteState, SavedRoute } from "@/lib/types";
@@ -185,6 +186,15 @@ export function useWorkoutRecorder() {
   const maxSpeedKmhRef = useRef<number>(0);
   const totalElevationGainRef = useRef<number>(0);
   const accumulatedWattsRef = useRef<number[]>([]);
+
+  // Manual Laps (Feature 28)
+  const [manualLaps, setManualLaps] = useState<ManualLap[]>([]);
+  const manualLapsRef = useRef<ManualLap[]>([]);
+  const lapStartSecRef = useRef<number>(0);
+  const lapStartDistMRef = useRef<number>(0);
+  const lapNumberRef = useRef<number>(1);
+  const [currentLapNumber, setCurrentLapNumber] = useState<number>(1);
+  const [lastCompletedLap, setLastCompletedLap] = useState<ManualLap | null>(null);
 
   useEffect(() => {
     statusRef.current = status;
@@ -1039,7 +1049,47 @@ export function useWorkoutRecorder() {
     setStepElapsedSec(0);
     setStepDistanceM(0);
     executedStepsReportRef.current = [];
+    manualLapsRef.current = [];
+    setManualLaps([]);
+    lapStartSecRef.current = 0;
+    lapStartDistMRef.current = 0;
+    lapNumberRef.current = 1;
+    setCurrentLapNumber(1);
+    setLastCompletedLap(null);
   }, [stopGpsWatch]);
+
+  const triggerManualLap = useCallback(() => {
+    if (status !== "recording" && status !== "paused") return null;
+
+    const currentElapsed = stats.movingSec || stats.elapsedSec;
+    const currentDist = stats.distanceM;
+    const lapDuration = Math.max(1, currentElapsed - lapStartSecRef.current);
+    const lapDistance = Math.max(0, currentDist - lapStartDistMRef.current);
+    const lapSpeedKmh = lapDuration > 0 ? (lapDistance / lapDuration) * 3.6 : 0;
+
+    const lap: ManualLap = {
+      lapNumber: lapNumberRef.current,
+      startedAtSec: lapStartSecRef.current,
+      durationSec: lapDuration,
+      distanceM: lapDistance,
+      avgSpeedKmh: Math.round(lapSpeedKmh * 10) / 10,
+      avgWatts: stats.currentWatts > 0 ? Math.round(stats.currentWatts) : undefined,
+      avgHr: hrBpm !== null ? hrBpm : undefined,
+    };
+
+    const updated = [...manualLapsRef.current, lap];
+    manualLapsRef.current = updated;
+    setManualLaps(updated);
+    setLastCompletedLap(lap);
+
+    lapNumberRef.current += 1;
+    setCurrentLapNumber(lapNumberRef.current);
+    lapStartSecRef.current = currentElapsed;
+    lapStartDistMRef.current = currentDist;
+
+    playCountdownPip();
+    return lap;
+  }, [status, stats, hrBpm]);
 
   const connectHr = useCallback(async () => {
     if (typeof window === "undefined") return;
@@ -1212,5 +1262,10 @@ export function useWorkoutRecorder() {
     stepDistanceM,
     setStructuredWorkout,
     skipStructuredWorkoutStep,
+    // Manual Laps (Feature 28)
+    manualLaps,
+    currentLapNumber,
+    lastCompletedLap,
+    triggerManualLap,
   };
 }

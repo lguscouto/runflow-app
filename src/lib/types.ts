@@ -455,4 +455,27 @@ export interface StructuredWorkoutReport {
   steps: ExecutedStepReport[];
 }
 
+export interface ManualLap {
+  lapNumber: number;
+  startedAtSec: number;
+  durationSec: number;
+  distanceM: number;
+  avgSpeedKmh: number;
+  avgWatts?: number;
+  avgHr?: number;
+  elevationGainM?: number;
+}
+
+export type BikeHudTheme = "sun" | "dark" | "neo";
+export type BikeHudOrientation = "auto" | "portrait" | "landscape";
+export type BikeHudLayout = "split_map" | "data_only";
+
+export interface BikeHudConfig {
+  theme: BikeHudTheme;
+  orientation: BikeHudOrientation;
+  layout: BikeHudLayout;
+  showMapInLandscape: boolean;
+  touchLockEnabled: boolean;
+}
+
 

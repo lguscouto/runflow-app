@@ -31,6 +31,7 @@ import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { AutoPauseModal } from "@/components/AutoPauseModal";
 import { WorkoutLibraryModal } from "@/components/WorkoutLibraryModal";
 import { StructuredWorkoutHud } from "@/components/StructuredWorkoutHud";
+import { BikeComputerHud } from "@/components/BikeComputerHud";
 import { useWorkoutRecorder } from "@/hooks/useWorkoutRecorder";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { estimateActivityCalories } from "@/lib/calories";
@@ -154,7 +155,15 @@ export function RecordWorkoutClient() {
     stepDistanceM,
     setStructuredWorkout,
     skipStructuredWorkoutStep,
+    manualLaps,
+    currentLapNumber,
+    lastCompletedLap,
+    triggerManualLap,
   } = useWorkoutRecorder();
+
+  const selectedBike = useMemo(() => {
+    return bikes.find((b) => b.id === selectedBikeId) || null;
+  }, [bikes, selectedBikeId]);
 
   const userHrZones = useMemo(() => {
     return calculateHrZones(profile || undefined);
@@ -430,8 +439,32 @@ export function RecordWorkoutClient() {
     );
   };
 
-  // ─── TRAINING MODE (fullscreen dark overlay) ───────────────────────────────
+  // ─── TRAINING MODE (fullscreen dark overlay or cycling HUD) ─────────────────
   if (trainingMode && isActive) {
+    if (sport === "cycling") {
+      return (
+        <BikeComputerHud
+          stats={stats}
+          points={points}
+          status={status}
+          isAutoPaused={stats.isAutoPaused}
+          hrBpm={hrBpm}
+          currentZone={currentZone}
+          selectedBike={selectedBike}
+          liveCalories={liveCalories}
+          manualLaps={manualLaps}
+          currentLapNumber={currentLapNumber}
+          lastCompletedLap={lastCompletedLap}
+          onPause={handlePause}
+          onResume={handleResume}
+          onStop={handleStop}
+          onDiscard={handleCancelActive}
+          onManualLap={triggerManualLap}
+          onClose={() => setTrainingMode(false)}
+        />
+      );
+    }
+
     const isPaused = status === "paused";
     return (
       <div
@@ -563,19 +596,17 @@ export function RecordWorkoutClient() {
             </p>
           </div>
 
-          {/* Pace / Speed row: current + average */}
+          {/* Pace row: current + average */}
           <div className="flex gap-8 justify-center">
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
-                {sport === "cycling" ? t("record.current_speed") : t("record.current_pace")}
+                {t("record.current_pace")}
               </p>
               <p
                 className="font-bold tabular-nums"
                 style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: "#f0f4f8" }}
               >
-                {sport === "cycling"
-                  ? formatSpeed(stats.currentSpeedKmh)
-                  : formatPace(stats.currentPaceSecKm)}
+                {formatPace(stats.currentPaceSecKm)}
               </p>
             </div>
             <div
@@ -584,50 +615,16 @@ export function RecordWorkoutClient() {
             />
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-widest text-[var(--muted)] mb-1 font-semibold">
-                {sport === "cycling" ? t("record.avg_speed") : t("detail.avg_pace")}
+                {t("detail.avg_pace")}
               </p>
               <p
                 className="font-bold tabular-nums"
                 style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: "#8b9bb4" }}
               >
-                {sport === "cycling"
-                  ? formatSpeed(stats.avgSpeedKmh)
-                  : formatPace(stats.avgPaceSecKm)}
+                {formatPace(stats.avgPaceSecKm)}
               </p>
             </div>
           </div>
-
-          {/* Cycling Power & Grade Row */}
-          {sport === "cycling" && (
-            <div className="flex gap-8 justify-center items-center py-1 px-4 rounded-2xl bg-white/5 border border-white/10">
-              <div className="text-center">
-                <p className="text-[10px] uppercase tracking-widest text-amber-400 mb-0.5 font-bold flex items-center justify-center gap-1">
-                  <Zap size={12} className="fill-amber-400" />
-                  <span>{t("record.estimated_power")}</span>
-                </p>
-                <p className="text-xl font-bold tabular-nums text-amber-300">
-                  {formatWatts(stats.currentWatts)}{" "}
-                  <span className="text-xs font-normal text-[var(--muted)]">
-                    (Méd: {formatWatts(stats.avgWatts)})
-                  </span>
-                </p>
-              </div>
-              <div className="w-px h-8 bg-white/10" />
-              <div className="text-center">
-                <p className="text-[10px] uppercase tracking-widest text-emerald-400 mb-0.5 font-bold flex items-center justify-center gap-1">
-                  <span>⛰️ {t("record.current_grade")}</span>
-                </p>
-                <p className="text-xl font-bold tabular-nums text-emerald-300">
-                  {formatGrade(stats.currentGradePercent)}{" "}
-                  {stats.currentVamMh > 0 && (
-                    <span className="text-xs font-normal text-[var(--muted)]">
-                      ({formatVam(stats.currentVamMh)})
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-          )}
 
           {/* Calories & Heart Rate */}
           <div className="flex gap-8 justify-center items-center">
@@ -878,18 +875,22 @@ export function RecordWorkoutClient() {
             <span>{voiceCoachConfig.enabled ? t("voice_coach.quick_btn") : "Voz Off"}</span>
           </button>
 
-          {/* Training Mode toggle button — only when active */}
+          {/* Training Mode / Bike Computer HUD toggle button — only when active */}
           {isActive && status !== "saving" && (
             <button
               onClick={() => {
                 haptics.light();
                 setTrainingMode(true);
               }}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)] text-xs font-semibold hover:bg-[var(--accent)]/20 transition-colors"
-              title={t("record.mode_training")}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
+                sport === "cycling"
+                  ? "border-amber-500/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 shadow-lg shadow-amber-500/10"
+                  : "border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)] hover:bg-[var(--accent)]/20"
+              }`}
+              title={sport === "cycling" ? t("bike_hud.title") : t("record.mode_training")}
             >
-              <Maximize2 size={13} />
-              {t("record.mode_training")}
+              {sport === "cycling" ? <Bike size={14} /> : <Maximize2 size={13} />}
+              {sport === "cycling" ? t("bike_hud.open_btn") : t("record.mode_training")}
             </button>
           )}
         </div>
