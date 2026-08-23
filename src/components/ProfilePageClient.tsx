@@ -22,6 +22,7 @@ import {
   Headphones,
   PauseCircle,
   Bike,
+  Activity,
 } from "lucide-react";
 import {
   getUserProfile,
@@ -29,6 +30,13 @@ import {
   saveUserProfile,
 } from "@/lib/profile";
 import { calculateTanakaMaxHr } from "@/lib/hr-zones";
+import {
+  calculatePowerZones,
+  calculateWattsPerKg,
+  calculateFtpFrom20MinTest,
+  estimateFtpFromWeight,
+  DEFAULT_FTP_WATTS,
+} from "@/lib/power-zones";
 import type { UserProfile, Gear, ActivitySummary, VoiceCoachConfig, AutoPauseConfig } from "@/lib/types";
 import { DEFAULT_VOICE_COACH_CONFIG } from "@/lib/voice-coach";
 import { DEFAULT_AUTO_PAUSE_CONFIG } from "@/lib/auto-pause";
@@ -64,6 +72,9 @@ export function ProfilePageClient() {
   const [prMinPaceDistanceKm, setPrMinPaceDistanceKm] = useState("");
   const [maxHr, setMaxHr] = useState("");
   const [restingHr, setRestingHr] = useState("");
+  const [cyclingFtpWatts, setCyclingFtpWatts] = useState("");
+  const [showFtpCalc, setShowFtpCalc] = useState(false);
+  const [ftp20MinInput, setFtp20MinInput] = useState("");
   const [langSelect, setLangSelect] = useState<"pt" | "en">("pt");
   const [voiceCoachConfig, setVoiceCoachConfig] = useState<VoiceCoachConfig>(DEFAULT_VOICE_COACH_CONFIG);
   const [isVoiceCoachModalOpen, setIsVoiceCoachModalOpen] = useState(false);
@@ -110,6 +121,7 @@ export function ProfilePageClient() {
         setPrMinPaceDistanceKm(p.prMinPaceDistanceKm != null ? String(p.prMinPaceDistanceKm) : "");
         setMaxHr(p.maxHr != null ? String(p.maxHr) : "");
         setRestingHr(p.restingHr != null ? String(p.restingHr) : "");
+        setCyclingFtpWatts(p.cyclingFtpWatts != null ? String(p.cyclingFtpWatts) : "");
         setLangSelect(p.language || "pt");
         if (p.voiceCoach) {
           setVoiceCoachConfig(p.voiceCoach);
@@ -227,6 +239,36 @@ export function ProfilePageClient() {
     setMessage({ type: "ok", text: `${t("profile.max_hr")}: ${calcMax} bpm (${t("profile.calc_tanaka_btn")})` });
   };
 
+  const handleCalcFtp20Min = () => {
+    const p20 = parseFloat(ftp20MinInput);
+    if (isNaN(p20) || p20 < 50 || p20 > 800) {
+      setMessage({ type: "err", text: t("profile.ftp_calc_invalid_20min") });
+      return;
+    }
+    const calculated = calculateFtpFrom20MinTest(p20);
+    setCyclingFtpWatts(String(calculated));
+    setShowFtpCalc(false);
+    setMessage({
+      type: "ok",
+      text: `${t("profile.cycling_ftp")}: ${calculated} W (${t("profile.ftp_calc_20min_applied", { p20, ftp: calculated })})`,
+    });
+  };
+
+  const handleCalcFtpByWeight = (level: "recreational" | "moderate" | "trained" | "advanced") => {
+    const w = parseFloat(weightKg);
+    if (isNaN(w) || w < 30 || w > 250) {
+      setMessage({ type: "err", text: t("profile.ftp_calc_need_weight") });
+      return;
+    }
+    const estimated = estimateFtpFromWeight(w, level);
+    setCyclingFtpWatts(String(estimated));
+    setShowFtpCalc(false);
+    setMessage({
+      type: "ok",
+      text: `${t("profile.cycling_ftp")}: ${estimated} W (${t(`profile.ftp_level_${level}`)} — ${calculateWattsPerKg(estimated, w)} W/kg)`,
+    });
+  };
+
   async function handleSubmitProfile(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
@@ -244,6 +286,7 @@ export function ProfilePageClient() {
       prMinPaceDistanceKm: prMinPaceDistanceKm ? parseFloat(prMinPaceDistanceKm) : undefined,
       maxHr: maxHr ? parseInt(maxHr, 10) : undefined,
       restingHr: restingHr ? parseInt(restingHr, 10) : undefined,
+      cyclingFtpWatts: cyclingFtpWatts ? parseInt(cyclingFtpWatts, 10) : undefined,
       language: langSelect,
       voiceCoach: voiceCoachConfig,
       autoPause: autoPauseConfig,
@@ -287,6 +330,10 @@ export function ProfilePageClient() {
     }
     if (parsed.restingHr != null && (parsed.restingHr < 30 || parsed.restingHr > 120)) {
       setMessage({ type: "err", text: t("profile.val_resting_hr") });
+      return;
+    }
+    if (parsed.cyclingFtpWatts != null && (parsed.cyclingFtpWatts < 40 || parsed.cyclingFtpWatts > 700)) {
+      setMessage({ type: "err", text: t("profile.val_ftp") });
       return;
     }
 
@@ -653,6 +700,154 @@ export function ProfilePageClient() {
                       placeholder={t("profile.resting_hr_placeholder")}
                     />
                   </div>
+                </div>
+
+                <div className="border-t border-[var(--border)] pt-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <Zap size={16} className="text-amber-400 fill-amber-400" />
+                      {t("profile.cycling_power_title")}
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase tracking-wider">
+                      Coggan 7 Zonas
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--muted)]">
+                    {t("profile.cycling_power_sub")}
+                  </p>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-sm text-[var(--muted)] flex items-center gap-1.5">
+                        <span>{t("profile.cycling_ftp")} (Watts)</span>
+                        {cyclingFtpWatts && weightKg && parseFloat(weightKg) > 0 && (
+                          <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20 font-mono">
+                            {calculateWattsPerKg(parseFloat(cyclingFtpWatts), parseFloat(weightKg))} W/kg
+                          </span>
+                        )}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowFtpCalc(!showFtpCalc)}
+                        className="text-xs font-semibold text-amber-400 hover:underline flex items-center gap-1"
+                      >
+                        <Zap size={12} />
+                        {showFtpCalc ? t("common.cancel") : t("profile.ftp_calc_btn")}
+                      </button>
+                    </div>
+
+                    <input
+                      type="number"
+                      min={40}
+                      max={700}
+                      step={1}
+                      value={cyclingFtpWatts}
+                      onChange={(e) => setCyclingFtpWatts(e.target.value)}
+                      className="profile-input"
+                      placeholder={t("profile.cycling_ftp_placeholder")}
+                    />
+                  </div>
+
+                  {/* FTP Calculator Box */}
+                  {showFtpCalc && (
+                    <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-amber-300">
+                          {t("profile.ftp_calc_title")}
+                        </span>
+                      </div>
+                      
+                      {/* Option 1: 20 min test */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-[var(--muted)]">
+                          {t("profile.ftp_calc_20min_label")}
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            min={50}
+                            max={800}
+                            value={ftp20MinInput}
+                            onChange={(e) => setFtp20MinInput(e.target.value)}
+                            placeholder="Ex: 240 W médios"
+                            className="profile-input text-xs py-1 px-2.5 flex-1"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCalcFtp20Min}
+                            className="btn-primary text-xs py-1 px-3 shrink-0"
+                          >
+                            Aplicar (-5%)
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Option 2: By body weight */}
+                      <div className="pt-2 border-t border-amber-500/20 space-y-1.5">
+                        <label className="text-xs text-[var(--muted)]">
+                          {t("profile.ftp_calc_weight_label")}
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {(["recreational", "moderate", "trained", "advanced"] as const).map((lvl) => (
+                            <button
+                              key={lvl}
+                              type="button"
+                              onClick={() => handleCalcFtpByWeight(lvl)}
+                              className="text-[11px] py-1 px-2 rounded-lg bg-black/40 hover:bg-black/70 border border-white/10 text-left truncate flex items-center justify-between"
+                            >
+                              <span>{t(`profile.ftp_level_${lvl}`)}</span>
+                              <span className="text-[10px] text-amber-400 font-mono">
+                                {lvl === "recreational" ? "2.2" : lvl === "moderate" ? "2.8" : lvl === "trained" ? "3.4" : "4.1"} W/kg
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Coggan 7 Zones Live Preview Card */}
+                  {cyclingFtpWatts && parseInt(cyclingFtpWatts, 10) >= 40 && (
+                    <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[#0d121c] space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-white flex items-center gap-1.5">
+                          <Activity size={13} className="text-amber-400" />
+                          {t("profile.coggan_zones_preview_title")}
+                        </span>
+                        <span className="text-[11px] text-[var(--muted)] font-mono">
+                          FTP: {cyclingFtpWatts} W
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
+                        {calculatePowerZones(parseInt(cyclingFtpWatts, 10)).map((z) => (
+                          <div
+                            key={z.zone}
+                            className="p-1.5 px-2 rounded-lg bg-black/30 border border-white/5 flex items-center justify-between gap-1"
+                          >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span
+                                style={{ backgroundColor: z.bgRgba, color: z.color, borderColor: z.color }}
+                                className="px-1.5 py-0.2 rounded text-[10px] font-black border font-mono shrink-0"
+                              >
+                                Z{z.zone}
+                              </span>
+                              <span className="text-[11px] text-[var(--text)] truncate">
+                                {t(z.nameKey)}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-[var(--muted)] font-mono shrink-0">
+                              {z.zone === 1
+                                ? `< ${z.maxWatts} W`
+                                : z.zone === 7
+                                ? `> ${z.minWatts} W`
+                                : `${z.minWatts} - ${z.maxWatts} W`}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t border-[var(--border)] pt-5 space-y-4">

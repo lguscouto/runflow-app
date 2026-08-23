@@ -418,12 +418,21 @@ export function useWorkoutRecorder() {
       const durationSec = Math.max(1, Math.round(nowElapsedSec - stepStartTimeSecRef.current));
       const distanceM = Math.max(0, Math.round(nowDistanceM - stepStartDistanceMRef.current));
       const avgPaceSecKm = distanceM > 10 && durationSec > 0 ? (durationSec / distanceM) * 1000 : null;
+      const avgWatts = currentPowerRef.current;
+      const avgCadenceRpm = currentCadenceRef.current ?? powerCadenceRef.current;
+      const userFtp = userProfileRef.current?.cyclingFtpWatts;
 
-      const targetMet = evaluateStepTargetMet(currentFlat.step, {
-        durationSec,
-        distanceM,
-        avgPaceSecKm,
-      });
+      const targetMet = evaluateStepTargetMet(
+        currentFlat.step,
+        {
+          durationSec,
+          distanceM,
+          avgPaceSecKm,
+          avgWatts,
+          avgCadenceRpm,
+        },
+        userFtp
+      );
 
       const executed: ExecutedStepReport = {
         stepIndex: currIdx,
@@ -432,12 +441,17 @@ export function useWorkoutRecorder() {
         targetType: currentFlat.step.targetType,
         targetValue: currentFlat.step.targetValue,
         paceTarget: currentFlat.step.paceTarget,
+        powerTarget: currentFlat.step.powerTarget,
+        cadenceTarget: currentFlat.step.cadenceTarget,
         hrZoneTarget: currentFlat.step.hrZoneTarget,
+        powerZoneTarget: currentFlat.step.powerZoneTarget,
         repeatIndex: currentFlat.repeatIndex,
         totalRepeats: currentFlat.totalRepeats,
         durationSec,
         distanceM,
         avgPaceSecKm,
+        avgWatts,
+        avgCadenceRpm,
         avgHr: currentHrRef.current,
         targetMet,
       };
@@ -454,7 +468,7 @@ export function useWorkoutRecorder() {
       lastPipSecRef.current = null;
 
       if (nextIdx < steps.length) {
-        speakWorkoutStep(steps[nextIdx], voiceCoachConfigRef.current, language);
+        speakWorkoutStep(steps[nextIdx], voiceCoachConfigRef.current, language, userFtp);
       } else {
         playStartBlockChime();
         speakWithConfig(
@@ -1018,7 +1032,12 @@ export function useWorkoutRecorder() {
         lastPipSecRef.current = null;
 
         if (flattened.length > 0) {
-          speakWorkoutStep(flattened[0], voiceCoachConfigRef.current, language);
+          speakWorkoutStep(
+            flattened[0],
+            voiceCoachConfigRef.current,
+            language,
+            userProfileRef.current?.cyclingFtpWatts
+          );
         }
       } else {
         setStructuredWorkoutState(null);

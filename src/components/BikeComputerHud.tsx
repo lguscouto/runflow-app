@@ -24,6 +24,10 @@ import {
   PauseCircle,
   AlertTriangle,
   RefreshCw,
+  SkipForward,
+  CheckCircle2,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import type {
   TrackPoint,
@@ -35,10 +39,17 @@ import type {
   Gear,
   ClimbSegment,
   ClimbProgressState,
+  FlatWorkoutStep,
 } from "@/lib/types";
 import type { RecorderStats } from "@/hooks/useWorkoutRecorder";
 import { LiveElevationProfile } from "@/components/LiveElevationProfile";
 import { ClimbProHudCard } from "@/components/ClimbProHudCard";
+import {
+  getStepTypeBadgeStyle,
+  resolveStepPowerTargetWatts,
+  formatStepCadenceRange,
+} from "@/lib/structured-workout";
+import { DEFAULT_FTP_WATTS } from "@/lib/power-zones";
 import {
   formatDistance,
   formatDuration,
@@ -81,6 +92,13 @@ interface BikeComputerHudProps {
   climbProgress?: ClimbProgressState | null;
   detectedClimbs?: ClimbSegment[];
   routePoints?: Array<{ lat: number; lng: number; elevation?: number }>;
+  currentWorkoutStep?: FlatWorkoutStep | null;
+  nextWorkoutStep?: FlatWorkoutStep | null;
+  workoutName?: string;
+  stepElapsedSec?: number;
+  stepDistanceM?: number;
+  userFtp?: number;
+  onSkipWorkoutStep?: () => void;
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
@@ -106,6 +124,13 @@ export function BikeComputerHud({
   climbProgress,
   detectedClimbs = [],
   routePoints = [],
+  currentWorkoutStep,
+  nextWorkoutStep,
+  workoutName,
+  stepElapsedSec = 0,
+  stepDistanceM = 0,
+  userFtp = DEFAULT_FTP_WATTS,
+  onSkipWorkoutStep,
   onPause,
   onResume,
   onStop,
@@ -413,6 +438,99 @@ export function BikeComputerHud({
             </span>
           </div>
           <span className="font-mono text-[11px]">{formatDuration(lapBanner.durationSec)}</span>
+        </div>
+      )}
+
+      {/* 2.5 STRUCTURED WORKOUT ACTIVE STEP BANNER */}
+      {currentWorkoutStep && (
+        <div className="mx-4 mt-2 p-3 rounded-2xl bg-[#0f141c]/95 border border-orange-500/40 shadow-2xl backdrop-blur-md space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${getStepTypeBadgeStyle(currentWorkoutStep.step.type).bg} ${getStepTypeBadgeStyle(currentWorkoutStep.step.type).text} ${getStepTypeBadgeStyle(currentWorkoutStep.step.type).border}`}
+              >
+                {currentWorkoutStep.repeatIndex && currentWorkoutStep.totalRepeats
+                  ? `${currentWorkoutStep.step.type === "work" ? "Tiro" : "Recup."} ${currentWorkoutStep.repeatIndex}/${currentWorkoutStep.totalRepeats}`
+                  : currentWorkoutStep.step.name || getStepTypeBadgeStyle(currentWorkoutStep.step.type).namePt}
+              </span>
+              <span className="text-xs font-bold text-white font-mono">
+                {currentWorkoutStep.step.targetType === "time"
+                  ? formatDuration(Math.max(0, currentWorkoutStep.step.targetValue - stepElapsedSec))
+                  : currentWorkoutStep.step.targetType === "distance"
+                  ? formatDistance(Math.max(0, currentWorkoutStep.step.targetValue - stepDistanceM))
+                  : "Livre"}
+              </span>
+            </div>
+
+            {/* Target Power or Cadence Chip */}
+            {(() => {
+              const resPower = resolveStepPowerTargetWatts(currentWorkoutStep.step, userFtp);
+              if (resPower) {
+                const isPowerOnTarget =
+                  stats.currentWatts >= resPower.minWatts * 0.9 &&
+                  (resPower.maxWatts >= 9000 || stats.currentWatts <= resPower.maxWatts * 1.1);
+                return (
+                  <div className="flex items-center gap-1 text-[11px] font-mono">
+                    <span className="text-[var(--muted)]">Alvo:</span>
+                    <span className="font-bold text-amber-300">{resPower.label}</span>
+                    {stats.currentWatts > 0 && (
+                      <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                        isPowerOnTarget
+                          ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                          : stats.currentWatts < resPower.minWatts
+                          ? "bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse"
+                          : "bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse"
+                      }`}>
+                        {isPowerOnTarget ? "✓" : stats.currentWatts < resPower.minWatts ? "▲" : "▼"}
+                      </span>
+                    )}
+                  </div>
+                );
+              }
+              if (currentWorkoutStep.step.cadenceTarget) {
+                return (
+                  <div className="flex items-center gap-1 text-[11px] font-mono">
+                    <span className="text-[var(--muted)]">RPM:</span>
+                    <span className="font-bold text-cyan-300">
+                      {formatStepCadenceRange(currentWorkoutStep.step.cadenceTarget)}
+                    </span>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Skip Button */}
+            {onSkipWorkoutStep && (
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.light();
+                  onSkipWorkoutStep();
+                }}
+                className="btn-ghost text-[11px] px-2.5 py-1 border-white/20 hover:border-white/40 flex items-center gap-1 bg-white/5 active:scale-95 transition-all shrink-0"
+              >
+                <SkipForward size={13} />
+                <span>Pular</span>
+              </button>
+            )}
+          </div>
+
+          {/* Mini progress bar */}
+          <div className="w-full h-1.5 rounded-full bg-black/40 overflow-hidden border border-white/5">
+            <div
+              className={`h-full transition-all duration-300 ${getStepTypeBadgeStyle(currentWorkoutStep.step.type).dotColor}`}
+              style={{
+                width: `${
+                  currentWorkoutStep.step.targetType === "distance"
+                    ? Math.min(100, (stepDistanceM / (currentWorkoutStep.step.targetValue || 1)) * 100)
+                    : currentWorkoutStep.step.targetType === "time"
+                    ? Math.min(100, (stepElapsedSec / (currentWorkoutStep.step.targetValue || 1)) * 100)
+                    : 100
+                }%`,
+              }}
+            />
+          </div>
         </div>
       )}
 

@@ -20,6 +20,9 @@ const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
   bestPace: "prs.best_pace",
   longestDuration: "prs.longest_duration",
   highestElevation: "prs.highest_elevation",
+  highestAvgSpeed: "prs.cycling_highest_avg_speed",
+  maxSpeed: "prs.cycling_max_speed",
+  bestPower: "prs.cycling_best_power",
 };
 
 export function ActivityList({

@@ -14,8 +14,10 @@ import {
   Clock,
   Navigation,
   Repeat,
+  Activity,
+  Bike,
 } from "lucide-react";
-import type { StructuredWorkout } from "@/lib/types";
+import type { Sport, StructuredWorkout } from "@/lib/types";
 import { BUILTIN_WORKOUT_PRESETS } from "@/lib/workout-presets";
 import { getAllStoredWorkouts, deleteStoredWorkout, putWorkout } from "@/lib/storage";
 import {
@@ -33,6 +35,7 @@ interface WorkoutLibraryModalProps {
   onClose: () => void;
   onSelectWorkout: (workout: StructuredWorkout | null) => void;
   selectedWorkoutId?: string | null;
+  initialSport?: Sport;
 }
 
 export function WorkoutLibraryModal({
@@ -40,10 +43,14 @@ export function WorkoutLibraryModal({
   onClose,
   onSelectWorkout,
   selectedWorkoutId,
+  initialSport,
 }: WorkoutLibraryModalProps) {
   const { t, language } = useI18n();
 
   const [filterTab, setFilterTab] = useState<"all" | "presets" | "custom">("all");
+  const [sportFilter, setSportFilter] = useState<"all" | "running" | "cycling">(
+    initialSport === "cycling" ? "cycling" : initialSport === "running" ? "running" : "all"
+  );
   const [customWorkouts, setCustomWorkouts] = useState<StructuredWorkout[]>([]);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [editingWorkout, setEditingWorkout] = useState<StructuredWorkout | null>(null);
@@ -51,8 +58,11 @@ export function WorkoutLibraryModal({
   useEffect(() => {
     if (isOpen) {
       loadCustomWorkouts();
+      if (initialSport) {
+        setSportFilter(initialSport === "cycling" ? "cycling" : "running");
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, initialSport]);
 
   async function loadCustomWorkouts() {
     try {
@@ -68,8 +78,9 @@ export function WorkoutLibraryModal({
   const allWorkouts = [...BUILTIN_WORKOUT_PRESETS, ...customWorkouts];
 
   const displayedWorkouts = allWorkouts.filter((w) => {
-    if (filterTab === "presets") return w.isPreset;
-    if (filterTab === "custom") return !w.isPreset;
+    if (filterTab === "presets" && !w.isPreset) return false;
+    if (filterTab === "custom" && w.isPreset) return false;
+    if (sportFilter !== "all" && (w.sport || "running") !== sportFilter) return false;
     return true;
   });
 
@@ -134,8 +145,57 @@ export function WorkoutLibraryModal({
             </button>
           </div>
 
-          {/* Filter Tabs & New Button */}
+          {/* Sport Selector & Filter Tabs & New Button */}
           <div className="p-3 sm:px-5 border-b border-[var(--border)] flex flex-wrap items-center justify-between gap-2 bg-[#121720]/60 shrink-0">
+            {/* Sport Filter */}
+            <div className="flex items-center gap-1 bg-[#161b22] p-1 rounded-xl border border-[var(--border)] text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.light();
+                  setSportFilter("all");
+                }}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
+                  sportFilter === "all"
+                    ? "bg-white/20 text-white shadow"
+                    : "text-[var(--muted)] hover:text-white"
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.light();
+                  setSportFilter("running");
+                }}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all flex items-center gap-1 ${
+                  sportFilter === "running"
+                    ? "bg-orange-500 text-white shadow"
+                    : "text-[var(--muted)] hover:text-white"
+                }`}
+              >
+                <span>🏃</span>
+                <span>Corrida</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.light();
+                  setSportFilter("cycling");
+                }}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all flex items-center gap-1 ${
+                  sportFilter === "cycling"
+                    ? "bg-amber-500 text-black font-black shadow"
+                    : "text-[var(--muted)] hover:text-white"
+                }`}
+              >
+                <span>🚴</span>
+                <span>Ciclismo</span>
+              </button>
+            </div>
+
+            {/* Presets vs Custom Tabs */}
             <div className="flex items-center gap-1 bg-[#161b22] p-1 rounded-xl border border-[var(--border)] text-xs">
               <button
                 type="button"
@@ -143,13 +203,13 @@ export function WorkoutLibraryModal({
                   haptics.light();
                   setFilterTab("all");
                 }}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
                   filterTab === "all"
                     ? "bg-[var(--accent)] text-white shadow"
                     : "text-[var(--muted)] hover:text-white"
                 }`}
               >
-                Todos ({allWorkouts.length})
+                Todos
               </button>
               <button
                 type="button"
@@ -157,13 +217,13 @@ export function WorkoutLibraryModal({
                   haptics.light();
                   setFilterTab("presets");
                 }}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
                   filterTab === "presets"
                     ? "bg-[var(--accent)] text-white shadow"
                     : "text-[var(--muted)] hover:text-white"
                 }`}
               >
-                Oficiais ({BUILTIN_WORKOUT_PRESETS.length})
+                Oficiais
               </button>
               <button
                 type="button"
@@ -171,13 +231,13 @@ export function WorkoutLibraryModal({
                   haptics.light();
                   setFilterTab("custom");
                 }}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${
                   filterTab === "custom"
                     ? "bg-[var(--accent)] text-white shadow"
                     : "text-[var(--muted)] hover:text-white"
                 }`}
               >
-                Meus Treinos ({customWorkouts.length})
+                Meus
               </button>
             </div>
 
@@ -197,7 +257,7 @@ export function WorkoutLibraryModal({
 
           {/* Workouts List */}
           <div className="p-4 sm:p-5 overflow-y-auto space-y-3 flex-1">
-            {/* Free Run Option */}
+            {/* Free Run / Ride Option */}
             <div
               onClick={() => {
                 haptics.medium();
@@ -217,7 +277,7 @@ export function WorkoutLibraryModal({
                 <div>
                   <h4 className="text-sm font-bold text-white">{t("workout.none")}</h4>
                   <p className="text-xs text-[var(--muted)]">
-                    Gravação padrão com GPS e cronômetro contínuo.
+                    Gravação livre padrão com GPS e cronômetro contínuo.
                   </p>
                 </div>
               </div>
@@ -231,6 +291,7 @@ export function WorkoutLibraryModal({
             {displayedWorkouts.map((workout) => {
               const isSelected = selectedWorkoutId === workout.id;
               const summary = calculateWorkoutSummary(workout);
+              const isCycling = workout.sport === "cycling";
 
               return (
                 <div
@@ -249,6 +310,7 @@ export function WorkoutLibraryModal({
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-base">{isCycling ? "🚴" : "🏃"}</span>
                         <h3 className="text-sm font-bold text-white leading-tight">
                           {workout.name}
                         </h3>
@@ -259,6 +321,11 @@ export function WorkoutLibraryModal({
                         ) : (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 border border-purple-500/30 text-purple-300">
                             {t("workout.custom_badge")}
+                          </span>
+                        )}
+                        {isCycling && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                            Watts / RPM
                           </span>
                         )}
                       </div>
@@ -295,7 +362,7 @@ export function WorkoutLibraryModal({
                     <div className="flex items-center gap-3">
                       <span>{summary.totalSteps} etapas</span>
                       {summary.repeatsCount > 0 && (
-                        <span className="flex items-center gap-1 text-purple-400">
+                        <span className="flex items-center gap-1 text-purple-400 font-semibold">
                           <Repeat size={12} />
                           {summary.repeatsCount} séries
                         </span>

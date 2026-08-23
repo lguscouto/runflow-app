@@ -1,13 +1,17 @@
-﻿import type {
+import type {
   FlatWorkoutStep,
+  PowerZoneId,
   StructuredWorkout,
+  WorkoutCadenceTarget,
   WorkoutItem,
+  WorkoutPowerTarget,
   WorkoutRepeatBlock,
   WorkoutStep,
   WorkoutStepType,
   WorkoutTargetType,
 } from "./types";
-import { formatDistance, formatDuration, formatPace } from "./format";
+import { formatDistance, formatDuration, formatPace, formatWatts } from "./format";
+import { calculatePowerZones, DEFAULT_FTP_WATTS } from "./power-zones";
 
 /**
  * Achata os itens de treino (incluindo blocos de repetição) em uma lista linear sequencial.
@@ -124,6 +128,84 @@ export function formatStepPaceRange(
 }
 
 /**
+ * Resolve e calcula a faixa de Watts do passo com base no FTP do ciclista.
+ */
+export function resolveStepPowerTargetWatts(
+  step: WorkoutStep,
+  userFtp: number = DEFAULT_FTP_WATTS
+): { minWatts: number; maxWatts: number; label: string; zone?: PowerZoneId } | null {
+  const ftp = Math.max(40, userFtp);
+  const powerTarget = step.powerTarget;
+  const pZoneTarget = step.powerZoneTarget || powerTarget?.powerZoneTarget;
+  const pFtpTarget = powerTarget?.percentFtpTarget;
+
+  // 1. Faixa direta em Watts
+  if (powerTarget?.minWatts != null || powerTarget?.maxWatts != null) {
+    const minW = powerTarget.minWatts || 0;
+    const maxW = powerTarget.maxWatts || (powerTarget.targetWatts ? Math.round(powerTarget.targetWatts * 1.1) : 9999);
+    return {
+      minWatts: minW,
+      maxWatts: maxW,
+      label: minW > 0 && maxW < 9999 ? `${minW} - ${maxW} W` : maxW < 9999 ? `< ${maxW} W` : `> ${minW} W`,
+      zone: pZoneTarget,
+    };
+  }
+
+  // 2. Porcentagem do FTP (ex: 88-94% FTP)
+  if (pFtpTarget?.minPct != null || pFtpTarget?.maxPct != null) {
+    const minPct = (pFtpTarget.minPct ?? 50) / 100;
+    const maxPct = (pFtpTarget.maxPct ?? 150) / 100;
+    const minWatts = Math.round(ftp * minPct);
+    const maxWatts = Math.round(ftp * maxPct);
+    return {
+      minWatts,
+      maxWatts,
+      label: `${minWatts} - ${maxWatts} W (${pFtpTarget.minPct}%-${pFtpTarget.maxPct}% FTP)`,
+      zone: pZoneTarget,
+    };
+  }
+
+  // 3. Zona de Coggan (Z1 a Z7)
+  if (pZoneTarget != null && pZoneTarget >= 1 && pZoneTarget <= 7) {
+    const zones = calculatePowerZones(ftp);
+    const zone = zones.find((z) => z.zone === pZoneTarget);
+    if (zone) {
+      return {
+        minWatts: zone.minWatts,
+        maxWatts: zone.maxWatts,
+        label: `Z${zone.zone} (${zone.minWatts} - ${zone.maxWatts < 9000 ? `${zone.maxWatts} W` : "W+"})`,
+        zone: pZoneTarget,
+      };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Formata a meta de cadência de pedalada em texto legível (ex: "85 - 95 RPM").
+ */
+export function formatStepCadenceRange(
+  cadenceTarget?: WorkoutCadenceTarget
+): string | null {
+  if (!cadenceTarget) return null;
+  const { minCadenceRpm, maxCadenceRpm, targetCadenceRpm } = cadenceTarget;
+  if (minCadenceRpm && maxCadenceRpm) {
+    return `${minCadenceRpm} - ${maxCadenceRpm} RPM`;
+  }
+  if (targetCadenceRpm) {
+    return `~${targetCadenceRpm} RPM`;
+  }
+  if (minCadenceRpm) {
+    return `> ${minCadenceRpm} RPM`;
+  }
+  if (maxCadenceRpm) {
+    return `< ${maxCadenceRpm} RPM`;
+  }
+  return null;
+}
+
+/**
  * Retorna as cores CSS para cada tipo de passo.
  */
 export function getStepTypeBadgeStyle(type: WorkoutStepType): {
@@ -175,7 +257,7 @@ export function getStepTypeBadgeStyle(type: WorkoutStepType): {
 }
 
 /**
- * Avalia se o passo executado atendeu a meta programada.
+ * Avalia se o passo executado atendeu a meta programada (distância, tempo, ritmo, potência, cadência).
  */
 export function evaluateStepTargetMet(
   step: WorkoutStep,
@@ -183,7 +265,10 @@ export function evaluateStepTargetMet(
     durationSec: number;
     distanceM: number;
     avgPaceSecKm: number | null;
-  }
+    avgWatts?: number | null;
+    avgCadenceRpm?: number | null;
+  },
+  userFtp: number = DEFAULT_FTP_WATTS
 ): boolean {
   if (step.targetType === "distance") {
     // Pelo menos 90% da distância atingida
@@ -193,11 +278,26 @@ export function evaluateStepTargetMet(
     if (stats.durationSec < step.targetValue * 0.9) return false;
   }
 
-  // Se tiver meta de ritmo em tiro
+  // Se tiver meta de ritmo em corrida
   if (step.type === "work" && step.paceTarget && stats.avgPaceSecKm) {
-    const { minPaceSecKm, maxPaceSecKm } = step.paceTarget;
-    // Se o ritmo máximo tolerado existe e o corredor foi mais lento que isso + 15s de margem
+    const { maxPaceSecKm } = step.paceTarget;
     if (maxPaceSecKm && stats.avgPaceSecKm > maxPaceSecKm + 15) {
+      return false;
+    }
+  }
+
+  // Se tiver meta de potência em ciclismo
+  const resolvedPower = resolveStepPowerTargetWatts(step, userFtp);
+  if (step.type === "work" && resolvedPower && stats.avgWatts && stats.avgWatts > 0) {
+    // Tolera até 15% abaixo do mínimo alvo em tiros de ciclismo
+    if (stats.avgWatts < resolvedPower.minWatts * 0.85) {
+      return false;
+    }
+  }
+
+  // Se tiver meta de cadência em ciclismo
+  if (step.cadenceTarget?.minCadenceRpm && stats.avgCadenceRpm && stats.avgCadenceRpm > 0) {
+    if (stats.avgCadenceRpm < step.cadenceTarget.minCadenceRpm - 10) {
       return false;
     }
   }

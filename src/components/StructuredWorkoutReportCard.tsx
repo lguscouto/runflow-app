@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import {
@@ -11,14 +11,16 @@ import {
   Navigation,
   Gauge,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import type { StructuredWorkoutReport } from "@/lib/types";
 import {
   getStepTypeBadgeStyle,
   formatStepTargetDescription,
   formatStepPaceRange,
+  formatStepCadenceRange,
 } from "@/lib/structured-workout";
-import { formatDistance, formatDuration, formatPace } from "@/lib/format";
+import { formatDistance, formatDuration, formatPace, formatWatts } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 
 interface StructuredWorkoutReportCardProps {
@@ -48,7 +50,7 @@ export function StructuredWorkoutReportCard({
               {t("workout.report_title")}
             </h3>
             <p className="text-xs text-[var(--muted)]">
-              {workoutName} • {completedSteps} / {totalSteps} etapas concluídas
+              {workoutName} • {completedSteps} / {totalSteps} {language === "en" ? "steps completed" : "etapas concluídas"}
             </p>
           </div>
         </div>
@@ -73,13 +75,25 @@ export function StructuredWorkoutReportCard({
         <div className="grid grid-cols-12 text-[11px] font-bold text-[var(--muted)] px-3 pb-1 border-b border-white/5 uppercase tracking-wider">
           <div className="col-span-4 sm:col-span-3">Etapa</div>
           <div className="col-span-3 sm:col-span-3">Meta</div>
-          <div className="col-span-3 sm:col-span-3">Executado</div>
-          <div className="col-span-2 sm:col-span-3 text-right">Resultado</div>
+          <div className="col-span-3 sm:col-span-4">Executado</div>
+          <div className="col-span-2 sm:col-span-2 text-right">Resultado</div>
         </div>
 
         {steps.map((step, idx) => {
           const badge = getStepTypeBadgeStyle(step.type);
           const paceTargetStr = formatStepPaceRange(step.paceTarget);
+          const cadenceTargetStr = formatStepCadenceRange(step.cadenceTarget);
+
+          // Power Target text
+          let powerTargetStr = "";
+          if (step.powerTarget) {
+            const { minWatts, maxWatts, targetWatts } = step.powerTarget;
+            if (minWatts && maxWatts) powerTargetStr = `${minWatts}-${maxWatts} W`;
+            else if (targetWatts) powerTargetStr = `${targetWatts} W`;
+            else if (minWatts) powerTargetStr = `≥ ${minWatts} W`;
+          } else if (step.powerZoneTarget) {
+            powerTargetStr = `Z${step.powerZoneTarget}`;
+          }
 
           return (
             <div
@@ -108,22 +122,39 @@ export function StructuredWorkoutReportCard({
                     {paceTargetStr}
                   </div>
                 )}
-              </div>
-
-              {/* Executed Stats */}
-              <div className="col-span-3 sm:col-span-3 space-y-0.5">
-                <div className="font-mono font-bold text-white">
-                  {formatDistance(step.distanceM)} • {formatDuration(step.durationSec)}
-                </div>
-                {step.avgPaceSecKm && (
-                  <div className="text-[10px] text-[var(--muted)] font-mono">
-                    {formatPace(step.avgPaceSecKm)}
+                {powerTargetStr && (
+                  <div className="text-[10px] text-amber-400 font-mono flex items-center gap-1">
+                    <Zap size={10} className="fill-amber-400" />
+                    <span>{powerTargetStr}</span>
+                  </div>
+                )}
+                {cadenceTargetStr && (
+                  <div className="text-[10px] text-cyan-400 font-mono flex items-center gap-1">
+                    <RefreshCw size={10} />
+                    <span>{cadenceTargetStr}</span>
                   </div>
                 )}
               </div>
 
+              {/* Executed Stats */}
+              <div className="col-span-3 sm:col-span-4 space-y-0.5">
+                <div className="font-mono font-bold text-white">
+                  {formatDistance(step.distanceM)} • {formatDuration(step.durationSec)}
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-[10px] text-[var(--muted)] font-mono">
+                  {step.avgPaceSecKm && <span>{formatPace(step.avgPaceSecKm)}</span>}
+                  {step.avgWatts !== undefined && step.avgWatts !== null && step.avgWatts > 0 && (
+                    <span className="text-amber-300 font-bold">{formatWatts(step.avgWatts)}</span>
+                  )}
+                  {step.avgCadenceRpm !== undefined && step.avgCadenceRpm !== null && step.avgCadenceRpm > 0 && (
+                    <span className="text-cyan-300">{step.avgCadenceRpm} RPM</span>
+                  )}
+                  {step.avgHr && <span className="text-rose-400">{step.avgHr} bpm</span>}
+                </div>
+              </div>
+
               {/* Compliance Badge */}
-              <div className="col-span-2 sm:col-span-3 text-right">
+              <div className="col-span-2 sm:col-span-2 text-right">
                 {step.targetMet ? (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
                     <CheckCircle2 size={12} className="hidden sm:inline" />

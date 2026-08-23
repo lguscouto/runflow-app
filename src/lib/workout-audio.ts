@@ -1,5 +1,7 @@
 import type { FlatWorkoutStep, VoiceCoachConfig } from "./types";
 import { formatPaceForSpeech, speakWithConfig } from "./voice-coach";
+import { resolveStepPowerTargetWatts, formatStepCadenceRange } from "./structured-workout";
+import { DEFAULT_FTP_WATTS } from "./power-zones";
 
 let audioCtx: AudioContext | null = null;
 
@@ -75,7 +77,8 @@ export function playStartBlockChime() {
  */
 export function buildStepAnnouncement(
   flatStep: FlatWorkoutStep,
-  lang: "pt" | "en" = "pt"
+  lang: "pt" | "en" = "pt",
+  userFtp: number = DEFAULT_FTP_WATTS
 ): string {
   const { step, repeatIndex, totalRepeats } = flatStep;
   const isPt = lang === "pt";
@@ -128,7 +131,37 @@ export function buildStepAnnouncement(
     paceTargetStr = isPt ? `. Ritmo alvo abaixo de ${paceSpoken}` : `. Target pace below ${paceSpoken}`;
   }
 
-  const parts = [repeatPrefix || `${stepName}. `, targetStr, paceTargetStr].filter(Boolean);
+  // Alvo de Potência (Watts / FTP)
+  let powerTargetStr = "";
+  const powerResolved = resolveStepPowerTargetWatts(step, userFtp);
+  if (powerResolved) {
+    if (powerResolved.zone) {
+      powerTargetStr = isPt
+        ? `. Zona ${powerResolved.zone}, em torno de ${Math.round((powerResolved.minWatts + powerResolved.maxWatts) / 2)} Watts`
+        : `. Zone ${powerResolved.zone}, around ${Math.round((powerResolved.minWatts + powerResolved.maxWatts) / 2)} Watts`;
+    } else {
+      powerTargetStr = isPt
+        ? `. Potência alvo entre ${powerResolved.minWatts} e ${powerResolved.maxWatts} Watts`
+        : `. Target power between ${powerResolved.minWatts} and ${powerResolved.maxWatts} Watts`;
+    }
+  }
+
+  // Alvo de Cadência (RPM)
+  let cadenceTargetStr = "";
+  if (step.cadenceTarget) {
+    const { minCadenceRpm, maxCadenceRpm, targetCadenceRpm } = step.cadenceTarget;
+    if (minCadenceRpm && maxCadenceRpm) {
+      cadenceTargetStr = isPt
+        ? `. Cadência entre ${minCadenceRpm} e ${maxCadenceRpm} rotações por minuto`
+        : `. Cadence between ${minCadenceRpm} and ${maxCadenceRpm} RPM`;
+    } else if (targetCadenceRpm) {
+      cadenceTargetStr = isPt
+        ? `. Cadência de ${targetCadenceRpm} rotações por minuto`
+        : `. Cadence ${targetCadenceRpm} RPM`;
+    }
+  }
+
+  const parts = [repeatPrefix || `${stepName}. `, targetStr, paceTargetStr, powerTargetStr, cadenceTargetStr].filter(Boolean);
   return parts.join("");
 }
 
@@ -138,10 +171,11 @@ export function buildStepAnnouncement(
 export function speakWorkoutStep(
   flatStep: FlatWorkoutStep,
   config: VoiceCoachConfig,
-  lang: "pt" | "en" = "pt"
+  lang: "pt" | "en" = "pt",
+  userFtp: number = DEFAULT_FTP_WATTS
 ) {
   playStartBlockChime();
-  const text = buildStepAnnouncement(flatStep, lang);
+  const text = buildStepAnnouncement(flatStep, lang, userFtp);
   setTimeout(() => {
     speakWithConfig(text, config, lang);
   }, 350);

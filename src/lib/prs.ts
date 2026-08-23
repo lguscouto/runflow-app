@@ -1,71 +1,155 @@
-import { ActivitySummary, UserProfile } from "./types";
+import { ActivitySummary, Sport, UserProfile } from "./types";
 
-export interface PersonalRecords {
+export interface RunningPersonalRecords {
   longestDistance: ActivitySummary | null;
   bestPace: ActivitySummary | null;
   longestDuration: ActivitySummary | null;
   highestElevation: ActivitySummary | null;
 }
 
-export type PRCategory = "longestDistance" | "bestPace" | "longestDuration" | "highestElevation";
+export interface CyclingPersonalRecords {
+  longestDistance: ActivitySummary | null;
+  highestAvgSpeed: ActivitySummary | null;
+  maxSpeed: ActivitySummary | null;
+  highestElevation: ActivitySummary | null;
+  bestPower: ActivitySummary | null;
+  longestDuration: ActivitySummary | null;
+}
+
+export interface PersonalRecords {
+  running: RunningPersonalRecords;
+  cycling: CyclingPersonalRecords;
+  // Legacy aliases for running backward compatibility
+  longestDistance: ActivitySummary | null;
+  bestPace: ActivitySummary | null;
+  longestDuration: ActivitySummary | null;
+  highestElevation: ActivitySummary | null;
+}
+
+export type PRCategory =
+  | "longestDistance"
+  | "bestPace"
+  | "longestDuration"
+  | "highestElevation"
+  | "highestAvgSpeed"
+  | "maxSpeed"
+  | "bestPower";
 
 export const PR_CATEGORY_LABELS: Record<PRCategory, string> = {
   longestDistance: "Maior Distância",
   bestPace: "Melhor Ritmo Médio",
   longestDuration: "Maior Duração",
   highestElevation: "Maior Ganho de Elevação",
+  highestAvgSpeed: "Maior Velocidade Média",
+  maxSpeed: "Velocidade Máxima",
+  bestPower: "Melhor Potência Média",
 };
 
 /**
- * Analisa as atividades (somente de corrida) e determina os recordes pessoais (PRs).
+ * Analisa as atividades e determina os recordes pessoais (PRs) separados por modalidade (Corrida e Ciclismo).
  */
 export function getPersonalRecords(
   activities: ActivitySummary[],
   profile: UserProfile | null
 ): PersonalRecords {
   const rawMinDistance = profile?.prMinPaceDistanceKm;
-  const minDistanceKm = (rawMinDistance !== undefined && rawMinDistance > 0) ? rawMinDistance : 5;
+  const minDistanceKm = rawMinDistance !== undefined && rawMinDistance > 0 ? rawMinDistance : 5;
   const minDistanceM = minDistanceKm * 1000;
 
-  // Filtrar apenas treinos de corrida
-  const runningActivities = activities.filter((a) => a.sport === "running");
+  // 1. Corrida (Running)
+  const runningActs = activities.filter((a) => a.sport === "running");
+  let runLongestDist: ActivitySummary | null = null;
+  let runBestPace: ActivitySummary | null = null;
+  let runLongestDur: ActivitySummary | null = null;
+  let runHighestEle: ActivitySummary | null = null;
 
-  let longestDistance: ActivitySummary | null = null;
-  let bestPace: ActivitySummary | null = null;
-  let longestDuration: ActivitySummary | null = null;
-  let highestElevation: ActivitySummary | null = null;
-
-  for (const act of runningActivities) {
-    // 1. Maior Distância
-    if (!longestDistance || act.distanceM > longestDistance.distanceM) {
-      longestDistance = act;
+  for (const act of runningActs) {
+    if (!runLongestDist || act.distanceM > runLongestDist.distanceM) {
+      runLongestDist = act;
     }
-
-    // 2. Melhor Ritmo (menor valor em segundos/km é o mais rápido)
-    if (act.distanceM >= minDistanceM && act.avgPaceSecKm !== null && act.avgPaceSecKm > 0) {
-      if (!bestPace || act.avgPaceSecKm < (bestPace.avgPaceSecKm ?? Infinity)) {
-        bestPace = act;
+    if (act.distanceM >= minDistanceM && act.avgPaceSecKm != null && act.avgPaceSecKm > 0) {
+      if (!runBestPace || act.avgPaceSecKm < (runBestPace.avgPaceSecKm ?? Infinity)) {
+        runBestPace = act;
       }
     }
-
-    // 3. Maior Duração
-    if (!longestDuration || act.durationSec > longestDuration.durationSec) {
-      longestDuration = act;
+    if (!runLongestDur || act.durationSec > runLongestDur.durationSec) {
+      runLongestDur = act;
     }
-
-    // 4. Maior Elevação
-    if (act.elevationGainM !== null && act.elevationGainM > 0) {
-      if (!highestElevation || act.elevationGainM > (highestElevation.elevationGainM ?? 0)) {
-        highestElevation = act;
+    if (act.elevationGainM != null && act.elevationGainM > 0) {
+      if (!runHighestEle || act.elevationGainM > (runHighestEle.elevationGainM ?? 0)) {
+        runHighestEle = act;
       }
     }
   }
 
+  // 2. Ciclismo (Cycling)
+  const cyclingActs = activities.filter((a) => a.sport === "cycling");
+  let bikeLongestDist: ActivitySummary | null = null;
+  let bikeHighestAvgSpeed: ActivitySummary | null = null;
+  let bikeMaxSpeed: ActivitySummary | null = null;
+  let bikeHighestEle: ActivitySummary | null = null;
+  let bikeBestPower: ActivitySummary | null = null;
+  let bikeLongestDur: ActivitySummary | null = null;
+
+  for (const act of cyclingActs) {
+    // Maior distância
+    if (!bikeLongestDist || act.distanceM > bikeLongestDist.distanceM) {
+      bikeLongestDist = act;
+    }
+    // Maior velocidade média (em pedais >= 10 km)
+    if (act.distanceM >= 10000 && act.avgSpeedKmh != null && act.avgSpeedKmh > 0) {
+      if (!bikeHighestAvgSpeed || act.avgSpeedKmh > (bikeHighestAvgSpeed.avgSpeedKmh ?? 0)) {
+        bikeHighestAvgSpeed = act;
+      }
+    }
+    // Velocidade máxima registrada
+    if (act.maxSpeedKmh != null && act.maxSpeedKmh > 0) {
+      if (!bikeMaxSpeed || act.maxSpeedKmh > (bikeMaxSpeed.maxSpeedKmh ?? 0)) {
+        bikeMaxSpeed = act;
+      }
+    }
+    // Maior altimetria acumulada
+    if (act.elevationGainM != null && act.elevationGainM > 0) {
+      if (!bikeHighestEle || act.elevationGainM > (bikeHighestEle.elevationGainM ?? 0)) {
+        bikeHighestEle = act;
+      }
+    }
+    // Melhor potência média (em pedais >= 10 min)
+    if (act.durationSec >= 600 && act.avgWatts != null && act.avgWatts > 0) {
+      if (!bikeBestPower || act.avgWatts > (bikeBestPower.avgWatts ?? 0)) {
+        bikeBestPower = act;
+      }
+    }
+    // Maior duração
+    if (!bikeLongestDur || act.durationSec > bikeLongestDur.durationSec) {
+      bikeLongestDur = act;
+    }
+  }
+
+  const runningPRs: RunningPersonalRecords = {
+    longestDistance: runLongestDist,
+    bestPace: runBestPace,
+    longestDuration: runLongestDur,
+    highestElevation: runHighestEle,
+  };
+
+  const cyclingPRs: CyclingPersonalRecords = {
+    longestDistance: bikeLongestDist,
+    highestAvgSpeed: bikeHighestAvgSpeed,
+    maxSpeed: bikeMaxSpeed,
+    highestElevation: bikeHighestEle,
+    bestPower: bikeBestPower,
+    longestDuration: bikeLongestDur,
+  };
+
   return {
-    longestDistance,
-    bestPace,
-    longestDuration,
-    highestElevation,
+    running: runningPRs,
+    cycling: cyclingPRs,
+    // Aliases
+    longestDistance: runLongestDist,
+    bestPace: runBestPace,
+    longestDuration: runLongestDur,
+    highestElevation: runHighestEle,
   };
 }
 
@@ -75,25 +159,29 @@ export interface ActivityPRResult {
 }
 
 /**
- * Verifica se uma atividade específica bateu algum recorde pessoal.
+ * Verifica se uma atividade específica bateu algum recorde pessoal na sua modalidade.
  */
 export function getActivityPRs(
   activityId: string,
-  prs: PersonalRecords
+  prs: PersonalRecords,
+  sport?: Sport
 ): ActivityPRResult {
   const categories: PRCategory[] = [];
 
-  if (prs.longestDistance?.id === activityId) {
-    categories.push("longestDistance");
+  if (sport === "cycling" || !sport) {
+    if (prs.cycling.longestDistance?.id === activityId) categories.push("longestDistance");
+    if (prs.cycling.highestAvgSpeed?.id === activityId) categories.push("highestAvgSpeed");
+    if (prs.cycling.maxSpeed?.id === activityId) categories.push("maxSpeed");
+    if (prs.cycling.highestElevation?.id === activityId) categories.push("highestElevation");
+    if (prs.cycling.bestPower?.id === activityId) categories.push("bestPower");
+    if (prs.cycling.longestDuration?.id === activityId) categories.push("longestDuration");
   }
-  if (prs.bestPace?.id === activityId) {
-    categories.push("bestPace");
-  }
-  if (prs.longestDuration?.id === activityId) {
-    categories.push("longestDuration");
-  }
-  if (prs.highestElevation?.id === activityId) {
-    categories.push("highestElevation");
+
+  if (sport === "running" || (!sport && categories.length === 0)) {
+    if (prs.running.longestDistance?.id === activityId) categories.push("longestDistance");
+    if (prs.running.bestPace?.id === activityId) categories.push("bestPace");
+    if (prs.running.longestDuration?.id === activityId) categories.push("longestDuration");
+    if (prs.running.highestElevation?.id === activityId) categories.push("highestElevation");
   }
 
   return {
@@ -103,7 +191,7 @@ export function getActivityPRs(
 }
 
 /**
- * Constrói um mapeamento de ID da atividade para as categorias de PR obtidas.
+ * Constrói um mapeamento de ID da atividade para as categorias de PR obtidas em qualquer esporte.
  */
 export function getPRMap(
   activities: ActivitySummary[],
@@ -111,22 +199,27 @@ export function getPRMap(
 ): Record<string, PRCategory[]> {
   const map: Record<string, PRCategory[]> = {};
 
-  if (prs.longestDistance) {
-    if (!map[prs.longestDistance.id]) map[prs.longestDistance.id] = [];
-    map[prs.longestDistance.id].push("longestDistance");
-  }
-  if (prs.bestPace) {
-    if (!map[prs.bestPace.id]) map[prs.bestPace.id] = [];
-    map[prs.bestPace.id].push("bestPace");
-  }
-  if (prs.longestDuration) {
-    if (!map[prs.longestDuration.id]) map[prs.longestDuration.id] = [];
-    map[prs.longestDuration.id].push("longestDuration");
-  }
-  if (prs.highestElevation) {
-    if (!map[prs.highestElevation.id]) map[prs.highestElevation.id] = [];
-    map[prs.highestElevation.id].push("highestElevation");
-  }
+  const register = (act: ActivitySummary | null, cat: PRCategory) => {
+    if (!act) return;
+    if (!map[act.id]) map[act.id] = [];
+    if (!map[act.id].includes(cat)) {
+      map[act.id].push(cat);
+    }
+  };
+
+  // Running
+  register(prs.running.longestDistance, "longestDistance");
+  register(prs.running.bestPace, "bestPace");
+  register(prs.running.longestDuration, "longestDuration");
+  register(prs.running.highestElevation, "highestElevation");
+
+  // Cycling
+  register(prs.cycling.longestDistance, "longestDistance");
+  register(prs.cycling.highestAvgSpeed, "highestAvgSpeed");
+  register(prs.cycling.maxSpeed, "maxSpeed");
+  register(prs.cycling.highestElevation, "highestElevation");
+  register(prs.cycling.bestPower, "bestPower");
+  register(prs.cycling.longestDuration, "longestDuration");
 
   return map;
 }

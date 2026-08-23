@@ -25,12 +25,16 @@ import { useI18n } from "@/lib/i18n";
 import { getAllStoredGear } from "@/lib/storage";
 import { associateGearToActivity } from "@/lib/gear";
 import type { Gear, UserProfile } from "@/lib/types";
+import { PowerDurationCurve } from "@/components/PowerDurationCurve";
 
 const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
   longestDistance: "prs.longest_distance",
   bestPace: "prs.best_pace",
   longestDuration: "prs.longest_duration",
   highestElevation: "prs.highest_elevation",
+  highestAvgSpeed: "prs.cycling_highest_avg_speed",
+  maxSpeed: "prs.cycling_max_speed",
+  bestPower: "prs.cycling_best_power",
 };
 
 const ActivityMap = dynamic(
@@ -69,6 +73,7 @@ import { MergeFitButton } from "@/components/MergeFitButton";
 import { ActivitySplits } from "@/components/ActivitySplits";
 import { SocialShareCardModal } from "@/components/SocialShareCardModal";
 import { HeartRateZonesPanel } from "@/components/HeartRateZonesPanel";
+import { PowerZonesPanel } from "@/components/PowerZonesPanel";
 import { StructuredWorkoutReportCard } from "@/components/StructuredWorkoutReportCard";
 import { useActivityDetail } from "@/hooks/useActivities";
 import { firePRConfetti } from "@/lib/confetti";
@@ -137,6 +142,7 @@ export function ActivityDetailClient() {
   useEffect(() => {
     if (!activity) return;
     const activityId = activity.id;
+    const activitySport = activity.sport;
     async function checkPR() {
       try {
         const [profile, allActivities] = await Promise.all([
@@ -147,7 +153,7 @@ export function ActivityDetailClient() {
           setUserProfile(profile);
         }
         const prs = getPersonalRecords(allActivities, profile);
-        const { isPR, categories } = getActivityPRs(activityId, prs);
+        const { isPR, categories } = getActivityPRs(activityId, prs, activitySport);
         if (isPR) {
           setPrCategories(categories);
           firePRConfetti();
@@ -302,6 +308,12 @@ export function ActivityDetailClient() {
       )}
 
       <HeartRateZonesPanel activity={activity} />
+
+      <PowerZonesPanel activity={activity} />
+
+      {isCycling && (
+        <PowerDurationCurve activity={activity} userProfile={userProfile} />
+      )}
 
       <ActivitySplits points={activity.points} sport={activity.sport} />
 

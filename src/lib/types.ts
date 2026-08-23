@@ -17,6 +17,8 @@ export interface UserProfile {
   maxHr?: number;
   /** Frequência cardíaca de repouso (bpm). */
   restingHr?: number;
+  /** Potência Limiar Funcional (FTP - Functional Threshold Power em Watts) para ciclismo. */
+  cyclingFtpWatts?: number;
   /** Configuração do Assistente de Voz (Voice Coach). */
   voiceCoach?: VoiceCoachConfig;
   /** Configuração de Auto-Pause Inteligente. */
@@ -146,6 +148,43 @@ export interface RacePrediction {
   targetPaceSecKm: number;
   baseActivityId?: string;
   baseDistanceM?: number;
+}
+
+// ── Coggan Cycling Power Zones Types (Feature 29 / Etapa 7) ─────────────────
+
+export type PowerZoneId = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export interface PowerZone {
+  zone: PowerZoneId;
+  nameKey: string;
+  descKey: string;
+  minPct: number; // ex: 0.55
+  maxPct: number; // ex: 0.75 (ou 9.99 para Z7)
+  minWatts: number;
+  maxWatts: number;
+  color: string;
+  bgRgba: string;
+}
+
+export interface PowerZoneDurationSummary {
+  zone: PowerZone;
+  durationSec: number;
+  percent: number;
+}
+
+export interface PowerZoneAnalysis {
+  ftpWatts: number;
+  avgWatts: number;
+  maxWatts: number;
+  normalizedPowerWatts?: number;
+  intensityFactor?: number; // IF = NP / FTP
+  trainingStressScore?: number; // TSS
+  variabilityIndex?: number; // VI = NP / avgWatts
+  wattsPerKg?: number;
+  hasPower: boolean;
+  totalTimeSec: number;
+  zones: PowerZoneDurationSummary[];
+  dominantZone: PowerZoneId | null;
 }
 
 
@@ -436,6 +475,20 @@ export interface WorkoutPaceTarget {
   maxPaceSecKm?: number; // ex: 300 (5:00/km)
 }
 
+export interface WorkoutPowerTarget {
+  minWatts?: number;
+  maxWatts?: number;
+  targetWatts?: number;
+  powerZoneTarget?: PowerZoneId;
+  percentFtpTarget?: { minPct?: number; maxPct?: number }; // ex: { minPct: 88, maxPct: 94 }
+}
+
+export interface WorkoutCadenceTarget {
+  minCadenceRpm?: number; // ex: 85
+  maxCadenceRpm?: number; // ex: 95
+  targetCadenceRpm?: number;
+}
+
 export interface WorkoutStep {
   id: string;
   type: WorkoutStepType;
@@ -443,7 +496,11 @@ export interface WorkoutStep {
   targetType: WorkoutTargetType;
   targetValue: number; // metros para distance (ex: 400), segundos para time (ex: 90), 0 para open
   paceTarget?: WorkoutPaceTarget;
+  powerTarget?: WorkoutPowerTarget;
+  cadenceTarget?: WorkoutCadenceTarget;
   hrZoneTarget?: HRZoneId;
+  powerZoneTarget?: PowerZoneId;
+  percentFtpTarget?: { minPct?: number; maxPct?: number };
   notes?: string;
 }
 
@@ -484,12 +541,18 @@ export interface ExecutedStepReport {
   targetType: WorkoutTargetType;
   targetValue: number;
   paceTarget?: WorkoutPaceTarget;
+  powerTarget?: WorkoutPowerTarget;
+  cadenceTarget?: WorkoutCadenceTarget;
   hrZoneTarget?: HRZoneId;
+  powerZoneTarget?: PowerZoneId;
+  percentFtpTarget?: { minPct?: number; maxPct?: number };
   repeatIndex?: number;
   totalRepeats?: number;
   durationSec: number;
   distanceM: number;
   avgPaceSecKm: number | null;
+  avgWatts?: number | null;
+  avgCadenceRpm?: number | null;
   avgHr: number | null;
   targetMet: boolean;
 }

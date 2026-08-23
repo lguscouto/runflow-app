@@ -308,3 +308,34 @@ export function computePowerSeries(
   if (sampled[sampled.length - 1] !== last) sampled.push(last);
   return sampled;
 }
+
+/** Cadência de pedalada (RPM) ou passos ao longo da distância. */
+export function computeCadenceSeries(
+  activity: ActivityDetail,
+  maxPoints = 120,
+  cumDist?: number[]
+): ChartPoint[] {
+  const all = activity.points;
+  const cum = cumDist ?? cumulativeDistances(all);
+  const series: ChartPoint[] = [];
+
+  for (let i = 0; i < all.length; i++) {
+    const cad = all[i].cadence;
+    if (cad != null && Number.isFinite(cad) && cad > 0) {
+      series.push({ x: cum[i] / 1000, y: Math.round(cad) });
+    }
+  }
+
+  if (series.length < 2) return [];
+  if (series.length <= maxPoints) return series;
+
+  const step = Math.ceil(series.length / maxPoints);
+  const sampled: ChartPoint[] = [];
+  for (let i = 0; i < series.length; i += step) {
+    sampled.push(series[i]);
+  }
+  const last = series[series.length - 1];
+  if (sampled[sampled.length - 1] !== last) sampled.push(last);
+  return sampled;
+}
+

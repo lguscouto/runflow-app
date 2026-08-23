@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useRef, useCallback } from "react";
 import type { ChartPoint } from "@/lib/chart-data";
 import { useI18n } from "@/lib/i18n";
 
@@ -12,9 +13,12 @@ interface SimpleLineChartProps {
   formatY?: (v: number) => string;
   invertY?: boolean;
   fillArea?: boolean;
+  hoverX?: number | null;
+  onHoverX?: (x: number | null) => void;
+  unit?: string;
 }
 
-const PAD = { top: 12, right: 8, bottom: 28, left: 44 };
+const PAD = { top: 14, right: 12, bottom: 28, left: 44 };
 
 export function SimpleLineChart({
   data,
@@ -25,13 +29,40 @@ export function SimpleLineChart({
   formatY = (v) => String(Math.round(v)),
   invertY = false,
   fillArea = true,
+  hoverX,
+  onHoverX,
+  unit,
 }: SimpleLineChartProps) {
   const { t } = useI18n();
+  const svgRef = useRef<SVGSVGElement>(null);
   const width = 400;
   const innerW = width - PAD.left - PAD.right;
   const innerH = height - PAD.top - PAD.bottom;
 
-  if (data.length < 2) {
+  const xs = data && data.length > 0 ? data.map((d) => d.x) : [0];
+  const ys = data && data.length > 0 ? data.map((d) => d.y) : [0];
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+
+  // Handle pointer tracking (hooks must be at the top)
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      if (!onHoverX || !svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      const clientX = e.clientX - rect.left;
+      const normX = (clientX / rect.width) * width;
+      const clampedX = Math.max(PAD.left, Math.min(width - PAD.right, normX));
+      const valX = minX + ((clampedX - PAD.left) / (innerW || 1)) * (maxX - minX);
+      onHoverX(valX);
+    },
+    [onHoverX, minX, maxX, innerW, width]
+  );
+
+  const handlePointerLeave = useCallback(() => {
+    if (onHoverX) onHoverX(null);
+  }, [onHoverX]);
+
+  if (!data || data.length < 2) {
     return (
       <p className="text-sm text-[var(--muted)] text-center py-8">
         {t("charts.insufficient_data")}
@@ -39,10 +70,6 @@ export function SimpleLineChart({
     );
   }
 
-  const xs = data.map((d) => d.x);
-  const ys = data.map((d) => d.y);
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
   let minY = Math.min(...ys);
   let maxY = Math.max(...ys);
 
@@ -58,20 +85,20 @@ export function SimpleLineChart({
   const scaleX = (x: number) =>
     PAD.left + ((x - minX) / (maxX - minX || 1)) * innerW;
   const scaleY = (y: number) => {
-    const t = (y - minY) / (maxY - minY || 1);
-    const norm = invertY ? t : 1 - t;
+    const tNorm = (y - minY) / (maxY - minY || 1);
+    const norm = invertY ? tNorm : 1 - tNorm;
     return PAD.top + norm * innerH;
   };
 
   const linePoints = data.map((d) => `${scaleX(d.x)},${scaleY(d.y)}`).join(" ");
-  const areaPoints = `${scaleX(data[0].x)},${scaleY(minY)} ${linePoints} ${scaleX(data[data.length - 1].x)},${scaleY(minY)}`;
+  const areaPoints = `${scaleX(data[0].x)},${scaleY(minY)} ${linePoints} ${scaleX(
+    data[data.length - 1].x
+  )},${scaleY(minY)}`;
 
   const yTicks = 4;
   const yTickValues = Array.from({ length: yTicks }, (_, i) => {
-    const t = i / (yTicks - 1);
-    return invertY
-      ? minY + (maxY - minY) * t
-      : maxY - (maxY - minY) * t;
+    const tVal = i / (yTicks - 1);
+    return invertY ? minY + (maxY - minY) * tVal : maxY - (maxY - minY) * tVal;
   });
 
   const xTicks = Math.min(5, data.length);
@@ -79,79 +106,158 @@ export function SimpleLineChart({
     Math.round((i / (xTicks - 1 || 1)) * (data.length - 1))
   );
 
+  // Find closest point to hovered X
+  let hoveredPoint: ChartPoint | null = null;
+  if (hoverX != null && Number.isFinite(hoverX)) {
+    let closestDist = Infinity;
+    for (const d of data) {
+      const dist = Math.abs(d.x - hoverX);
+      if (dist < closestDist) {
+        closestDist = dist;
+        hoveredPoint = d;
+      }
+    }
+  }
+
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className="w-full h-auto"
-      role="img"
-      aria-label={yLabel ?? t("charts.graph")}
-    >
-      {yTickValues.map((v, i) => {
-        const y = scaleY(invertY ? v : v);
-        return (
-          <g key={i}>
-            <line
-              x1={PAD.left}
-              y1={y}
-              x2={width - PAD.right}
-              y2={y}
-              stroke="var(--border)"
-              strokeWidth={1}
-              strokeDasharray="4 4"
-            />
+    <div className="relative select-none">
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-auto cursor-crosshair touch-none"
+        role="img"
+        aria-label={yLabel ?? t("charts.graph")}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={handlePointerLeave}
+        onPointerCancel={handlePointerLeave}
+      >
+        {yTickValues.map((v, i) => {
+          const y = scaleY(v);
+          return (
+            <g key={i}>
+              <line
+                x1={PAD.left}
+                y1={y}
+                x2={width - PAD.right}
+                y2={y}
+                stroke="var(--border)"
+                strokeWidth={1}
+                strokeDasharray="4 4"
+              />
+              <text
+                x={PAD.left - 6}
+                y={y + 3.5}
+                textAnchor="end"
+                fill="var(--muted)"
+                fontSize={9.5}
+                fontFamily="monospace"
+              >
+                {formatY(v)}
+              </text>
+            </g>
+          );
+        })}
+
+        {fillArea && (
+          <polygon points={areaPoints} fill={color} fillOpacity={0.12} />
+        )}
+        <polyline
+          points={linePoints}
+          fill="none"
+          stroke={color}
+          strokeWidth={2.2}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+
+        {xTickIndices.map((idx) => {
+          const d = data[idx];
+          const x = scaleX(d.x);
+          return (
             <text
-              x={PAD.left - 6}
-              y={y + 4}
-              textAnchor="end"
+              key={idx}
+              x={x}
+              y={height - 8}
+              textAnchor="middle"
               fill="var(--muted)"
-              fontSize={10}
+              fontSize={9.5}
+              fontFamily="monospace"
             >
-              {formatY(v)}
+              {d.label ?? (Number.isInteger(d.x) ? d.x : d.x.toFixed(1))}
             </text>
+          );
+        })}
+
+        {/* Synchronized Crosshair Cursor */}
+        {hoveredPoint && (
+          <g className="pointer-events-none transition-all">
+            {/* Vertical crosshair line */}
+            <line
+              x1={scaleX(hoveredPoint.x)}
+              y1={PAD.top - 4}
+              x2={scaleX(hoveredPoint.x)}
+              y2={height - PAD.bottom + 2}
+              stroke="white"
+              strokeWidth={1.5}
+              strokeDasharray="3 3"
+              strokeOpacity={0.7}
+            />
+
+            {/* Dot on line */}
+            <circle
+              cx={scaleX(hoveredPoint.x)}
+              cy={scaleY(hoveredPoint.y)}
+              r={5}
+              fill={color}
+              stroke="white"
+              strokeWidth={2}
+            />
+
+            {/* Tooltip Tag */}
+            <g
+              transform={`translate(${Math.max(
+                PAD.left + 30,
+                Math.min(width - PAD.right - 30, scaleX(hoveredPoint.x))
+              )}, ${PAD.top - 2})`}
+            >
+              <rect
+                x={-32}
+                y={-12}
+                width={64}
+                height={16}
+                rx={4}
+                fill="#0f141c"
+                stroke="white"
+                strokeOpacity={0.3}
+                strokeWidth={1}
+              />
+              <text
+                x={0}
+                y={0}
+                textAnchor="middle"
+                fill="white"
+                fontSize={9.5}
+                fontWeight="bold"
+                fontFamily="monospace"
+              >
+                {formatY(hoveredPoint.y)}
+              </text>
+            </g>
           </g>
-        );
-      })}
+        )}
 
-      {fillArea && (
-        <polygon points={areaPoints} fill={color} fillOpacity={0.12} />
-      )}
-      <polyline
-        points={linePoints}
-        fill="none"
-        stroke={color}
-        strokeWidth={2.5}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-
-      {xTickIndices.map((idx) => {
-        const d = data[idx];
-        const x = scaleX(d.x);
-        return (
+        {xLabel && (
           <text
-            key={idx}
-            x={x}
-            y={height - 8}
+            x={width / 2}
+            y={height - 2}
             textAnchor="middle"
             fill="var(--muted)"
-            fontSize={10}
+            fontSize={8.5}
           >
-            {d.label ?? (Number.isInteger(d.x) ? d.x : d.x.toFixed(1))}
+            {xLabel}
           </text>
-        );
-      })}
-
-      {xLabel && (
-        <text
-          x={width / 2}
-          y={height - 2}
-          textAnchor="middle"
-          fill="var(--muted)"
-          fontSize={9}
-        >
-          {xLabel}
-        </text>
-      )}
-    </svg>
+        )}
+      </svg>
+    </div>
   );
 }

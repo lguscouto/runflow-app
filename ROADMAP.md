@@ -113,26 +113,27 @@ Visualização da altimetria da rota durante a pedalada para gerenciamento de es
 
 ---
 
-### 7. Treinos Estruturados de Ciclismo & Zonas de Potência (Watts / FTP / Coggan)
+### 7. Treinos Estruturados de Ciclismo & Zonas de Potência (Watts / FTP / Coggan) ✅
 **Esforço:** M · **Prioridade:** Média · **Inspiração:** TrainerRoad / TrainingPeaks / Zwift
 
 Treinos intervalados orientados a potência (Watts) e cadência (RPM).
 
-- [ ] Configuração de FTP (Functional Threshold Power em Watts) no perfil do ciclista
-- [ ] 7 Zonas de Potência clássicas de Andrew Coggan (Z1 Recuperação Ativa até Z7 Potência Neuromuscular)
-- [ ] Presets de treinos intervalados de ciclismo: *Sprints de Cadência (High Cadence Drills)*, *Tiros VO2 Max (3x 3min)*, *Sweet Spot (2x 15min)* e *Resistência Z2*
+- [x] Configuração de FTP (Functional Threshold Power em Watts) no perfil do ciclista com cálculo de W/kg e estimador interativo (teste de 20 min com desconto de 5% e estimativa por nível/peso)
+- [x] 7 Zonas de Potência clássicas de Andrew Coggan (Z1 Recuperação Ativa até Z7 Potência Neuromuscular) com análise de Potência Normalizada (NP™), Fator de Intensidade (IF), Training Stress Score (TSS) e componente `PowerZonesPanel`
+- [x] Presets de treinos intervalados de ciclismo oficiais: *Sprints de Cadência (High Cadence Drills)*, *Tiros VO2 Max (3x 3min)*, *Sweet Spot (2x 15min)*, *Resistência Z2* e *Protocolo de Teste de FTP (20 Min)*
+- [x] Suporte integrado a metas de Watts e RPM nos HUDs (Ciclocomputador e HUD de Treino Estruturado) com status dinâmico ao vivo e anúncios do Voice Coach
 
 ---
 
-### 8. Gráficos Avançados & Análise Pós-Pedal (Power Curve, Cadence & Altimetria)
+### 8. Gráficos Avançados & Análise Pós-Pedal (Power Curve, Cadence & Altimetria) ✅
 **Esforço:** M · **Prioridade:** Média · **Inspiração:** Strava Summit / Intervals.icu
 
 Aprofundamento analítico na tela de detalhes de treinos de ciclismo.
 
-- [ ] Gráficos interativos sincronizados de Velocidade (km/h), Elevação (m), Cadência (RPM) e Potência (Watts)
-- [ ] Distribuição de tempo em Zonas de Potência (Z1–Z7) e Zonas de FC (Z1–Z5)
-- [ ] Recordes Pessoais (PRs) exclusivos de Ciclismo: Maior Distância, Maior Velocidade Média, Velocidade Máxima, Maior Altimetria e Melhor Potência
-- [ ] Curva de Potência Crítica (Melhores Esforços de Potência: 5s, 30s, 1min, 5min, 20min, 60min)
+- [x] Gráficos interativos sincronizados de Velocidade (km/h), Elevação (m), Cadência (RPM) e Potência (Watts) com cursor unificado (crosshair) e barra de telemetria instantânea
+- [x] Distribuição de tempo em Zonas de Potência (Z1–Z7) e Zonas de FC (Z1–Z5) integrada
+- [x] Recordes Pessoais (PRs) exclusivos de Ciclismo: Maior Distância, Maior Velocidade Média, Velocidade Máxima, Maior Altimetria, Melhor Potência e Maior Duração com abas por esporte na Home e badges
+- [x] Curva de Potência Crítica (Mean Maximal Power / Melhores Esforços de Potência: 5s, 30s, 1min, 5min, 20min, 60min) com componente `PowerDurationCurve` e comparação W/kg / FTP
 
 ---
 

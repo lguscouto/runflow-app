@@ -494,6 +494,13 @@ export function RecordWorkoutClient() {
           climbProgress={climbProgress}
           detectedClimbs={detectedClimbs}
           routePoints={routePoints}
+          currentWorkoutStep={currentWorkoutStep}
+          nextWorkoutStep={nextWorkoutStep}
+          workoutName={structuredWorkout?.name || t("workout.hud_badge")}
+          stepElapsedSec={stepElapsedSec}
+          stepDistanceM={stepDistanceM}
+          userFtp={profile?.cyclingFtpWatts}
+          onSkipWorkoutStep={handleSkipStep}
           onPause={handlePause}
           onResume={handleResume}
           onStop={handleStop}
@@ -725,6 +732,10 @@ export function RecordWorkoutClient() {
               stepElapsedSec={stepElapsedSec}
               stepDistanceM={stepDistanceM}
               currentPaceSecKm={stats.currentPaceSecKm}
+              currentWatts={stats.currentWatts}
+              currentCadenceRpm={stats.currentCadenceRpm}
+              userFtp={profile?.cyclingFtpWatts}
+              sport={sport}
               onSkipStep={handleSkipStep}
             />
           </div>
@@ -967,6 +978,10 @@ export function RecordWorkoutClient() {
               stepElapsedSec={stepElapsedSec}
               stepDistanceM={stepDistanceM}
               currentPaceSecKm={stats.currentPaceSecKm}
+              currentWatts={stats.currentWatts}
+              currentCadenceRpm={stats.currentCadenceRpm}
+              userFtp={profile?.cyclingFtpWatts}
+              sport={sport}
               onSkipStep={handleSkipStep}
             />
           )}

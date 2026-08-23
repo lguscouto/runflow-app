@@ -1,4 +1,4 @@
-﻿import type { StructuredWorkout } from "./types";
+import type { StructuredWorkout } from "./types";
 
 export const BUILTIN_WORKOUT_PRESETS: StructuredWorkout[] = [
   {
@@ -265,6 +265,263 @@ export const BUILTIN_WORKOUT_PRESETS: StructuredWorkout[] = [
         targetValue: 2100, // 35 min
         hrZoneTarget: 2,
         notes: "Ritmo de conversa. Se a respiração ficar ofegante, diminua a velocidade.",
+      },
+    ],
+  },
+  // ── Presets Oficiais de Ciclismo (Etapa 7) ──────────────────────────────────
+  {
+    id: "preset-cycling-cadence-drills",
+    name: "Sprints de Cadência (High Cadence Drills)",
+    description: "Exercício clássico de eficiência neuromuscular para pedalada fluida, coordenação motora e economia de energia.",
+    sport: "cycling",
+    isPreset: true,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    items: [
+      {
+        id: "cad-warmup",
+        type: "warmup",
+        name: "Aquecimento Progressivo",
+        targetType: "time",
+        targetValue: 600, // 10 min
+        powerZoneTarget: 2,
+        cadenceTarget: { minCadenceRpm: 85, maxCadenceRpm: 95 },
+        notes: "Giro fácil e solto para aquecer as pernas.",
+      },
+      {
+        id: "cad-repeat-block",
+        type: "repeat",
+        repeats: 4,
+        steps: [
+          {
+            id: "cad-work",
+            type: "work",
+            name: "Giro Rápido (105-120 RPM)",
+            targetType: "time",
+            targetValue: 60, // 1 min
+            powerZoneTarget: 3,
+            percentFtpTarget: { minPct: 76, maxPct: 90 },
+            cadenceTarget: { minCadenceRpm: 105, maxCadenceRpm: 120 },
+            notes: "Mantenha o quadril firme no selim sem quicar.",
+          },
+          {
+            id: "cad-rec",
+            type: "recovery",
+            name: "Giro Leve de Recuperação",
+            targetType: "time",
+            targetValue: 120, // 2 min
+            powerZoneTarget: 1,
+            cadenceTarget: { minCadenceRpm: 80, maxCadenceRpm: 90 },
+            notes: "Respire fundo e gire suave.",
+          },
+        ],
+      },
+      {
+        id: "cad-cooldown",
+        type: "cooldown",
+        name: "Desaquecimento",
+        targetType: "time",
+        targetValue: 300, // 5 min
+        powerZoneTarget: 1,
+        notes: "Soltura muscular final.",
+      },
+    ],
+  },
+  {
+    id: "preset-cycling-vo2max",
+    name: "Tiros VO2 Max (3x 3min @ 115% FTP)",
+    description: "Estímulos acima do limiar funcional para expandir o teto aeróbico (VO2 Max) e a capacidade de suportar acelerações.",
+    sport: "cycling",
+    isPreset: true,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    items: [
+      {
+        id: "vo2-warmup",
+        type: "warmup",
+        name: "Aquecimento com Progressão",
+        targetType: "time",
+        targetValue: 600, // 10 min
+        powerZoneTarget: 2,
+        notes: "Aumente gradualmente a intensidade nos últimos 3 minutos.",
+      },
+      {
+        id: "vo2-repeat-block",
+        type: "repeat",
+        repeats: 3,
+        steps: [
+          {
+            id: "vo2-work",
+            type: "work",
+            name: "Tiro VO2 Max (Z5 110-120% FTP)",
+            targetType: "time",
+            targetValue: 180, // 3 min
+            powerZoneTarget: 5,
+            percentFtpTarget: { minPct: 110, maxPct: 120 },
+            cadenceTarget: { minCadenceRpm: 90, maxCadenceRpm: 105 },
+            notes: "Esforço muito forte e consistente até o último segundo.",
+          },
+          {
+            id: "vo2-rec",
+            type: "recovery",
+            name: "Recuperação Ativa Z1",
+            targetType: "time",
+            targetValue: 180, // 3 min
+            powerZoneTarget: 1,
+            notes: "Giro super leve para limpar o lactato.",
+          },
+        ],
+      },
+      {
+        id: "vo2-cooldown",
+        type: "cooldown",
+        name: "Desaquecimento",
+        targetType: "time",
+        targetValue: 600, // 10 min
+        powerZoneTarget: 1,
+      },
+    ],
+  },
+  {
+    id: "preset-cycling-sweet-spot",
+    name: "Sweet Spot (2x 15min @ 90% FTP)",
+    description: "O equilíbrio perfeito entre benefício fisiológico e fadiga. Ideal para construir sustentação em subidas longas e contra-relógio.",
+    sport: "cycling",
+    isPreset: true,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    items: [
+      {
+        id: "ss-warmup",
+        type: "warmup",
+        name: "Aquecimento",
+        targetType: "time",
+        targetValue: 600, // 10 min
+        powerZoneTarget: 2,
+      },
+      {
+        id: "ss-repeat-block",
+        type: "repeat",
+        repeats: 2,
+        steps: [
+          {
+            id: "ss-work",
+            type: "work",
+            name: "Bloco Sweet Spot (88-94% FTP)",
+            targetType: "time",
+            targetValue: 900, // 15 min
+            powerZoneTarget: 4,
+            percentFtpTarget: { minPct: 88, maxPct: 94 },
+            cadenceTarget: { minCadenceRpm: 85, maxCadenceRpm: 95 },
+            notes: "Ritmo concentrado e firme. Foco na respiração rítmica.",
+          },
+          {
+            id: "ss-rec",
+            type: "recovery",
+            name: "Recuperação Leve Z1",
+            targetType: "time",
+            targetValue: 300, // 5 min
+            powerZoneTarget: 1,
+          },
+        ],
+      },
+      {
+        id: "ss-cooldown",
+        type: "cooldown",
+        name: "Desaquecimento",
+        targetType: "time",
+        targetValue: 600, // 10 min
+        powerZoneTarget: 1,
+      },
+    ],
+  },
+  {
+    id: "preset-cycling-z2-endurance",
+    name: "Resistência Z2 / Base Aeróbica (45 min)",
+    description: "Pedal contínuo em Zona 2 para queima de gordura como substrato energético e aumento da densidade mitocondrial.",
+    sport: "cycling",
+    isPreset: true,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    items: [
+      {
+        id: "z2-warmup",
+        type: "warmup",
+        name: "Aquecimento Leve",
+        targetType: "time",
+        targetValue: 300, // 5 min
+        powerZoneTarget: 1,
+      },
+      {
+        id: "z2-work",
+        type: "work",
+        name: "Base Aeróbica Contínua (60-75% FTP)",
+        targetType: "time",
+        targetValue: 2100, // 35 min
+        powerZoneTarget: 2,
+        percentFtpTarget: { minPct: 60, maxPct: 75 },
+        cadenceTarget: { minCadenceRpm: 85, maxCadenceRpm: 95 },
+        notes: "Ritmo que você conseguiria manter conversando com tranquilidade.",
+      },
+      {
+        id: "z2-cooldown",
+        type: "cooldown",
+        name: "Desaquecimento",
+        targetType: "time",
+        targetValue: 300, // 5 min
+        powerZoneTarget: 1,
+      },
+    ],
+  },
+  {
+    id: "preset-cycling-ftp-test-20min",
+    name: "Protocolo Teste de FTP (20 Min All-Out)",
+    description: "Protocolo científico oficial para determinar seu Functional Threshold Power (FTP) e calibrar todas as suas 7 Zonas de Coggan.",
+    sport: "cycling",
+    isPreset: true,
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    items: [
+      {
+        id: "ftp-warmup",
+        type: "warmup",
+        name: "Aquecimento Z2",
+        targetType: "time",
+        targetValue: 900, // 15 min
+        powerZoneTarget: 2,
+      },
+      {
+        id: "ftp-opener",
+        type: "work",
+        name: "Abertura / Limpeza Z4",
+        targetType: "time",
+        targetValue: 300, // 5 min
+        powerZoneTarget: 4,
+        notes: "Aceleração controlada para preparar o sistema neuromuscular.",
+      },
+      {
+        id: "ftp-recovery",
+        type: "recovery",
+        name: "Giro Leve Z1",
+        targetType: "time",
+        targetValue: 300, // 5 min
+        powerZoneTarget: 1,
+      },
+      {
+        id: "ftp-test-main",
+        type: "work",
+        name: "TESTE 20 MIN ALL-OUT",
+        targetType: "time",
+        targetValue: 1200, // 20 min
+        notes: "Esforço MÁXIMO e uniforme que você puder sustentar durante os 20 minutos completos!",
+      },
+      {
+        id: "ftp-cooldown",
+        type: "cooldown",
+        name: "Desaquecimento Regenerativo",
+        targetType: "time",
+        targetValue: 600, // 10 min
+        powerZoneTarget: 1,
       },
     ],
   },
