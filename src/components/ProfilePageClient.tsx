@@ -47,7 +47,7 @@ import { VO2MaxFitnessCard } from "@/components/VO2MaxFitnessCard";
 import { RacePredictorCard } from "@/components/RacePredictorCard";
 import { useI18n } from "@/lib/i18n";
 import { listGearWithUsage, setDefaultGear, type GearWithUsage } from "@/lib/gear";
-import { putGear, removeGear, getAllStoredActivities } from "@/lib/storage";
+import { putGear, removeGear, getAllStoredSummaries } from "@/lib/storage";
 import { calculateAchievements, type Achievement } from "@/lib/achievements";
 import { v4 as uuidv4 } from "uuid";
 import { exportBackup, importBackup } from "@/lib/backup";
@@ -134,7 +134,7 @@ export function ProfilePageClient() {
       // Load Gear and Activities
       const [gearList, acts] = await Promise.all([
         listGearWithUsage(),
-        getAllStoredActivities(),
+        getAllStoredSummaries(),
       ]);
       setGears(gearList);
       setActivities(acts);
@@ -159,7 +159,7 @@ export function ProfilePageClient() {
       setProfile(p || undefined);
       const [gearList, acts] = await Promise.all([
         listGearWithUsage(),
-        getAllStoredActivities(),
+        getAllStoredSummaries(),
       ]);
       setGears(gearList);
       setActivities(acts);

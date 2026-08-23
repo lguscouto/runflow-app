@@ -780,7 +780,7 @@ export function BikeGarageManager({
 
       {/* Modal: Replace / Service Component */}
       {activeReplaceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
           <form
             onSubmit={handleConfirmReplace}
             className="stat-card max-w-md w-full border-amber-500/50 bg-[var(--surface)] p-6 space-y-4 shadow-2xl"
@@ -855,7 +855,7 @@ export function BikeGarageManager({
 
       {/* Modal: Add Custom Component */}
       {activeAddComponentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
           <form
             onSubmit={handleConfirmAddComponent}
             className="stat-card max-w-md w-full border-amber-500/50 bg-[var(--surface)] p-6 space-y-4 shadow-2xl"

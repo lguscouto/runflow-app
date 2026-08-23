@@ -267,8 +267,34 @@ export function ActivityFlyover3D({
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      renderer.dispose();
+
+      // Desalocação profunda recursiva de objetos WebGL/Three.js (Prevenção de Leaks de RAM/VRAM)
+      scene.traverse((object) => {
+        if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points) {
+          if (object.geometry) {
+            object.geometry.dispose();
+          }
+          if (object.material) {
+            if (Array.isArray(object.material)) {
+              object.material.forEach((mat) => {
+                mat.dispose();
+              });
+            } else {
+              object.material.dispose();
+            }
+          }
+        }
+      });
+
       scene.clear();
+      renderer.dispose();
+      renderer.forceContextLoss?.();
+
+      sceneRef.current = null;
+      cameraRef.current = null;
+      rendererRef.current = null;
+      runnerMeshRef.current = null;
+      runnerLightRef.current = null;
     };
   }, []);
 
@@ -356,12 +382,23 @@ export function ActivityFlyover3D({
         renderer.render(scene, camera);
       }
 
-      animFrameIdRef.current = requestAnimationFrame(animate);
+      if (!document.hidden) {
+        animFrameIdRef.current = requestAnimationFrame(animate);
+      }
     };
+
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        lastTime = performance.now();
+        animFrameIdRef.current = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
 
     animFrameIdRef.current = requestAnimationFrame(animate);
 
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
       if (animFrameIdRef.current) {
         cancelAnimationFrame(animFrameIdRef.current);
       }

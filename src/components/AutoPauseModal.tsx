@@ -39,8 +39,8 @@ export function AutoPauseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="bg-[var(--surface)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[92vh] safe-area-bottom">
         {/* Header */}
         <div className="p-5 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-raised)]">
           <div className="flex items-center gap-3">
@@ -257,7 +257,7 @@ export function AutoPauseModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-[var(--border)] bg-[var(--surface-raised)] flex items-center justify-end gap-3">
+        <div className="p-4 pb-[max(env(safe-area-inset-bottom),1.25rem)] border-t border-[var(--border)] bg-[var(--surface-raised)] flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}

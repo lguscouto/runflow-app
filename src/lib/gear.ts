@@ -1,6 +1,6 @@
 import {
   getAllStoredGear,
-  getAllStoredActivities,
+  getAllStoredSummaries,
   putGear,
   getStoredGear,
   getStoredActivity,
@@ -136,7 +136,7 @@ export async function listGearWithUsage(
   filterType?: GearType
 ): Promise<GearWithUsage[]> {
   const gears = await getAllStoredGear();
-  const activities = await getAllStoredActivities();
+  const activities = await getAllStoredSummaries();
 
   // Calcular distância acumulada por equipamento
   const distanceByGear = new Map<string, number>();

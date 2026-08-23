@@ -68,13 +68,13 @@ export function VoiceCoachModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
-        className="relative w-full max-w-lg max-h-[90vh] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+        className="relative w-full max-w-lg max-h-[92vh] bg-[var(--surface)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden safe-area-bottom"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -585,7 +585,7 @@ export function VoiceCoachModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-[var(--border)] bg-[var(--surface-hover)]/30 shrink-0">
+        <div className="flex items-center justify-end gap-3 px-5 py-4 pb-[max(env(safe-area-inset-bottom),1.25rem)] border-t border-[var(--border)] bg-[var(--surface-hover)]/30 shrink-0">
           <button
             type="button"
             onClick={onClose}

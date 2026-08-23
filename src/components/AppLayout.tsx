@@ -1,57 +1,118 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Activity, Home, MapPin, Play, Upload, User } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { haptics } from "@/lib/haptics";
 import React from "react";
 
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { t, loading } = useI18n();
+  const pathname = usePathname() || "/";
+
+  const isHome = pathname === "/" || pathname === "";
+  const isRecord = pathname.startsWith("/gravar");
+  const isActivities = pathname.startsWith("/atividades");
+  const isImport = pathname.startsWith("/importar");
+  const isRoutes = pathname.startsWith("/rotas");
+  const isProfile = pathname.startsWith("/perfil");
+
+  const handleNavClick = () => {
+    haptics.light();
+  };
 
   return (
     <div className="min-h-screen flex flex-col safe-area-app">
+      {/* Top Header */}
       <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur sticky top-0 z-50 safe-area-top">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg shrink-0">
-            <span className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white text-sm">
+          <Link
+            href="/"
+            onClick={handleNavClick}
+            className="flex items-center gap-2 font-bold text-lg shrink-0"
+          >
+            <span className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white text-sm shadow-sm font-black tracking-tighter">
               RF
             </span>
-            RunFlow
+            <span>RunFlow</span>
           </Link>
-          <nav className="flex items-center gap-1">
-            <Link href="/" className="nav-link flex items-center gap-1.5">
+
+          {/* Desktop Navigation (>= sm / 640px) */}
+          <nav className="hidden sm:flex items-center gap-1">
+            <Link
+              href="/"
+              onClick={handleNavClick}
+              className={`nav-link flex items-center gap-1.5 ${isHome ? "active text-[var(--accent)] font-semibold" : ""}`}
+            >
               <Home size={16} />
-              <span className="hidden sm:inline">{t("nav.home")}</span>
+              <span>{t("nav.home")}</span>
             </Link>
             <Link
               href="/gravar/"
-              className="nav-link flex items-center gap-1.5 text-[var(--accent)]"
+              onClick={handleNavClick}
+              className={`nav-link flex items-center gap-1.5 text-[var(--accent)] ${isRecord ? "active font-bold" : ""}`}
             >
               <Play size={16} />
-              <span className="hidden sm:inline">{t("nav.record")}</span>
+              <span>{t("nav.record")}</span>
             </Link>
-            <Link href="/atividades/" className="nav-link flex items-center gap-1.5">
+            <Link
+              href="/atividades/"
+              onClick={handleNavClick}
+              className={`nav-link flex items-center gap-1.5 ${isActivities ? "active text-[var(--accent)] font-semibold" : ""}`}
+            >
               <Activity size={16} />
-              <span className="hidden sm:inline">{t("nav.activities")}</span>
+              <span>{t("nav.activities")}</span>
             </Link>
-            <Link href="/importar/" className="nav-link flex items-center gap-1.5">
+            <Link
+              href="/importar/"
+              onClick={handleNavClick}
+              className={`nav-link flex items-center gap-1.5 ${isImport ? "active text-[var(--accent)] font-semibold" : ""}`}
+            >
               <Upload size={16} />
-              <span className="hidden sm:inline">{t("nav.import")}</span>
+              <span>{t("nav.import")}</span>
             </Link>
-            <Link href="/rotas/" className="nav-link flex items-center gap-1.5">
+            <Link
+              href="/rotas/"
+              onClick={handleNavClick}
+              className={`nav-link flex items-center gap-1.5 ${isRoutes ? "active text-[var(--accent)] font-semibold" : ""}`}
+            >
               <MapPin size={16} />
-              <span className="hidden sm:inline">{t("nav.routes")}</span>
+              <span>{t("nav.routes")}</span>
             </Link>
-            <Link href="/perfil/" className="nav-link flex items-center gap-1.5">
+            <Link
+              href="/perfil/"
+              onClick={handleNavClick}
+              className={`nav-link flex items-center gap-1.5 ${isProfile ? "active text-[var(--accent)] font-semibold" : ""}`}
+            >
               <User size={16} />
-              <span className="hidden sm:inline">{t("nav.profile")}</span>
+              <span>{t("nav.profile")}</span>
             </Link>
           </nav>
+
+          {/* Mobile Top Header Quick Action (Import GPX/FIT) */}
+          <div className="flex sm:hidden items-center gap-2">
+            <Link
+              href="/importar/"
+              onClick={handleNavClick}
+              className={`p-2 rounded-lg text-sm border border-[var(--border)] transition-colors ${
+                isImport
+                  ? "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/40"
+                  : "text-[var(--muted)] hover:text-[var(--text)] bg-[var(--surface)]"
+              }`}
+              title={t("nav.import")}
+              aria-label={t("nav.import")}
+            >
+              <Upload size={18} />
+            </Link>
+          </div>
         </div>
       </header>
-      <main className="flex-1 max-w-5xl w-full mx-auto px-4 py-8">
+
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-5xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-24 sm:pb-8">
         {loading ? (
           <div className="text-center py-20 text-[var(--muted)] text-sm">
             {t("common.loading")}
@@ -63,9 +124,64 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </>
         )}
       </main>
-      <footer className="border-t border-[var(--border)] py-6 text-center text-sm text-[var(--muted)] safe-area-bottom">
+
+      {/* Desktop Footer (>= sm) */}
+      <footer className="hidden sm:block border-t border-[var(--border)] py-6 text-center text-sm text-[var(--muted)] safe-area-bottom">
         {t("footer.text")}
       </footer>
+
+      {/* Mobile Bottom Navigation Bar (< sm / 640px) */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bottom-nav-bar safe-area-bottom px-2 py-1 flex items-center justify-around shadow-2xl"
+        aria-label="Navegação Principal"
+      >
+        <Link
+          href="/"
+          onClick={handleNavClick}
+          className={`bottom-nav-link ${isHome ? "active font-bold" : ""}`}
+        >
+          <Home size={20} />
+          <span>{t("nav.home")}</span>
+        </Link>
+
+        <Link
+          href="/atividades/"
+          onClick={handleNavClick}
+          className={`bottom-nav-link ${isActivities ? "active font-bold" : ""}`}
+        >
+          <Activity size={20} />
+          <span>{t("nav.activities")}</span>
+        </Link>
+
+        {/* Center Prominent Record FAB */}
+        <Link
+          href="/gravar/"
+          onClick={handleNavClick}
+          className="bottom-nav-fab"
+          aria-label={t("nav.record")}
+          title={t("nav.record")}
+        >
+          <Play size={22} className="fill-white ml-0.5" />
+        </Link>
+
+        <Link
+          href="/rotas/"
+          onClick={handleNavClick}
+          className={`bottom-nav-link ${isRoutes ? "active font-bold" : ""}`}
+        >
+          <MapPin size={20} />
+          <span>{t("nav.routes")}</span>
+        </Link>
+
+        <Link
+          href="/perfil/"
+          onClick={handleNavClick}
+          className={`bottom-nav-link ${isProfile ? "active font-bold" : ""}`}
+        >
+          <User size={20} />
+          <span>{t("nav.profile")}</span>
+        </Link>
+      </nav>
     </div>
   );
 }

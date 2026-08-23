@@ -1,4 +1,4 @@
-import { getAllStoredActivities } from "./storage";
+import { getAllStoredSummaries } from "./storage";
 import type { UserProfile } from "./types";
 
 export interface WeeklyProgress {
@@ -37,7 +37,7 @@ export async function getWeeklyProgress(
 ): Promise<WeeklyProgress> {
   const weekStart = getWeekStart();
   const weekEnd = getWeekEnd(weekStart);
-  const all = await getAllStoredActivities();
+  const all = await getAllStoredSummaries();
 
   let distanceM = 0;
   let workoutCount = 0;

@@ -42,17 +42,90 @@ export function elevationGainFromPoints(points: TrackPoint[]): number {
   return gain;
 }
 
+/**
+ * Distância perpendicular aproximada (em metros) de um ponto P em relação ao segmento de reta AB.
+ */
+function perpendicularDistanceM<T extends { lat: number; lng: number }>(
+  p: T,
+  a: T,
+  b: T
+): number {
+  // Projeção euclidiana local aproximada compensada pela latitude
+  const latFactor = Math.cos(toRad((a.lat + b.lat) / 2));
+  const x = (p.lng - a.lng) * latFactor;
+  const y = p.lat - a.lat;
+  const dx = (b.lng - a.lng) * latFactor;
+  const dy = b.lat - a.lat;
+
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) {
+    return haversineM(p.lat, p.lng, a.lat, a.lng);
+  }
+
+  // Ponto de projeção normalizado t
+  const t = Math.max(0, Math.min(1, (x * dx + y * dy) / lenSq));
+  const projX = a.lng * latFactor + t * dx;
+  const projY = a.lat + t * dy;
+
+  const curX = p.lng * latFactor;
+  const curY = p.lat;
+
+  const degDist = Math.sqrt((curX - projX) ** 2 + (curY - projY) ** 2);
+  // 1 grau ~ 111.319 metros no equador
+  return degDist * 111319;
+}
+
+/**
+ * Algoritmo Ramer-Douglas-Peucker (RDP) para simplificação geométrica de alta fidelidade.
+ * Preserva esquinas, cotovelos e curvas de montanha sem deformação geométrica.
+ */
+export function douglasPeucker<T extends { lat: number; lng: number }>(
+  points: T[],
+  epsilonMeters = 3.0
+): T[] {
+  if (points.length <= 2) return points;
+
+  let maxDist = 0;
+  let maxIndex = 0;
+  const first = points[0];
+  const last = points[points.length - 1];
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const dist = perpendicularDistanceM(points[i], first, last);
+    if (dist > maxDist) {
+      maxDist = dist;
+      maxIndex = i;
+    }
+  }
+
+  if (maxDist > epsilonMeters) {
+    const left = douglasPeucker(points.slice(0, maxIndex + 1), epsilonMeters);
+    const right = douglasPeucker(points.slice(maxIndex), epsilonMeters);
+    return [...left.slice(0, -1), ...right];
+  }
+
+  return [first, last];
+}
+
 export function simplifyPoints<T extends { lat: number; lng: number }>(
   points: T[],
   maxPoints = 800
 ): T[] {
   if (points.length <= maxPoints) return points;
-  const step = Math.ceil(points.length / maxPoints);
-  const simplified: T[] = [];
-  for (let i = 0; i < points.length; i += step) {
-    simplified.push(points[i]);
+
+  // 1. Aplica Douglas-Peucker com epsilon calibrado
+  const rdp = douglasPeucker(points, 2.5);
+  if (rdp.length <= maxPoints) {
+    return rdp;
   }
-  const last = points[points.length - 1];
+
+  // 2. Se ainda exceder maxPoints após RDP, aplica sub-amostragem proporcional de segurança
+  const step = Math.ceil(rdp.length / maxPoints);
+  const simplified: T[] = [];
+  for (let i = 0; i < rdp.length; i += step) {
+    simplified.push(rdp[i]);
+  }
+  const last = rdp[rdp.length - 1];
   if (simplified[simplified.length - 1] !== last) {
     simplified.push(last);
   }

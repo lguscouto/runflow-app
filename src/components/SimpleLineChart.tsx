@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, memo } from "react";
 import type { ChartPoint } from "@/lib/chart-data";
 import { useI18n } from "@/lib/i18n";
 
@@ -20,7 +20,7 @@ interface SimpleLineChartProps {
 
 const PAD = { top: 14, right: 12, bottom: 28, left: 44 };
 
-export function SimpleLineChart({
+export const SimpleLineChart = memo(function SimpleLineChart({
   data,
   height = 160,
   color = "#ff6b35",
@@ -260,4 +260,4 @@ export function SimpleLineChart({
       </svg>
     </div>
   );
-}
+});

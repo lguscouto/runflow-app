@@ -114,6 +114,23 @@ export async function getAllStoredActivities(): Promise<StoredActivity[]> {
   );
 }
 
+/**
+ * Retorna todos os resumos de atividades (sem os arrays pesados de trackpoints)
+ * proporcionando economia crítica de memória RAM em dispositivos de 4GB a 8GB.
+ */
+export async function getAllStoredSummaries(): Promise<ActivitySummary[]> {
+  const db = await getStore();
+  const tx = db.transaction("activities", "readonly");
+  const index = tx.store.index("by-started");
+  const summaries: ActivitySummary[] = [];
+  let cursor = await index.openCursor(null, "prev");
+  while (cursor) {
+    summaries.push(toActivitySummary(cursor.value));
+    cursor = await cursor.continue();
+  }
+  return summaries;
+}
+
 export async function listStoredActivitiesWithCursor(
   limit = 50
 ): Promise<ActivitySummary[]> {

@@ -12,6 +12,7 @@ import { getUserProfile } from "./profile";
 import { computeCyclingActivityStats } from "./cycling-physics";
 import {
   getAllStoredActivities,
+  getAllStoredSummaries,
   getStoredActivity,
   putActivity,
   removeActivity,
@@ -155,7 +156,7 @@ export async function deleteActivity(id: string): Promise<boolean> {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const all = await getAllStoredActivities();
+  const all = await getAllStoredSummaries();
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
   let totalDistanceM = 0;

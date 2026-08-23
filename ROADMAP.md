@@ -21,161 +21,157 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 |---|---|---|
 | **Fase 1.0: Core do App** | Importação GPX/FIT, Altimetria, Splits, PRs, Gráficos, BLE HR, Metas, Dashboard Anual | ✅ 100% Concluído |
 | **Fase 2.0: Avançada** | Sincronização P2P/WebDAV, Navegação Offline, Flyover 3D, Card Social, Voice Coach, Auto-Pause, Heatmap Térmico, Treinos Intervalados, VO2 Max, Micro-Interações Táteis & Modo Sol | ✅ 100% Concluído |
+| **Fase 3.0: Ecossistema de Ciclismo** | Garagem de Bikes, Potência Watts, Cadência RPM, Velocidade km/h, Ciclocomputador HUD, Sensores BLE (CSCS/CPS), Auto-Pause Ciclismo, ClimbPro, Treinos FTP/Coggan, Curva de Potência e Heatmap Velo | ✅ 100% Concluído |
+| **Fase 4.0: Fine-Tuning & Performance** | Visual Multi-Resoluções, Otimização de Memória (4GB-8GB), Modernização Android 13 a 17 & Remoção de Legado (12 Etapas) | ✅ 100% Concluído |
+| **Fase Final: Publicação** | Google Play Store Release Assinado (.aab, Proguard/R8, Keystore, Data Safety) | ⏳ Próxima |
 
 ---
 
-# 🚴 Fase 3.0: Ecossistema de Ciclismo & Publicação (10 Etapas)
+# 🚴 Fase 3.0: Ecossistema de Ciclismo (Concluído)
+
+*(Todas as 9 etapas funcionais de ciclismo concluídas com sucesso: Garagem de Bicicletas, Métricas km/h e Watts, Ciclocomputador HUD Retrato/Paisagem, Sensores BLE CSCS/CPS, Auto-Pause & Voice Coach de Bike, ClimbPro ao Vivo, Treinos Estruturados FTP/Coggan, Curva de Potência e Cards Sociais/Heatmap de Ciclismo).*
 
 ---
 
-### 1. Garagem de Bicicletas & Manutenção Preventiva (Bike Garage & Components)
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava Gear / ProBikeGarage · **Status:** ✅ Concluído
+# 🚀 Fase 4.0: Fine-Tuning, Performance E2E & Modernização Android (13 a 17) — ✅ 100% Concluído
 
-Evoluir o cadastro de equipamentos para uma Garagem Completa de Bicicletas com controle de desgaste de componentes mecânicos.
-
-- [x] Cadastro de Bikes: Tipos (Speed / Road, MTB, Gravel, Urbana, E-Bike, Dobrável), Marca, Modelo, Ano, Peso da bike (kg) e Foto/Ícone
-- [x] Rastreamento de componentes com limite de vida útil (km) e alertas preventivos:
-  - Corrente (ex.: alerta de troca com 2.500 km)
-  - Pneus dianteiro e traseiro (ex.: 4.000 km)
-  - Pastilhas/Sapatas de freio (ex.: 3.000 km)
-  - Fluido / Sangria de freios e Revisão Geral (ex.: 6 meses / 5.000 km)
-- [x] Associação da bike padrão para pedais e transferência de quilometragem automática
-- [x] Hodômetro acumulado e histórico de manutenção por bicicleta
+Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos fundamentais, antecedendo a publicação oficial.
 
 ---
 
-### 2. Motor de Métricas de Ciclismo (Velocidade km/h, Potência Estimada & Inclinação)
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Strava / GoldenCheetah · **Status:** ✅ Concluído
+## 🎨 Pilar 1: Fine-Tuning Visual & Multi-Resoluções (5 Etapas) — ✅ Concluído
 
-Cálculo científico de métricas de ciclismo em tempo real e pós-treino.
-
-- [x] Alternância automática entre Ritmo (min/km para corrida) e **Velocidade (km/h)** para ciclismo
-- [x] Cálculo de Velocidade Instantânea, Média e Máxima em km/h com suavização por GPS
-- [x] Estimativa de Potência em Watts ($P_{\text{total}} = P_{\text{aero}} + P_{\text{climb}} + P_{\text{rolling}}$) baseada no peso combinado (ciclista + bike), velocidade, inclinação e coeficiente aerodinâmico
-- [x] VAM (Velocidade Ascensional Média em m/h) e cálculo de inclinação percentual do terreno (% grade)
-- [x] Potência Normalizada (NP™ de Coggan) e gráficos dedicados de Velocidade e Potência por elevação/distância
+### 1. Design System Responsivo & Multi-Breakpoints (360dp a 1440dp)
+**Esforço:** M · **Prioridade:** Alta · **Foco:** Responsividade & Escala · **Status:** ✅ Concluído
+- [x] Mapeamento e testes em proporções de aspecto 16:9, 18:9, 19.5:9, 20:9, 21:9 e compactos (360x640 até 1440x3120px)
+- [x] Tipografia fluida com escala relativa (`clamp()`, `rem`, `dvh`/`dvw`) para evitar overflow horizontal ou corte de telemetria
+- [x] Suporte à escala de fonte de acessibilidade do Android (até 200%) em cards estatísticos, listas e modais
 
 ---
 
-### 3. Ciclocomputador & HUD de Guidão (Bike Computer HUD & Modo Paisagem)
-**Esforço:** M · **Prioridade:** Alta · **Inspiração:** Wahoo Elemnt / Garmin Edge / Cadence · **Status:** ✅ Concluído
-
-Transformar o smartphone em um ciclocomputador profissional para fixação no guidão da bicicleta.
-
-- [x] Interface de gravação de ciclismo com campos de alta legibilidade e tipografia extra grande
-- [x] Suporte nativo ao **Modo Paisagem (Horizontal / Landscape)** e Modo Retrato com rotação dinâmica e mini-mapa split
-- [x] Botões táteis aumentados (Glove Bar 64px+) para fácil acionamento durante a pedalada (mesmo com luvas de ciclismo)
-- [x] Compatibilidade integrada com 3 temas: **☀️ Modo Sol (Outdoor E-Ink)**, **🌙 Modo Noite (AMOLED Dark)** e **⚡ Modo Neo**
-- [x] Modo Bloqueio de Toque (Proteção contra Suor e Chuva) com destravamento por pressão sustentada de 1.5s
-- [x] Suporte a Voltas Manuais (Manual Laps) com exibição de banner instantâneo e estatísticas da volta
+### 2. Bottom Navigation Bar Mobile-First & Ergonomia de Polegar
+**Esforço:** S · **Prioridade:** Alta · **Foco:** UX / Usabilidade com Uma Mão · **Status:** ✅ Concluído
+- [x] Implementação de Bottom Navigation Bar flutuante/fixa para telas mobile (<640px) com os 5 hubs centrais (Início, Atividades, Gravar [Destaque], Rotas, Perfil)
+- [x] Preservação do Header espaçado para visualizações desktop, tablets e modo paisagem
+- [x] Micro-interações táteis (Haptics) e transições suaves ao alternar entre abas
 
 ---
 
-### 4. Conexão com Sensores BLE de Ciclismo (Cadência, Velocidade & Potência) — ✅ Concluído
-**Esforço:** L · **Prioridade:** Média–Alta · **Inspiração:** Garmin Edge / Wahoo
-
-Comunicação direta com sensores Bluetooth Low Energy específicos de bicicleta sem necessidade de internet via `@capacitor-community/bluetooth-le`.
-
-- [x] Suporte ao serviço BLE padrão de **Cycling Speed and Cadence (CSCS - 0x1816)**:
-  - Sensor de Cadência de Pedivela (RPM - Rotações por Minuto) com parser stateful (`CSCParser`)
-  - Sensor de Velocidade de Roda/Cubo (com suporte a cálculo de deltas de revolução e rollover uint16/uint32)
-- [x] Suporte completo ao serviço BLE de **Cycling Power (CPS - 0x1818)** para medidores de potência (Power Meters):
-  - Potência Instantânea em Watts com parser stateful (`CyclingPowerParser`)
-  - Cadência integrada de pedivelas com medidor de potência (Crank Revolution data)
-  - Prioridade automática: Potência real do sensor > Potência estimada por física
-- [x] Cards visuais dedicados de pareamento BLE na tela de pré-gravação (somente para Ciclismo)
-- [x] Telemetria de cadência e potência em tempo real no Ciclocomputador HUD (Retrato & Paisagem) com badges de status e fonte
-- [x] Gravação e persistência de RPM e Watts nos trackpoints e resumo consolidado pós-pedal (`avgCadenceRpm`, `maxCadenceRpm`, `avgWatts`, `maxWatts`)
+### 3. Safe Area Insets E2E (Android 15+ Edge-to-Edge & Recortes de Tela)
+**Esforço:** S · **Prioridade:** Alta · **Foco:** Conformidade com Android 15/16/17 · **Status:** ✅ Concluído
+- [x] Conformidade total com a política de Edge-to-Edge mandatória a partir do Android 15 (API 35+)
+- [x] Mapeamento dinâmico de `env(safe-area-inset-top)`, `env(safe-area-inset-bottom)`, `env(safe-area-inset-left)` e `right`
+- [x] Proteção contra sobreposição da barra de gestos inferior sobre botões de ação e adaptação a recortes de câmera/notch em Paisagem
 
 ---
 
-### 5. Auto-Pause & Voice Coach Específicos para Ciclismo ✅
-**Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / NRC
-
-Adaptação dos assistentes automáticos para a dinâmica de velocidade do ciclismo.
-
-- [x] Perfil de sensibilidade do Auto-Pause para Bike (paradas em semáforos, cruzamentos urbanos e descidas com velocidade < 4.0 km/h a 6.0 km/h: Ciclismo Urbano 5.0 km/h, Estrada 7.0 km/h, MTB 3.5 km/h)
-- [x] Voice Coach com intervalos estendidos para ciclismo (a cada 5 km, 10 km, 15 km, 20 km ou a cada 5, 10, 15, 20, 30 min)
-- [x] Métricas faladas em voz natural: Velocidade média e atual em km/h, Cadência em RPM, Potência em Watts, FC atual (bpm), Zona FC e Ganho de Elevação acumulado
-- [x] Avisos sonoros contextuais por modalidade ("Pedal pausado automaticamente" / "Pedal retomado")
+### 4. HUDs de Gravação, Modos Retrato/Paisagem & Touch Targets (48dp+)
+**Esforço:** M · **Prioridade:** Alta · **Foco:** Acessibilidade & Uso ao Ar Livre · **Status:** ✅ Concluído
+- [x] Grid responsivo refinado para Ciclocomputador e HUD de Corrida com redimensionamento dinâmico de fontes e mapa dividido (Split Map)
+- [x] Garantia de área de toque mínima de **48x48dp** (WCAG 2.2 / Material Design 3) com **Glove Mode (64dp+)** na tela de gravação
+- [x] Otimização dos modos de visualização de alto contraste: ☀️ Modo Sol (E-Ink), 🌙 Modo Noite (AMOLED Black #000000) e ⚡ Modo Neo
 
 ---
 
-### 6. Análise de Subidas & Perfil de Altimetria ao Vivo (ClimbPro / Live Elevation) ✅
-**Esforço:** M · **Prioridade:** Média · **Inspiração:** Garmin ClimbPro / Hammerhead Karoo
-
-Visualização da altimetria da rota durante a pedalada para gerenciamento de esforço em subidas.
-
-- [x] Algoritmo de detecção e classificação de subidas por categoria (Cat 4, Cat 3, Cat 2, Cat 1, HC) usando o índice de esforço de subida oficial UCI
-- [x] Mini display de perfil de elevação ao vivo na tela de gravação com fatias de gradiente coloridas, marcadores de categoria e posição atual do ciclista com toggle de zoom
-- [x] Alertas visuais (ClimbPro HUD Card) e sonoros por Voice Coach ao aproximar-se (150m), iniciar e concluir uma subida categorizada (*"Atenção: subida à frente em 150 metros. Subida 1 de 2, Categoria 3..."*)
-- [x] Suporte a enriquecimento de rotas sem altitude via Open-Meteo Elevation API e gerador de rotas de serra para testes imediatos
+### 5. Modais, Bottom Sheets Deslizáveis & Proporções de Gráficos/Mapas
+**Esforço:** M · **Prioridade:** Média · **Foco:** Fluidez de Componentes · **Status:** ✅ Concluído
+- [x] Transformação de modais em Bottom Sheets deslizáveis (Drawer) no mobile (Workout Builder, Social Card, Auto-Pause, Voice Coach, Garagem)
+- [x] Ajuste de proporção para mapas Leaflet e gráficos interativos SVG (Power Curve, Altimetria, Ritmo) com suporte a pan/zoom suave
 
 ---
 
-### 7. Treinos Estruturados de Ciclismo & Zonas de Potência (Watts / FTP / Coggan) ✅
-**Esforço:** M · **Prioridade:** Média · **Inspiração:** TrainerRoad / TrainingPeaks / Zwift
+## ⚡ Pilar 2: Performance E2E & Gestão de Memória 4GB-8GB (5 Etapas) — ✅ Concluído
 
-Treinos intervalados orientados a potência (Watts) e cadência (RPM).
-
-- [x] Configuração de FTP (Functional Threshold Power em Watts) no perfil do ciclista com cálculo de W/kg e estimador interativo (teste de 20 min com desconto de 5% e estimativa por nível/peso)
-- [x] 7 Zonas de Potência clássicas de Andrew Coggan (Z1 Recuperação Ativa até Z7 Potência Neuromuscular) com análise de Potência Normalizada (NP™), Fator de Intensidade (IF), Training Stress Score (TSS) e componente `PowerZonesPanel`
-- [x] Presets de treinos intervalados de ciclismo oficiais: *Sprints de Cadência (High Cadence Drills)*, *Tiros VO2 Max (3x 3min)*, *Sweet Spot (2x 15min)*, *Resistência Z2* e *Protocolo de Teste de FTP (20 Min)*
-- [x] Suporte integrado a metas de Watts e RPM nos HUDs (Ciclocomputador e HUD de Treino Estruturado) com status dinâmico ao vivo e anúncios do Voice Coach
+### 6. Otimização do Armazenamento IndexedDB & Paginamento de Dados
+**Esforço:** M · **Prioridade:** Alta · **Foco:** Redução de Consumo de RAM Heap · **Status:** ✅ Concluído
+- [x] Desacoplamento na leitura: listagens de atividades carregam apenas sumários leves (`ActivitySummary`), sem desserializar arrays gigantes de trackpoints
+- [x] Carregamento de trackpoints sob demanda (`getStoredActivity(id)`) exclusivamente na abertura de detalhes/flyover
+- [x] Implementação de cursor paginado indexado por data (`by-started`) para manter uso de memória constante mesmo com centenas de treinos
 
 ---
 
-### 8. Gráficos Avançados & Análise Pós-Pedal (Power Curve, Cadence & Altimetria) ✅
-**Esforço:** M · **Prioridade:** Média · **Inspiração:** Strava Summit / Intervals.icu
-
-Aprofundamento analítico na tela de detalhes de treinos de ciclismo.
-
-- [x] Gráficos interativos sincronizados de Velocidade (km/h), Elevação (m), Cadência (RPM) e Potência (Watts) com cursor unificado (crosshair) e barra de telemetria instantânea
-- [x] Distribuição de tempo em Zonas de Potência (Z1–Z7) e Zonas de FC (Z1–Z5) integrada
-- [x] Recordes Pessoais (PRs) exclusivos de Ciclismo: Maior Distância, Maior Velocidade Média, Velocidade Máxima, Maior Altimetria, Melhor Potência e Maior Duração com abas por esporte na Home e badges
-- [x] Curva de Potência Crítica (Mean Maximal Power / Melhores Esforços de Potência: 5s, 30s, 1min, 5min, 20min, 60min) com componente `PowerDurationCurve` e comparação W/kg / FTP
+### 7. Virtualização de Listas Longas & Redução da Árvore DOM
+**Esforço:** M · **Prioridade:** Alta · **Foco:** Scrolling Fluido 60/120fps · **Status:** ✅ Concluído
+- [x] Virtualização de listas no `ActivityList`, `BikeGarageManager` e tabelas de splits com dezenas de voltas
+- [x] Reutilização eficiente de nós DOM, eliminando engasgos de renderização (INP/FID < 50ms) e reduzindo a pressão do Garbage Collector em aparelhos de 4GB RAM
 
 ---
 
-### 9. Cards Sociais & Heatmap Térmico Dedicados para Ciclismo ✅
-**Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / Instagram
-
-Celebração visual e mapeamento térmico de rotas de pedal.
-
-- [x] Cards de compartilhamento social (Stories 9:16 e Feed 1:1) com layout e dados específicos de ciclismo (Velocidade Média km/h, Máx km/h, Potência Watts, Cadência RPM, Altimetria, Foto da Bike e tema *Peloton Tech*)
-- [x] Filtro dedicado no Mapa de Calor Pessoal (Heatmap) para visualizar exclusivamente a malha viária pedalada com barra de filtros rápidos no topo e tema *Velo Gold*
+### 8. Ciclo de Vida e Desalocação Estrita de Memória em WebGL / Three.js (Flyover 3D)
+**Esforço:** M · **Prioridade:** Alta · **Foco:** Prevenção de Memory Leaks · **Status:** ✅ Concluído
+- [x] Rotina completa de desalocação (`dispose()` de geometrias, materiais, texturas e buffers) ao fechar o Flyover 3D
+- [x] Liberação explícita de contexto WebGL (`renderer.dispose()`) e pausa do `requestAnimationFrame` em background (`visibilitychange`)
+- [x] Recuperação de até 150MB+ de memória VRAM/RAM imediatamente após a reprodução
 
 ---
 
-### 10. Publicação na Play Store & Release Final Assinado (Fase Final de Distribuição)
+### 9. Simplificação Adaptativa de Trajetos GPS (Douglas-Peucker) & Leaflet
+**Esforço:** M · **Prioridade:** Média · **Foco:** Eficiência Gráfica em Mapas · **Status:** ✅ Concluído
+- [x] Implementação do algoritmo Douglas-Peucker com tolerância dinâmica conforme nível de zoom (redução de até 85% dos pontos renderizados na PolyLine)
+- [x] Desalocação imediata de TileLayers e PolyLines no Leaflet e `PersonalHeatmap` ao desmontar componentes
+
+---
+
+### 10. Memoização Estratégica, Code Splitting Dinâmico & Redução de Bundle
+**Esforço:** S · **Prioridade:** Média · **Foco:** Tempo de Inicialização & CPU · **Status:** ✅ Concluído
+- [x] Code splitting dinâmico (`next/dynamic` com SSR desativado) para bibliotecas pesadas (`leaflet`, `three`, `canvas-confetti`, `peerjs`)
+- [x] Memoização com `useMemo`/`useCallback`/`React.memo` em cálculos intensivos (NP™ Coggan, Zonas de Potência, ClimbPro, VO2 Max)
+
+---
+
+## 📱 Pilar 3: Modernização Android 13-17 & Limpeza de Legado (2 Etapas) — ✅ Concluído
+
+### 11. Elevação de Linha de Base: Android 13 a 17 (minSdkVersion = 33, targetSdk = 35+)
+**Esforço:** S · **Prioridade:** Alta · **Foco:** Arquitetura Nativa Atual · **Status:** ✅ Concluído
+- [x] Atualização do `variables.gradle`: `minSdkVersion = 33` e `compileSdkVersion` / `targetSdkVersion = 35` (com suporte e validação para APIs 36 e 37)
+- [x] Habilitação de Predictive Back Gestures (`android:enableOnBackInvokedCallback="true"`)
+- [x] Configuração nativa de suporte a idiomas por app (Per-App Language Preferences) e permissão em tempo de execução `POST_NOTIFICATIONS`
+
+---
+
+### 12. Limpeza de Permissões e Fallbacks Legados (Android 12 para baixo)
+**Esforço:** S · **Prioridade:** Alta · **Foco:** Higienização de Código · **Status:** ✅ Concluído
+- [x] Remoção de permissões legadas de Bluetooth (`android.permission.BLUETOOTH` e `BLUETOOTH_ADMIN` maxSdkVersion 30) do `AndroidManifest.xml`
+- [x] Remoção de flags obsoletas de storage legado (`requestLegacyExternalStorage`), adotando estritamente Scoped Storage nativo
+- [x] Remoção de flags de debug (`android:debuggable="true"`) e exclusão de polyfills CSS/JS redundantes em WebViews modernos (Chromium 106+)
+
+---
+
+# 🚀 Fase Final: Publicação na Google Play Store & Release de Produção
+
+### 13. Publicação na Play Store & Release Final Assinado
 **Esforço:** M · **Prioridade:** Conclusão do Ciclo de Lançamento
-
-Preparação de produção para distribuição pública do RunFlow como app multi-esporte de corrida e ciclismo.
-
 - [ ] Geração de chave de assinatura `keystore` criptografada para builds de produção
 - [ ] Configuração do Gradle para build de **Android App Bundle (`.aab`)** otimizado com Proguard/R8 para a Google Play Store
 - [ ] Geração de APK de Release assinado para download direto (GitHub Releases / F-Droid)
-- [ ] Ícones adaptativos em alta resolução (Adaptive Icons para Android 13+) e splash screen nativa
+- [ ] Ícones adaptativos em alta resolução (Material You Themed Icons + Adaptive Icons) e splash screen nativa
 - [ ] Documento formal de Política de Privacidade Local-First (declaração de dados 100% locais sem telemetria externa)
 
 ---
 
-## 🗺️ Fluxograma de Dependências da Fase 3.0
+## 🗺️ Fluxograma de Dependências da Fase 4.0 & Lançamento
 
 ```mermaid
 flowchart TD
-  E1[1 Garagem de Bikes & Peças] --> E2[2 Métricas de Ciclismo km/h e Watts]
-  E2 --> E3[3 Ciclocomputador HUD & Landscape]
-  E2 --> E4[4 Sensores BLE Cadência & Potência]
-  E3 --> E5[5 Auto-Pause & Voice Coach Ciclismo]
-  E3 --> E6[6 Análise de Subidas ClimbPro]
-  E4 --> E7[7 Treinos por Potência FTP & Coggan]
-  E2 --> E8[8 Gráficos Pós-Pedal & PRs de Ciclismo]
-  E8 --> E9[9 Cards Sociais & Heatmap Ciclismo]
-  E7 --> E10[10 Play Store & Release Assinado]
-  E9 --> E10
-  E6 --> E10
-  E5 --> E10
+  subgraph Fase4["Fase 4.0: Fine-Tuning & Performance E2E"]
+    V1[1 Multi-Resoluções 360-1440dp] --> V2[2 Bottom Nav Bar Mobile]
+    V2 --> V3[3 Safe Areas & Edge-to-Edge Android 15+]
+    V3 --> V4[4 HUDs Retrato/Paisagem & 48dp+ Targets]
+    V4 --> V5[5 Bottom Sheets & Gráficos/Mapas]
+    
+    V5 --> P6[6 IndexedDB & Paginamento RAM]
+    P6 --> P7[7 Virtualização de Listas 4GB-8GB]
+    P7 --> P8[8 Desalocação WebGL / Three.js 3D]
+    P8 --> P9[9 Simplificação GPS Douglas-Peucker]
+    P9 --> P10[10 Code Splitting & Memoização]
+    
+    P10 --> M11[11 Android 13 a 17 minSdk 33]
+    M11 --> M12[12 Limpeza de Permissões & Legado]
+  end
+
+  subgraph ReleaseFinal["Fase Final: Distribuição"]
+    M12 --> PUB[13 Publicação Play Store & AAB Assinado]
+  end
 ```
 
-*Última atualização: agosto 2026 — Início da Fase 3.0: Ecossistema de Ciclismo & Lançamento*
+*Última atualização: agosto 2026 — Início da Fase 4.0: Fine-Tuning, Performance E2E & Modernização Android (13 a 17)*

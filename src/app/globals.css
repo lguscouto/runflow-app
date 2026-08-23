@@ -142,11 +142,90 @@ a {
 }
 
 .safe-area-top {
-  padding-top: env(safe-area-inset-top);
+  padding-top: max(env(safe-area-inset-top), 0px);
 }
 
 .safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+/* Touch Targets Acessíveis (WCAG 2.2 / Material 3) */
+.touch-target {
+  min-width: 48px;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.glove-target {
+  min-width: 64px;
+  min-height: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tipografia Fluida para Telemetria */
+.fluid-num-xl {
+  font-size: clamp(2rem, 8vw, 4.5rem);
+  line-height: 1;
+}
+
+.fluid-num-lg {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  line-height: 1.1;
+}
+
+/* Bottom Navigation Bar Mobile */
+.bottom-nav-bar {
+  background: rgba(21, 26, 34, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+}
+
+.bottom-nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 6px 4px;
+  border-radius: 8px;
+  transition: all 0.15s ease-out;
+  flex: 1;
+  min-height: 48px;
+}
+
+.bottom-nav-link.active {
+  color: var(--accent);
+}
+
+.bottom-nav-link:active {
+  transform: scale(0.92);
+}
+
+.bottom-nav-fab {
+  background: var(--accent);
+  color: #fff;
+  width: 46px;
+  height: 46px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  margin-top: -14px;
+}
+
+.bottom-nav-fab:active {
+  transform: scale(0.90);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
 }
 
 .profile-input {
