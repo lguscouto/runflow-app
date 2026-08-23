@@ -37,7 +37,9 @@ export function SocialShareCardModal({
 
   // Card Options
   const [format, setFormat] = useState<CardFormat>("stories");
-  const [theme, setTheme] = useState<CardTheme>("cyberpunk");
+  const [theme, setTheme] = useState<CardTheme>(
+    activity.sport === "cycling" ? "peloton" : "cyberpunk"
+  );
   const [customImage, setCustomImage] = useState<HTMLImageElement | null>(null);
   const [customImageSrc, setCustomImageSrc] = useState<string | null>(null);
 
@@ -254,6 +256,7 @@ export function SocialShareCardModal({
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {[
+                      { key: "peloton" as const, label: t("share_card.theme_peloton"), color: "from-amber-500 via-cyan-500 to-blue-600" },
                       { key: "cyberpunk" as const, label: t("share_card.theme_cyberpunk"), color: "from-cyan-500 to-pink-500" },
                       { key: "minimal" as const, label: t("share_card.theme_minimal"), color: "from-slate-800 to-zinc-900" },
                       { key: "sunset" as const, label: t("share_card.theme_sunset"), color: "from-purple-600 via-pink-600 to-orange-500" },
@@ -309,12 +312,15 @@ export function SocialShareCardModal({
                   {customImageSrc && (
                     <div className="flex items-center justify-between mt-2.5 p-2 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-xs">
                       <div className="flex items-center gap-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={customImageSrc}
                           alt="Thumbnail"
                           className="w-6 h-6 rounded object-cover"
                         />
-                        <span className="text-[var(--muted)]">{t("share_card.theme_custom")}</span>
+                        <span className="text-[var(--muted)]">
+                          {activity.sport === "cycling" ? "Foto da Bike" : t("share_card.theme_custom")}
+                        </span>
                       </div>
                       <button
                         type="button"

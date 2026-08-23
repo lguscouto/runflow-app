@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-08-23 — Etapa 9: Cards Sociais & Heatmap Térmico Dedicados para Ciclismo
+
+### Features
+- **Cards Sociais de Ciclismo (`SocialShareCardModal` & `social-card.ts`)**: Renderização inteligente para Stories (9:16) e Feed (1:1) com dados exclusivos de bike (Velocidade Média km/h, Velocidade Máxima, Altimetria, Potência Watts, Cadência RPM, FC e Calorias).
+- **Tema Visual *Peloton Tech***: Novo tema de card social estilo fibra de carbono escuro com grid tecnológico, brilho neon âmbar e ciano.
+- **Suporte a Foto da Bike como Background**: Upload e ajuste automático com overlay gradiente escuro de alta legibilidade.
+- **Heatmap com Filtro Rápido Multi-Esporte (`PersonalHeatmap`)**: Barra de pílulas rápidas no topo do mapa (Todos, 🏃 Corrida, 🚴 Ciclismo, 🚶 Caminhada) para visualização instantânea da malha viária pedalada.
+- **Tema Térmico *Velo Gold***: Paleta de cores exclusiva para rotas de pedal com traçado neon em dourado âmbar `#f59e0b` e ciano `#06b6d4`.
+- **Popups de Atividade no Heatmap**: Detalhamento contextual no clique da rota mostrando velocidade média (km/h) e potência média (Watts) para treinos de ciclismo.
+
 ## 2026-08-23 — Etapa 8: Gráficos Avançados & Análise Pós-Pedal (Power Curve, Cadence & PRs)
 
 ### Features

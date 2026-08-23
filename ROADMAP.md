@@ -137,13 +137,13 @@ Aprofundamento analítico na tela de detalhes de treinos de ciclismo.
 
 ---
 
-### 9. Cards Sociais & Heatmap Térmico Dedicados para Ciclismo
+### 9. Cards Sociais & Heatmap Térmico Dedicados para Ciclismo ✅
 **Esforço:** S · **Prioridade:** Média · **Inspiração:** Strava / Instagram
 
 Celebração visual e mapeamento térmico de rotas de pedal.
 
-- [ ] Cards de compartilhamento social (Stories 9:16 e Feed 1:1) com layout e dados específicos de ciclismo (Velocidade Média km/h, Máx km/h, Altimetria, Foto da Bike)
-- [ ] Filtro dedicado no Mapa de Calor Pessoal (Heatmap) para visualizar exclusivamente a malha viária pedalada
+- [x] Cards de compartilhamento social (Stories 9:16 e Feed 1:1) com layout e dados específicos de ciclismo (Velocidade Média km/h, Máx km/h, Potência Watts, Cadência RPM, Altimetria, Foto da Bike e tema *Peloton Tech*)
+- [x] Filtro dedicado no Mapa de Calor Pessoal (Heatmap) para visualizar exclusivamente a malha viária pedalada com barra de filtros rápidos no topo e tema *Velo Gold*
 
 ---
 

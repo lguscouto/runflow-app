@@ -7,12 +7,13 @@ import {
   formatSportSpeedOrPace,
   formatElevation,
   formatCalories,
+  formatWatts,
   formatDate,
   sportLabel,
 } from "./format";
 
 export type CardFormat = "stories" | "feed";
-export type CardTheme = "cyberpunk" | "minimal" | "sunset" | "topo" | "custom";
+export type CardTheme = "cyberpunk" | "minimal" | "sunset" | "topo" | "peloton" | "custom";
 
 export interface CardRenderOptions {
   format: CardFormat;
@@ -160,44 +161,50 @@ export function renderSocialCard(
 
   canvas.width = width;
   canvas.height = height;
+
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  ctx.clearRect(0, 0, width, height);
-
+  // 1. Draw Background
   drawBackground(ctx, width, height, options);
 
-  const topPadding = isStories ? 140 : 80;
-  const sidePadding = 80;
+  // Layout Parameters
+  const padX = 70;
+  let cursorY = isStories ? 130 : 70;
+  const contentWidth = width - padX * 2;
 
+  // 2. Branding (Top Right)
   if (options.showBranding) {
-    drawBranding(ctx, sidePadding, topPadding);
+    drawBranding(ctx, width - padX - 210, cursorY);
   }
 
-  const titleY = topPadding + (options.showBranding ? 110 : 40);
-  drawHeaderInfo(ctx, activity, options, sidePadding, titleY, width - sidePadding * 2);
+  // 3. Header: Title & Sport / Date
+  drawHeaderInfo(ctx, activity, options, padX, cursorY, contentWidth - (options.showBranding ? 230 : 0));
+  cursorY += isStories ? 170 : 130;
 
-  const mapY = titleY + 160;
-  const mapHeight = isStories ? 680 : 380;
-
+  // 4. Map Container (if enabled and points exist)
   if (options.showMap && activity.points.length >= 2) {
-    const mapBoxWidth = width - sidePadding * 2;
-    drawMapContainer(ctx, activity.points, options, sidePadding, mapY, mapBoxWidth, mapHeight);
+    const mapHeight = isStories ? 860 : 460;
+    drawMapContainer(ctx, activity.points, options, padX, cursorY, contentWidth, mapHeight);
+    cursorY += mapHeight + (isStories ? 60 : 35);
+  } else {
+    cursorY += isStories ? 180 : 70;
   }
 
-  const statsY = isStories ? (options.showMap ? 1220 : 700) : (options.showMap ? 720 : 450);
-
+  // 5. Primary Stats (Distance, Time, Pace/Speed)
   if (options.showStats) {
-    drawPrimaryStats(ctx, activity, options, sidePadding, statsY, width - sidePadding * 2);
+    drawPrimaryStats(ctx, activity, options, padX, cursorY, contentWidth);
+    cursorY += isStories ? 180 : 140;
   }
 
-  const secondaryY = statsY + (isStories ? 250 : 180);
+  // 6. Secondary Stats (Elevation, Power, Cadence, Max Speed, HR, Calories)
   if (options.showSecondaryStats) {
-    drawSecondaryStats(ctx, activity, options, sidePadding, secondaryY, width - sidePadding * 2);
+    drawSecondaryStats(ctx, activity, options, padX, cursorY, contentWidth);
+    cursorY += isStories ? 130 : 90;
   }
 
-  const footerY = height - (isStories ? 120 : 70);
-  drawFooter(ctx, options, sidePadding, footerY, width - sidePadding * 2);
+  // 7. Footer / PR Badge
+  drawFooter(ctx, options, padX, height - (isStories ? 90 : 50), contentWidth);
 }
 
 function drawBackground(
@@ -210,42 +217,82 @@ function drawBackground(
     const img = options.customImage;
     const imgAspect = img.width / img.height;
     const canvasAspect = width / height;
-    let sW = img.width;
-    let sH = img.height;
-    let sX = 0;
-    let sY = 0;
+    let sx = 0, sy = 0, sWidth = img.width, sHeight = img.height;
 
     if (imgAspect > canvasAspect) {
-      sW = img.height * canvasAspect;
-      sX = (img.width - sW) / 2;
+      sWidth = img.height * canvasAspect;
+      sx = (img.width - sWidth) / 2;
     } else {
-      sH = img.width / canvasAspect;
-      sY = (img.height - sH) / 2;
+      sHeight = img.width / canvasAspect;
+      sy = (img.height - sHeight) / 2;
     }
 
-    ctx.drawImage(img, sX, sY, sW, sH, 0, 0, width, height);
+    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, width, height);
 
+    // Dark gradient overlay for legibility
     const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, "rgba(10, 14, 20, 0.75)");
-    grad.addColorStop(0.5, "rgba(10, 14, 20, 0.45)");
-    grad.addColorStop(1, "rgba(10, 14, 20, 0.92)");
+    grad.addColorStop(0, "rgba(8, 12, 18, 0.72)");
+    grad.addColorStop(0.35, "rgba(8, 12, 18, 0.55)");
+    grad.addColorStop(0.7, "rgba(8, 12, 18, 0.75)");
+    grad.addColorStop(1, "rgba(8, 12, 18, 0.95)");
     ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+    return;
+  }
+
+  if (options.theme === "peloton") {
+    // Carbon Dark Cycling Tech Background
+    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
+    bgGrad.addColorStop(0, "#080c12");
+    bgGrad.addColorStop(0.5, "#0f1622");
+    bgGrad.addColorStop(1, "#182230");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle carbon grid
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.04)";
+    ctx.lineWidth = 1.5;
+    const step = 60;
+    for (let x = 0; x < width; x += step) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+    for (let y = 0; y < height; y += step) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+
+    // Amber and Cyan radial glows
+    const rad1 = ctx.createRadialGradient(width * 0.85, height * 0.25, 40, width * 0.85, height * 0.25, 550);
+    rad1.addColorStop(0, "rgba(245, 158, 11, 0.16)");
+    rad1.addColorStop(1, "transparent");
+    ctx.fillStyle = rad1;
+    ctx.fillRect(0, 0, width, height);
+
+    const rad2 = ctx.createRadialGradient(width * 0.15, height * 0.8, 40, width * 0.15, height * 0.8, 550);
+    rad2.addColorStop(0, "rgba(6, 182, 212, 0.14)");
+    rad2.addColorStop(1, "transparent");
+    ctx.fillStyle = rad2;
     ctx.fillRect(0, 0, width, height);
     return;
   }
 
   if (options.theme === "cyberpunk") {
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, "#080b11");
-    bgGrad.addColorStop(0.5, "#0d131f");
-    bgGrad.addColorStop(1, "#180f24");
+    bgGrad.addColorStop(0, "#0a0a14");
+    bgGrad.addColorStop(0.5, "#120d22");
+    bgGrad.addColorStop(1, "#0d1b2a");
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    const radial = ctx.createRadialGradient(width * 0.8, height * 0.3, 50, width * 0.8, height * 0.3, 600);
-    radial.addColorStop(0, "rgba(0, 240, 255, 0.15)");
-    radial.addColorStop(1, "transparent");
-    ctx.fillStyle = radial;
+    const radial1 = ctx.createRadialGradient(width * 0.8, height * 0.3, 50, width * 0.8, height * 0.3, 600);
+    radial1.addColorStop(0, "rgba(0, 240, 255, 0.15)");
+    radial1.addColorStop(1, "transparent");
+    ctx.fillStyle = radial1;
     ctx.fillRect(0, 0, width, height);
 
     const radial2 = ctx.createRadialGradient(width * 0.2, height * 0.7, 50, width * 0.2, height * 0.7, 600);
@@ -337,11 +384,20 @@ function drawHeaderInfo(
   ctx.save();
 
   ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 56px system-ui, sans-serif";
+  ctx.font = "bold 54px system-ui, sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
 
-  let name = activity.name || (options.language === "pt" ? "Treino de Corrida" : "Running Workout");
+  const isCycling = activity.sport === "cycling";
+  let defaultName = isCycling
+    ? options.language === "pt"
+      ? "Pedal com RunFlow"
+      : "Cycling Ride"
+    : options.language === "pt"
+    ? "Treino de Corrida"
+    : "Running Workout";
+
+  let name = activity.name || defaultName;
   if (ctx.measureText(name).width > maxWidth) {
     while (name.length > 4 && ctx.measureText(name + "...").width > maxWidth) {
       name = name.slice(0, -1);
@@ -350,11 +406,12 @@ function drawHeaderInfo(
   }
   ctx.fillText(name, x, y);
 
+  const sportIcon = isCycling ? "🚴" : "🏃";
   const sport = sportLabel(activity.sport, options.language);
   const dateStr = formatDate(activity.startedAt, options.language);
-  const subText = `${sport}  ·  ${dateStr}`;
+  const subText = `${sportIcon} ${sport}  ·  ${dateStr}`;
 
-  ctx.fillStyle = "rgba(240, 244, 248, 0.7)";
+  ctx.fillStyle = isCycling ? "rgba(245, 158, 11, 0.9)" : "rgba(240, 244, 248, 0.75)";
   ctx.font = "500 28px system-ui, sans-serif";
   ctx.fillText(subText, x, y + 74);
 
@@ -382,7 +439,14 @@ function drawMapContainer(
   let strokeColor: string | CanvasGradient = "#ff6b35";
   let glowColor: string | undefined = "rgba(255, 107, 53, 0.4)";
 
-  if (options.theme === "cyberpunk") {
+  if (options.theme === "peloton") {
+    const grad = ctx.createLinearGradient(x, y, x + width, y + height);
+    grad.addColorStop(0, "#f59e0b");
+    grad.addColorStop(0.65, "#06b6d4");
+    grad.addColorStop(1, "#3b82f6");
+    strokeColor = grad;
+    glowColor = "rgba(245, 158, 11, 0.55)";
+  } else if (options.theme === "cyberpunk") {
     const grad = ctx.createLinearGradient(x, y, x + width, y + height);
     grad.addColorStop(0, "#00f0ff");
     grad.addColorStop(0.5, "#ff007f");
@@ -428,9 +492,10 @@ function drawPrimaryStats(
 
   const isCycling = activity.sport === "cycling";
   const colWidth = width / 3;
-  const labels = options.language === "pt"
-    ? { dist: "DISTÂNCIA", dur: "TEMPO", pace: isCycling ? "VELOCIDADE" : "RITMO MÉDIO" }
-    : { dist: "DISTANCE", dur: "TIME", pace: isCycling ? "AVG SPEED" : "AVG PACE" };
+  const labels =
+    options.language === "pt"
+      ? { dist: "DISTÂNCIA", dur: "TEMPO", pace: isCycling ? "VELOCIDADE MÉDIA" : "RITMO MÉDIO" }
+      : { dist: "DISTANCE", dur: "TIME", pace: isCycling ? "AVG SPEED" : "AVG PACE" };
 
   const values = {
     dist: formatDistance(activity.distanceM),
@@ -438,9 +503,12 @@ function drawPrimaryStats(
     pace: formatSportSpeedOrPace(activity.sport, activity.avgPaceSecKm, activity.avgSpeedKmh),
   };
 
-  drawSingleStat(ctx, x, y, colWidth, values.dist, labels.dist, "#ff6b35");
+  const distColor = isCycling ? "#f59e0b" : "#ff6b35";
+  const paceColor = isCycling ? "#06b6d4" : "#3dd68c";
+
+  drawSingleStat(ctx, x, y, colWidth, values.dist, labels.dist, distColor);
   drawSingleStat(ctx, x + colWidth, y, colWidth, values.dur, labels.dur, "#ffffff");
-  drawSingleStat(ctx, x + colWidth * 2, y, colWidth, values.pace, labels.pace, "#3dd68c");
+  drawSingleStat(ctx, x + colWidth * 2, y, colWidth, values.pace, labels.pace, paceColor);
 
   ctx.restore();
 }
@@ -479,8 +547,10 @@ function drawSecondaryStats(
 ) {
   ctx.save();
 
+  const isCycling = activity.sport === "cycling";
   const chips: { icon: string; label: string; val: string }[] = [];
 
+  // Elevation
   if (activity.elevationGainM != null && activity.elevationGainM > 0) {
     chips.push({
       icon: "▲",
@@ -489,6 +559,34 @@ function drawSecondaryStats(
     });
   }
 
+  // Cycling Max Speed
+  if (isCycling && activity.maxSpeedKmh != null && activity.maxSpeedKmh > 0) {
+    chips.push({
+      icon: "⚡",
+      label: options.language === "pt" ? "Vel. Máx" : "Max Speed",
+      val: formatSpeed(activity.maxSpeedKmh),
+    });
+  }
+
+  // Power (Watts)
+  if (activity.avgWatts != null && activity.avgWatts > 0) {
+    chips.push({
+      icon: "⚡",
+      label: options.language === "pt" ? "Potência" : "Power",
+      val: formatWatts(activity.avgWatts),
+    });
+  }
+
+  // Cadence (RPM)
+  if (activity.avgCadenceRpm != null && activity.avgCadenceRpm > 0) {
+    chips.push({
+      icon: "↻",
+      label: options.language === "pt" ? "Cadência" : "Cadence",
+      val: `${Math.round(activity.avgCadenceRpm)} RPM`,
+    });
+  }
+
+  // Heart Rate
   if (activity.avgHr != null && activity.avgHr > 0) {
     chips.push({
       icon: "♥",
@@ -497,7 +595,8 @@ function drawSecondaryStats(
     });
   }
 
-  if (activity.calories != null && activity.calories > 0) {
+  // Calories
+  if (activity.calories != null && activity.calories > 0 && chips.length < 4) {
     chips.push({
       icon: "🔥",
       label: options.language === "pt" ? "Calorias" : "Calories",
@@ -507,10 +606,13 @@ function drawSecondaryStats(
 
   if (chips.length === 0) return;
 
-  const chipWidth = (width - (chips.length - 1) * 20) / chips.length;
+  // Cap at max 4 chips
+  const displayedChips = chips.slice(0, 4);
+  const gap = 16;
+  const chipWidth = (width - (displayedChips.length - 1) * gap) / displayedChips.length;
 
-  chips.forEach((chip, i) => {
-    const cx = x + i * (chipWidth + 20);
+  displayedChips.forEach((chip, i) => {
+    const cx = x + i * (chipWidth + gap);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.07)";
     ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
@@ -520,7 +622,7 @@ function drawSecondaryStats(
     ctx.stroke();
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 26px system-ui, sans-serif";
+    ctx.font = "bold 24px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(`${chip.icon}  ${chip.val}`, cx + chipWidth / 2, y + 40);

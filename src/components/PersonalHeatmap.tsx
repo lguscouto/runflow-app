@@ -25,11 +25,11 @@ import {
 } from "lucide-react";
 import { getAllStoredActivities, getAllStoredRoutes, type StoredActivity } from "@/lib/storage";
 import type { SavedRoute, Sport } from "@/lib/types";
-import { formatPace, formatDistance, formatDuration } from "@/lib/format";
+import { formatPace, formatSpeed, formatWatts, formatDistance, formatDuration } from "@/lib/format";
 import { simplifyPoints } from "@/lib/geo";
 import { useI18n } from "@/lib/i18n";
 
-export type HeatmapTheme = "flame" | "cyan" | "sunset" | "lime" | "strava";
+export type HeatmapTheme = "flame" | "cyan" | "sunset" | "lime" | "strava" | "velo";
 export type HeatmapBasemap = "dark" | "light" | "osm" | "satellite";
 export type HeatmapStroke = "thin" | "medium" | "thick";
 
@@ -41,6 +41,8 @@ export interface HeatmapTrack {
   distanceM: number;
   durationSec: number;
   avgPaceSecKm: number | null;
+  avgSpeedKmh?: number | null;
+  avgWatts?: number | null;
   points: [number, number][];
   isRoute?: boolean;
 }
@@ -61,6 +63,13 @@ export const HEATMAP_THEMES: Record<
     glowColor: "#ff8c00",
     accentColor: "#ffd700",
     previewBg: "bg-gradient-to-r from-red-600 via-orange-500 to-amber-400",
+  },
+  velo: {
+    nameKey: "heatmap.theme_velo",
+    coreColor: "#f59e0b",
+    glowColor: "#06b6d4",
+    accentColor: "#ffffff",
+    previewBg: "bg-gradient-to-r from-amber-500 via-yellow-400 to-cyan-400",
   },
   cyan: {
     nameKey: "heatmap.theme_cyan",
@@ -241,6 +250,8 @@ export function PersonalHeatmap({
           distanceM: act.distanceM,
           durationSec: act.durationSec,
           avgPaceSecKm: act.avgPaceSecKm,
+          avgSpeedKmh: act.avgSpeedKmh,
+          avgWatts: act.avgWatts,
           points,
           isRoute: false,
         });
@@ -317,27 +328,50 @@ export function PersonalHeatmap({
     >
       {/* Top Floating Control Bar */}
       <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-        {/* Left Badges / Info */}
-        <div className="flex items-center gap-2 pointer-events-auto bg-[#161b22]/90 backdrop-blur-md border border-[var(--border)] px-3 py-1.5 rounded-xl shadow-lg">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
-            <Flame size={15} className="text-orange-400" />
-            <span>{t("heatmap.title")}</span>
-          </div>
-
-          <span className="text-[var(--border)]">|</span>
-
-          <span className="text-xs text-[var(--muted)] font-medium">
-            {t("heatmap.stats_summary", {
-              activities: totalStats.activitiesCount,
-              distance: totalStats.distanceKm,
-              points: totalStats.pointsCount,
-            })}
-          </span>
+        {/* Left: Quick Sport Filter Tabs */}
+        <div className="flex items-center gap-1 bg-[#161b22]/90 backdrop-blur-md p-1 rounded-xl border border-[var(--border)] text-xs pointer-events-auto shadow-lg">
+          {[
+            { id: "all", label: t("heatmap.sport_all"), icon: "🌐" },
+            { id: "running", label: t("sport.running"), icon: "🏃" },
+            { id: "cycling", label: t("sport.cycling"), icon: "🚴" },
+            { id: "walking", label: t("sport.walking"), icon: "🚶" },
+          ].map((sp) => (
+            <button
+              key={sp.id}
+              type="button"
+              onClick={() => {
+                setSelectedSport(sp.id);
+                if (sp.id === "cycling" && theme === "flame") {
+                  setTheme("velo");
+                }
+              }}
+              className={`px-2.5 py-1 rounded-lg font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                selectedSport === sp.id
+                  ? sp.id === "cycling"
+                    ? "bg-amber-500 text-black font-bold shadow"
+                    : "bg-[var(--accent)] text-white shadow"
+                  : "text-[var(--muted)] hover:text-white"
+              }`}
+            >
+              <span>{sp.icon}</span>
+              <span className="hidden sm:inline">{sp.label}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Right Action Buttons */}
+        {/* Right Badges / Actions */}
         <div className="flex items-center gap-1.5 pointer-events-auto">
+          {/* Total Distance & Activity Count Badge */}
+          <div className="hidden md:flex items-center gap-2 bg-[#161b22]/90 backdrop-blur-md border border-[var(--border)] px-3 py-1.5 rounded-xl shadow-lg text-xs">
+            <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
+            <span className="text-white font-semibold">
+              {totalStats.distanceKm} km
+            </span>
+            <span className="text-[var(--muted)]">
+              ({totalStats.activitiesCount} {selectedSport === "cycling" ? "pedais" : selectedSport === "running" ? "corridas" : "treinos"})
+            </span>
+          </div>
+
           {/* Controls Toggle */}
           <button
             type="button"
@@ -619,7 +653,12 @@ export function PersonalHeatmap({
                           <span className="text-gray-500 block text-[9px]">Distância</span>
                           <strong className="text-gray-900">{formatDistance(track.distanceM)}</strong>
                         </div>
-                        {track.avgPaceSecKm ? (
+                        {track.sport === "cycling" && track.avgSpeedKmh ? (
+                          <div>
+                            <span className="text-gray-500 block text-[9px]">Vel. Média</span>
+                            <strong className="text-gray-900">{formatSpeed(track.avgSpeedKmh)}</strong>
+                          </div>
+                        ) : track.avgPaceSecKm ? (
                           <div>
                             <span className="text-gray-500 block text-[9px]">Ritmo</span>
                             <strong className="text-gray-900">{formatPace(track.avgPaceSecKm)}</strong>
@@ -631,6 +670,12 @@ export function PersonalHeatmap({
                           </div>
                         )}
                       </div>
+                      {track.avgWatts && track.avgWatts > 0 && (
+                        <div className="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded flex items-center justify-between">
+                          <span>⚡ Potência Média:</span>
+                          <span>{formatWatts(track.avgWatts)}</span>
+                        </div>
+                      )}
                       {!track.isRoute && (
                         <Link
                           href={`/atividades/ver?id=${track.id}`}
