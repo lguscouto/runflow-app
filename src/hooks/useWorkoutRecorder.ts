@@ -63,6 +63,14 @@ import { getAllStoredGear } from "@/lib/storage";
 import { getUserProfile, saveUserProfile } from "@/lib/profile";
 import { calculateHrZones, getCurrentHrZone } from "@/lib/hr-zones";
 import { flattenWorkoutItems, evaluateStepTargetMet } from "@/lib/structured-workout";
+import type { ClimbCategory, ClimbSegment, ClimbProgressState, RoutePoint } from "@/lib/types";
+import { detectClimbs, getClimbProgress } from "@/lib/climb-detection";
+import {
+  buildClimbApproachAnnouncement,
+  buildClimbStartAnnouncement,
+  buildClimbCompletedAnnouncement,
+} from "@/lib/voice-coach";
+import { haptics } from "@/lib/haptics";
 import {
   playCountdownPip,
   speakWorkoutStep,
@@ -91,6 +99,7 @@ export interface RecorderStats {
   currentVamMh: number;
   isAutoPaused: boolean;
   powerSource: "sensor" | "estimated";
+  climbProgress?: ClimbProgressState | null;
 }
 
 export function useWorkoutRecorder() {
@@ -131,7 +140,18 @@ export function useWorkoutRecorder() {
   const [ghostStats, setGhostStats] = useState<GhostStats | null>(null);
   const [routeConfig, setRouteConfigState] = useState<RouteConfig | null>(null);
   const [offRouteState, setOffRouteState] = useState<OffRouteState | null>(null);
-  const [routePoints, setRoutePoints] = useState<{ lat: number; lng: number }[]>([]);
+  const [routePoints, setRoutePoints] = useState<{ lat: number; lng: number; elevation?: number }[]>([]);
+
+  // ClimbPro States (Etapa 6)
+  const [detectedClimbs, setDetectedClimbs] = useState<ClimbSegment[]>([]);
+  const detectedClimbsRef = useRef<ClimbSegment[]>([]);
+  const [climbProgressState, setClimbProgressState] = useState<ClimbProgressState | null>(null);
+  const climbProgressRef = useRef<ClimbProgressState | null>(null);
+  const lastApproachedClimbIdRef = useRef<string | null>(null);
+  const lastStartedClimbIdRef = useRef<string | null>(null);
+  const lastCompletedClimbIdRef = useRef<string | null>(null);
+  const wasInClimbRef = useRef<boolean>(false);
+  const activeClimbRef = useRef<ClimbSegment | null>(null);
 
   // Bluetooth HR States
   const [hrStatus, setHrStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
@@ -322,7 +342,17 @@ export function useWorkoutRecorder() {
     setRouteConfigState(config);
     if (config?.routeId) {
       const route = await getStoredRoute(config.routeId);
-      setRoutePoints(route?.points || []);
+      const pts = route?.points || [];
+      setRoutePoints(pts);
+      const climbs = detectClimbs(pts);
+      setDetectedClimbs(climbs);
+      detectedClimbsRef.current = climbs;
+      lastApproachedClimbIdRef.current = null;
+      lastStartedClimbIdRef.current = null;
+      lastCompletedClimbIdRef.current = null;
+      wasInClimbRef.current = false;
+      activeClimbRef.current = null;
+
       setOffRouteState({
         isOffRoute: false,
         distanceFromRouteM: 0,
@@ -332,6 +362,8 @@ export function useWorkoutRecorder() {
       });
     } else {
       setRoutePoints([]);
+      setDetectedClimbs([]);
+      detectedClimbsRef.current = [];
       setOffRouteState(null);
     }
   }, []);
@@ -556,6 +588,18 @@ export function useWorkoutRecorder() {
         effectiveMovingSec
       );
 
+      // ClimbPro Progress Tracking (Etapa 6)
+      let currentClimbProg: ClimbProgressState | null = null;
+      if (detectedClimbsRef.current.length > 0) {
+        currentClimbProg = getClimbProgress(
+          detectedClimbsRef.current,
+          distanceM,
+          currentGradePercent
+        );
+        setClimbProgressState(currentClimbProg);
+        climbProgressRef.current = currentClimbProg;
+      }
+
       setStats({
         elapsedSec,
         movingSec: effectiveMovingSec,
@@ -573,6 +617,7 @@ export function useWorkoutRecorder() {
         currentVamMh,
         isAutoPaused: isAutoPausedNow ?? isAutoPausedRef.current,
         powerSource,
+        climbProgress: currentClimbProg,
       });
 
       // Structured Workout Step Progress & Completion Checks
@@ -758,6 +803,70 @@ export function useWorkoutRecorder() {
           if (msg) {
             speakWithConfig(msg, vConfig, language);
           }
+        }
+      }
+
+      // ClimbPro Audio & Haptic Alerts (Etapa 6)
+      if (currentClimbProg && statusRef.current === "recording" && vConfig && vConfig.enabled) {
+        // 1. Alerta de Aproximação (150m antes)
+        if (
+          currentClimbProg.isApproachingClimb &&
+          currentClimbProg.nextClimb &&
+          lastApproachedClimbIdRef.current !== currentClimbProg.nextClimb.id
+        ) {
+          lastApproachedClimbIdRef.current = currentClimbProg.nextClimb.id;
+          haptics.warning();
+          const alertText = buildClimbApproachAnnouncement(
+            currentClimbProg.nextClimb.climbIndex,
+            currentClimbProg.totalClimbsCount,
+            currentClimbProg.nextClimb.category,
+            currentClimbProg.distanceToNextClimbM || 150,
+            currentClimbProg.nextClimb.distanceM,
+            currentClimbProg.nextClimb.avgGradePct,
+            language
+          );
+          speakWithConfig(alertText, vConfig, language);
+        }
+
+        // 2. Início de Subida
+        if (
+          currentClimbProg.isActiveClimb &&
+          currentClimbProg.currentClimb &&
+          lastStartedClimbIdRef.current !== currentClimbProg.currentClimb.id
+        ) {
+          lastStartedClimbIdRef.current = currentClimbProg.currentClimb.id;
+          activeClimbRef.current = currentClimbProg.currentClimb;
+          wasInClimbRef.current = true;
+          haptics.medium();
+          const startText = buildClimbStartAnnouncement(
+            currentClimbProg.currentClimb.climbIndex,
+            currentClimbProg.totalClimbsCount,
+            currentClimbProg.currentClimb.category,
+            currentClimbProg.currentClimb.distanceM,
+            currentClimbProg.currentClimb.avgGradePct,
+            language
+          );
+          speakWithConfig(startText, vConfig, language);
+        }
+
+        // 3. Conclusão / Cume da Subida
+        if (
+          wasInClimbRef.current &&
+          !currentClimbProg.isActiveClimb &&
+          activeClimbRef.current &&
+          lastCompletedClimbIdRef.current !== activeClimbRef.current.id
+        ) {
+          lastCompletedClimbIdRef.current = activeClimbRef.current.id;
+          wasInClimbRef.current = false;
+          haptics.success();
+          const finishText = buildClimbCompletedAnnouncement(
+            activeClimbRef.current.climbIndex,
+            currentClimbProg.totalClimbsCount,
+            activeClimbRef.current.elevationGainM,
+            language
+          );
+          activeClimbRef.current = null;
+          speakWithConfig(finishText, vConfig, language);
         }
       }
     },
@@ -1534,7 +1643,7 @@ export function useWorkoutRecorder() {
       utterance.lang = language === "pt" ? "pt-BR" : "en-US";
       window.speechSynthesis.speak(utterance);
     }
-  }, [offRouteState?.isOffRoute, routeConfig?.audioAlerts, language, t]);
+  }, [offRouteState?.isOffRoute, offRouteState?.distanceFromRouteM, routeConfig?.audioAlerts, language, t]);
 
   return {
     status,
@@ -1595,5 +1704,9 @@ export function useWorkoutRecorder() {
     currentLapNumber,
     lastCompletedLap,
     triggerManualLap,
+    // ClimbPro (Etapa 6)
+    detectedClimbs,
+    climbProgress: climbProgressState,
+    routePoints,
   };
 }

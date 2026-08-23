@@ -309,14 +309,53 @@ export interface RoutePoint {
   elevation?: number;
 }
 
+export type ClimbCategory = "HC" | "Cat 1" | "Cat 2" | "Cat 3" | "Cat 4" | "Uncategorized";
+
+export interface ClimbSegment {
+  id: string;
+  climbIndex: number;
+  name: string;
+  category: ClimbCategory;
+  climbScore: number;
+  startIndex: number;
+  endIndex: number;
+  startDistM: number;
+  endDistM: number;
+  distanceM: number;
+  startElevM: number;
+  topElevM: number;
+  elevationGainM: number;
+  avgGradePct: number;
+  maxGradePct: number;
+  profilePoints: Array<{ distM: number; elevM: number; gradePct: number }>;
+}
+
+export interface ClimbProgressState {
+  isActiveClimb: boolean;
+  currentClimb: ClimbSegment | null;
+  currentClimbNumber: number | null; // 1-indexed (ex: 2 de 4)
+  totalClimbsCount: number;
+  climbProgressPct: number; // 0 a 100
+  distanceRemainingM: number;
+  elevationRemainingM: number;
+  currentGradePct: number;
+  avgGradeRemainingPct: number;
+  nextClimb: ClimbSegment | null;
+  distanceToNextClimbM: number | null;
+  isApproachingClimb: boolean; // <= 200m do início
+}
+
 export interface SavedRoute {
   id: string;
   name: string;
   points: RoutePoint[];
   distanceM: number;
+  elevationGainM?: number;
+  climbs?: ClimbSegment[];
   source: "drawn" | "imported";
   createdAt: string;
   sport?: Sport;
+  color?: string;
 }
 
 export interface RouteConfig {

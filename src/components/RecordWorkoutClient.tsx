@@ -27,12 +27,16 @@ import {
   Sun,
   Bike,
   RefreshCw,
+  Mountain,
 } from "lucide-react";
 import { VoiceCoachModal } from "@/components/VoiceCoachModal";
 import { AutoPauseModal } from "@/components/AutoPauseModal";
 import { WorkoutLibraryModal } from "@/components/WorkoutLibraryModal";
 import { StructuredWorkoutHud } from "@/components/StructuredWorkoutHud";
 import { BikeComputerHud } from "@/components/BikeComputerHud";
+import { LiveElevationProfile } from "@/components/LiveElevationProfile";
+import { ClimbProHudCard } from "@/components/ClimbProHudCard";
+import { getCategoryBadgeStyle } from "@/lib/climb-detection";
 import { useWorkoutRecorder } from "@/hooks/useWorkoutRecorder";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { estimateActivityCalories } from "@/lib/calories";
@@ -171,6 +175,10 @@ export function RecordWorkoutClient() {
     currentLapNumber,
     lastCompletedLap,
     triggerManualLap,
+    detectedClimbs,
+    climbProgress,
+    routePoints,
+    setRouteConfig,
   } = useWorkoutRecorder();
 
   const selectedBike = useMemo(() => {
@@ -204,6 +212,20 @@ export function RecordWorkoutClient() {
   useEffect(() => {
     getAllStoredRoutes().then(setAllRoutes);
   }, []);
+
+  // Sync selected route with recorder (ClimbPro & Elevation Profile)
+  useEffect(() => {
+    if (selectedRouteId) {
+      setRouteConfig({
+        routeId: selectedRouteId,
+        offRouteToleranceM: routeTolerance,
+        audioAlerts: true,
+        audioFreq: "1km",
+      });
+    } else {
+      setRouteConfig(null);
+    }
+  }, [selectedRouteId, routeTolerance, setRouteConfig]);
 
   // Keep screen awake while recording
   useWakeLock(status === "recording");
@@ -469,6 +491,9 @@ export function RecordWorkoutClient() {
           lastCompletedLap={lastCompletedLap}
           cadenceRpm={cscCadenceRpm ?? powerCadenceRpm}
           powerSource={stats.powerSource}
+          climbProgress={climbProgress}
+          detectedClimbs={detectedClimbs}
+          routePoints={routePoints}
           onPause={handlePause}
           onResume={handleResume}
           onStop={handleStop}
@@ -948,6 +973,26 @@ export function RecordWorkoutClient() {
 
           <LiveMapTrack points={points} follow={status === "recording"} />
 
+          {/* ClimbPro Alert / Active Card (Etapa 6) */}
+          {climbProgress && (climbProgress.isActiveClimb || climbProgress.isApproachingClimb) && (
+            <ClimbProHudCard
+              climbProgress={climbProgress}
+              currentSpeedKmh={stats.currentSpeedKmh}
+              currentVamMh={stats.currentVamMh}
+            />
+          )}
+
+          {/* Live Elevation Profile (Etapa 6) */}
+          {(routePoints.length > 2 || detectedClimbs.length > 0 || (points.length > 5 && sport === "cycling")) && (
+            <LiveElevationProfile
+              points={routePoints.length > 0 ? routePoints : points}
+              climbs={detectedClimbs}
+              currentDistM={stats.distanceM}
+              activeClimb={climbProgress?.currentClimb}
+              height={120}
+            />
+          )}
+
           {renderGhostComparison(false)}
 
           <div className="grid grid-cols-2 gap-3">
@@ -1413,6 +1458,34 @@ export function RecordWorkoutClient() {
                       />
                     </button>
                   </div>
+
+                  {/* ClimbPro Route Preview (Etapa 6) */}
+                  {detectedClimbs.length > 0 && (
+                    <div className="p-3 rounded-xl bg-[#0c121e] border border-white/10 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-white flex items-center gap-1.5">
+                          <Mountain size={14} className="text-amber-400" />
+                          <span>{t("climb.climbs_count", { count: detectedClimbs.length })}</span>
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {detectedClimbs.map((climb) => {
+                          const badge = getCategoryBadgeStyle(climb.category);
+                          return (
+                            <span
+                              key={climb.id}
+                              style={{ backgroundColor: `${badge.badgeBg}20`, borderColor: badge.badgeBg, color: "#fff" }}
+                              className="px-2 py-0.5 rounded-md border text-[10px] font-bold flex items-center gap-1"
+                            >
+                              <span style={{ backgroundColor: badge.badgeBg }} className="w-1.5 h-1.5 rounded-full" />
+                              <span>{climb.name}</span>
+                              <span className="text-[9px] text-[var(--muted)]">({formatDistance(climb.distanceM)} @ {climb.avgGradePct.toFixed(1)}%)</span>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>

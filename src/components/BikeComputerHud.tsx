@@ -33,8 +33,12 @@ import type {
   BikeHudLayout,
   HeartRateZone,
   Gear,
+  ClimbSegment,
+  ClimbProgressState,
 } from "@/lib/types";
 import type { RecorderStats } from "@/hooks/useWorkoutRecorder";
+import { LiveElevationProfile } from "@/components/LiveElevationProfile";
+import { ClimbProHudCard } from "@/components/ClimbProHudCard";
 import {
   formatDistance,
   formatDuration,
@@ -74,6 +78,9 @@ interface BikeComputerHudProps {
   lastCompletedLap: ManualLap | null;
   cadenceRpm?: number | null;
   powerSource?: "sensor" | "estimated";
+  climbProgress?: ClimbProgressState | null;
+  detectedClimbs?: ClimbSegment[];
+  routePoints?: Array<{ lat: number; lng: number; elevation?: number }>;
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
@@ -96,6 +103,9 @@ export function BikeComputerHud({
   lastCompletedLap,
   cadenceRpm,
   powerSource = "estimated",
+  climbProgress,
+  detectedClimbs = [],
+  routePoints = [],
   onPause,
   onResume,
   onStop,
@@ -105,6 +115,8 @@ export function BikeComputerHud({
 }: BikeComputerHudProps) {
   const { t } = useI18n();
   const effectiveCadence = cadenceRpm ?? stats.currentCadenceRpm ?? null;
+  const effectiveClimbProg = climbProgress ?? stats.climbProgress ?? null;
+  const [profileZoomMode, setProfileZoomMode] = useState<"full" | "climb">("full");
 
   // Customization States
   const [theme, setTheme] = useState<BikeHudTheme>("dark");
@@ -600,13 +612,36 @@ export function BikeComputerHud({
               )}
             </div>
 
-            {/* Right: Live Map in Landscape (if split_map layout active) */}
+            {/* Right: Live Map / ClimbPro in Landscape (if split_map layout active) */}
             {layoutMode === "split_map" && (
-              <div className="w-[38%] h-full rounded-2xl overflow-hidden border border-neutral-800 relative shadow-xl">
-                <LiveMapTrack points={points} follow={isRecording} />
-                <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/70 backdrop-blur text-[10px] font-bold text-white z-[1000]">
-                  GPS AO VIVO
-                </div>
+              <div className="w-[38%] h-full rounded-2xl overflow-hidden border border-neutral-800 relative shadow-xl flex flex-col gap-2">
+                {effectiveClimbProg && (effectiveClimbProg.isActiveClimb || effectiveClimbProg.isApproachingClimb) ? (
+                  <div className="flex-1 flex flex-col gap-2 overflow-y-auto p-1">
+                    <ClimbProHudCard
+                      climbProgress={effectiveClimbProg}
+                      currentSpeedKmh={stats.currentSpeedKmh}
+                      currentVamMh={stats.currentVamMh}
+                    />
+                    {(routePoints.length > 0 || points.length > 0) && (
+                      <LiveElevationProfile
+                        points={routePoints.length > 0 ? routePoints : points}
+                        climbs={detectedClimbs}
+                        currentDistM={stats.distanceM}
+                        activeClimb={effectiveClimbProg.currentClimb}
+                        height={95}
+                        zoomMode={profileZoomMode}
+                        onToggleZoom={() => setProfileZoomMode((p) => (p === "full" ? "climb" : "full"))}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full h-full relative">
+                    <LiveMapTrack points={points} follow={isRecording} />
+                    <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/70 backdrop-blur text-[10px] font-bold text-white z-[1000]">
+                      GPS AO VIVO
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -614,10 +649,21 @@ export function BikeComputerHud({
           /* =========================================================================
              PORTRAIT LAYOUT (MODO RETRATO / VERTICAL PADRÃO)
              ========================================================================= */
-          <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-hidden">
+          <div className="flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto">
+            {/* ClimbPro Alert / Active Card in Portrait */}
+            {effectiveClimbProg && (effectiveClimbProg.isActiveClimb || effectiveClimbProg.isApproachingClimb) && (
+              <div className="shrink-0">
+                <ClimbProHudCard
+                  climbProgress={effectiveClimbProg}
+                  currentSpeedKmh={stats.currentSpeedKmh}
+                  currentVamMh={stats.currentVamMh}
+                />
+              </div>
+            )}
+
             {/* Top Main Speed Cell */}
             <div
-              className={`${themeStyles.cardBg} rounded-3xl p-5 flex flex-col justify-between items-center text-center flex-1 max-h-[42vh]`}
+              className={`${themeStyles.cardBg} rounded-3xl p-5 flex flex-col justify-between items-center text-center flex-1 max-h-[42vh] shrink-0`}
             >
               <div className="w-full flex items-center justify-between px-2">
                 <span className={`text-xs uppercase tracking-widest ${themeStyles.textSecondary}`}>
@@ -770,6 +816,21 @@ export function BikeComputerHud({
                     <span className="text-[11px]">Sem Cinta FC</span>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Live Elevation Profile (if route or points available) */}
+            {(routePoints.length > 2 || detectedClimbs.length > 0 || points.length > 5) && (
+              <div className="shrink-0">
+                <LiveElevationProfile
+                  points={routePoints.length > 0 ? routePoints : points}
+                  climbs={detectedClimbs}
+                  currentDistM={stats.distanceM}
+                  activeClimb={effectiveClimbProg?.currentClimb}
+                  height={110}
+                  zoomMode={profileZoomMode}
+                  onToggleZoom={() => setProfileZoomMode((p) => (p === "full" ? "climb" : "full"))}
+                />
               </div>
             )}
           </div>

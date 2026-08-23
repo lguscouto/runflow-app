@@ -101,14 +101,15 @@ Adaptação dos assistentes automáticos para a dinâmica de velocidade do cicli
 
 ---
 
-### 6. Análise de Subidas & Perfil de Altimetria ao Vivo (ClimbPro / Live Elevation)
+### 6. Análise de Subidas & Perfil de Altimetria ao Vivo (ClimbPro / Live Elevation) ✅
 **Esforço:** M · **Prioridade:** Média · **Inspiração:** Garmin ClimbPro / Hammerhead Karoo
 
 Visualização da altimetria da rota durante a pedalada para gerenciamento de esforço em subidas.
 
-- [ ] Algoritmo de detecção e classificação de subidas por categoria (Cat 4, Cat 3, Cat 2, Cat 1, HC) usando o índice de esforço de subida
-- [ ] Mini display de perfil de elevação ao vivo na tela de gravação com marcador de posição atual
-- [ ] Alertas visuais e sonoros ao iniciar uma subida categorizada (*"Início da subida: 1.8 km @ 6.5% de inclinação"*)
+- [x] Algoritmo de detecção e classificação de subidas por categoria (Cat 4, Cat 3, Cat 2, Cat 1, HC) usando o índice de esforço de subida oficial UCI
+- [x] Mini display de perfil de elevação ao vivo na tela de gravação com fatias de gradiente coloridas, marcadores de categoria e posição atual do ciclista com toggle de zoom
+- [x] Alertas visuais (ClimbPro HUD Card) e sonoros por Voice Coach ao aproximar-se (150m), iniciar e concluir uma subida categorizada (*"Atenção: subida à frente em 150 metros. Subida 1 de 2, Categoria 3..."*)
+- [x] Suporte a enriquecimento de rotas sem altitude via Open-Meteo Elevation API e gerador de rotas de serra para testes imediatos
 
 ---
 

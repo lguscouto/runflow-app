@@ -376,3 +376,70 @@ export function playVoiceCoachPreview(
 
   speakWithConfig(text || fallback, config, lang);
 }
+
+/**
+ * Constrói anúncio falado de aproximação de subida.
+ */
+export function buildClimbApproachAnnouncement(
+  climbNumber: number,
+  totalClimbs: number,
+  category: string,
+  distanceToStartM: number,
+  climbLengthM: number,
+  avgGradePct: number,
+  lang: "pt" | "en" = "pt"
+): string {
+  const distKm = (climbLengthM / 1000).toFixed(1).replace(".", ",");
+  const gradeStr = avgGradePct.toFixed(1).replace(".", ",");
+
+  if (lang === "pt") {
+    const catText = category === "HC" ? "Fora de Categoria" : category === "Uncategorized" ? "Rampa" : category;
+    return `Atenção: subida à frente em ${Math.round(distanceToStartM)} metros. Subida ${climbNumber} de ${totalClimbs}, ${catText}. ${distKm} quilômetros a ${gradeStr} por cento de inclinação média.`;
+  } else {
+    const catText = category === "HC" ? "Hors Categorie" : category === "Uncategorized" ? "Short Climb" : category;
+    const distKmEn = (climbLengthM / 1000).toFixed(1);
+    const gradeStrEn = avgGradePct.toFixed(1);
+    return `Attention: climb ahead in ${Math.round(distanceToStartM)} meters. Climb ${climbNumber} of ${totalClimbs}, ${catText}. ${distKmEn} kilometers at ${gradeStrEn} percent average gradient.`;
+  }
+}
+
+/**
+ * Constrói anúncio falado de início de subida.
+ */
+export function buildClimbStartAnnouncement(
+  climbNumber: number,
+  totalClimbs: number,
+  category: string,
+  climbLengthM: number,
+  avgGradePct: number,
+  lang: "pt" | "en" = "pt"
+): string {
+  const distKm = (climbLengthM / 1000).toFixed(1).replace(".", ",");
+  const gradeStr = avgGradePct.toFixed(1).replace(".", ",");
+
+  if (lang === "pt") {
+    const catText = category === "HC" ? "Fora de Categoria" : category === "Uncategorized" ? "Rampa" : category;
+    return `Início da subida ${climbNumber} de ${totalClimbs}. ${catText}, ${distKm} quilômetros até o cume com média de ${gradeStr} por cento. Força nas pernas!`;
+  } else {
+    const catText = category === "HC" ? "Hors Categorie" : category === "Uncategorized" ? "Short Climb" : category;
+    const distKmEn = (climbLengthM / 1000).toFixed(1);
+    const gradeStrEn = avgGradePct.toFixed(1);
+    return `Start of climb ${climbNumber} of ${totalClimbs}. ${catText}, ${distKmEn} kilometers to the summit with ${gradeStrEn} percent average gradient. Push hard!`;
+  }
+}
+
+/**
+ * Constrói anúncio falado de conclusão de subida (topo alcançado).
+ */
+export function buildClimbCompletedAnnouncement(
+  climbNumber: number,
+  totalClimbs: number,
+  elevationGainM: number,
+  lang: "pt" | "en" = "pt"
+): string {
+  if (lang === "pt") {
+    return `Excelente! Subida ${climbNumber} de ${totalClimbs} concluída. Ganho de ${Math.round(elevationGainM)} metros de elevação alcançado.`;
+  } else {
+    return `Great job! Climb ${climbNumber} of ${totalClimbs} completed. ${Math.round(elevationGainM)} meters of elevation gain achieved.`;
+  }
+}
