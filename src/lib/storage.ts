@@ -8,9 +8,21 @@ import type {
   Gear,
   SavedRoute,
   StructuredWorkout,
+  StructuredWorkoutReport,
 } from "./types";
 
 export const PROFILE_KEY = "user";
+
+export interface ActivityPageCursor {
+  startedAt: string;
+  id: string;
+}
+
+export interface ActivityPage {
+  items: ActivitySummary[];
+  nextCursor: ActivityPageCursor | null;
+  hasMore: boolean;
+}
 
 export interface StoredActivityTrack {
   id: string;
@@ -28,6 +40,8 @@ export interface StoredActivityTrack {
   maxPaceSecKm?: number | null;
   maxHr?: number | null;
   notes?: string | null;
+  workoutId?: string | null;
+  structuredWorkoutReport?: StructuredWorkoutReport | null;
 }
 
 export interface StoredActivity extends ActivitySummary {
@@ -36,6 +50,7 @@ export interface StoredActivity extends ActivitySummary {
   notes: string | null;
   routeId?: string | null;
   workoutId?: string | null;
+  structuredWorkoutReport?: StructuredWorkoutReport | null;
   points: Array<{
     lat: number;
     lng: number;
@@ -50,15 +65,13 @@ export interface StoredActivity extends ActivitySummary {
 }
 
 interface RunFlowDB extends DBSchema {
-  activities: {
-    key: string;
-    value: StoredActivity;
-    indexes: { "by-started": string };
-  };
   activitySummaries: {
     key: string;
     value: ActivitySummary;
-    indexes: { "by-started": string };
+    indexes: {
+      "by-started": string;
+      "by-started-id": [string, string];
+    };
   };
   activityTracks: {
     key: string;
@@ -83,7 +96,7 @@ interface RunFlowDB extends DBSchema {
 }
 
 const DB_NAME = "runflow";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 let dbPromise: Promise<IDBPDatabase<RunFlowDB>> | null = null;
 
@@ -91,73 +104,91 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
   if (!dbPromise) {
     dbPromise = openDB<RunFlowDB>(DB_NAME, DB_VERSION, {
       async upgrade(database, oldVersion, _newVersion, transaction) {
-        if (!database.objectStoreNames.contains("activities")) {
-          const store = database.createObjectStore("activities", {
-            keyPath: "id",
-          });
-          store.createIndex("by-started", "startedAt");
-        }
-        if (oldVersion < 2 && !database.objectStoreNames.contains("profile")) {
+        if (!database.objectStoreNames.contains("profile")) {
           database.createObjectStore("profile");
         }
-        if (oldVersion < 3 && !database.objectStoreNames.contains("gear")) {
-          database.createObjectStore("gear", {
+        if (!database.objectStoreNames.contains("gear")) {
+          database.createObjectStore("gear", { keyPath: "id" });
+        }
+        if (!database.objectStoreNames.contains("routes")) {
+          database.createObjectStore("routes", { keyPath: "id" });
+        }
+        if (!database.objectStoreNames.contains("workouts")) {
+          database.createObjectStore("workouts", { keyPath: "id" });
+        }
+
+        // Criação ou atualização dos stores split
+        let summaryStore: any;
+        if (!database.objectStoreNames.contains("activitySummaries")) {
+          summaryStore = database.createObjectStore("activitySummaries", {
             keyPath: "id",
           });
-        }
-        if (oldVersion < 4 && !database.objectStoreNames.contains("routes")) {
-          database.createObjectStore("routes", {
-            keyPath: "id",
-          });
-        }
-        if (oldVersion < 5 && !database.objectStoreNames.contains("workouts")) {
-          database.createObjectStore("workouts", {
-            keyPath: "id",
-          });
-        }
-        if (oldVersion < 6) {
-          if (!database.objectStoreNames.contains("activitySummaries")) {
-            const summaryStore = database.createObjectStore("activitySummaries", {
-              keyPath: "id",
-            });
-            summaryStore.createIndex("by-started", "startedAt");
+          summaryStore.createIndex("by-started", "startedAt");
+          summaryStore.createIndex("by-started-id", ["startedAt", "id"]);
+        } else {
+          summaryStore = transaction.objectStore("activitySummaries");
+          if (!summaryStore.indexNames.contains("by-started-id")) {
+            summaryStore.createIndex("by-started-id", ["startedAt", "id"]);
           }
-          if (!database.objectStoreNames.contains("activityTracks")) {
-            database.createObjectStore("activityTracks", {
-              keyPath: "id",
-            });
+        }
+
+        if (!database.objectStoreNames.contains("activityTracks")) {
+          database.createObjectStore("activityTracks", { keyPath: "id" });
+        }
+
+        // Migração atômica de stores legados ('activities') para v7
+        if (database.objectStoreNames.contains("activities" as any)) {
+          const actStore = transaction.objectStore("activities" as any);
+          const trackStore = transaction.objectStore("activityTracks");
+          let cursor = await actStore.openCursor();
+          while (cursor) {
+            const act = cursor.value as StoredActivity;
+            if (!act || !act.id || !act.startedAt) {
+              throw new Error(`Dados inválidos na atividade durante migração v7: ID ${act?.id}`);
+            }
+
+            const summary = toActivitySummary(act);
+            const track: StoredActivityTrack = {
+              id: act.id,
+              points: Array.isArray(act.points) ? act.points : [],
+              maxPaceSecKm: act.maxPaceSecKm ?? null,
+              maxHr: act.maxHr ?? null,
+              notes: act.notes ?? null,
+              workoutId: act.workoutId ?? null,
+              structuredWorkoutReport: act.structuredWorkoutReport ?? null,
+            };
+
+            await summaryStore.put(summary);
+            await trackStore.put(track);
+            cursor = await cursor.continue();
           }
 
-          // Migrate existing data from 'activities' to split stores
-          if (database.objectStoreNames.contains("activities")) {
-            try {
-              const actStore = transaction.objectStore("activities");
-              const summaryStore = transaction.objectStore("activitySummaries");
-              const trackStore = transaction.objectStore("activityTracks");
-              let cursor = await actStore.openCursor();
-              while (cursor) {
-                const act = cursor.value as StoredActivity;
-                const summary = toActivitySummary(act);
-                const track: StoredActivityTrack = {
-                  id: act.id,
-                  points: act.points || [],
-                  maxPaceSecKm: act.maxPaceSecKm,
-                  maxHr: act.maxHr,
-                  notes: act.notes,
-                };
-                await summaryStore.put(summary);
-                await trackStore.put(track);
-                cursor = await cursor.continue();
-              }
-            } catch (err) {
-              console.warn("RunFlow DB v6 migration notice:", err);
-            }
-          }
+          // Eliminação segura do store legado após migração atômica completa
+          database.deleteObjectStore("activities" as any);
         }
       },
     });
   }
   return dbPromise;
+}
+
+/**
+ * Helper para testes unitários fecharem e resetarem a conexão singleton do IndexedDB.
+ */
+export async function resetStoreForTesting(deleteDb = false): Promise<void> {
+  if (dbPromise) {
+    const db = await dbPromise;
+    db.close();
+    dbPromise = null;
+  }
+  if (deleteDb && typeof indexedDB !== "undefined") {
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.deleteDatabase(DB_NAME);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => resolve();
+    });
+  }
 }
 
 export async function putActivity(activity: StoredActivity): Promise<void> {
@@ -166,16 +197,18 @@ export async function putActivity(activity: StoredActivity): Promise<void> {
   const track: StoredActivityTrack = {
     id: activity.id,
     points: activity.points || [],
-    maxPaceSecKm: activity.maxPaceSecKm,
-    maxHr: activity.maxHr,
-    notes: activity.notes,
+    maxPaceSecKm: activity.maxPaceSecKm ?? null,
+    maxHr: activity.maxHr ?? null,
+    notes: activity.notes ?? null,
+    workoutId: activity.workoutId ?? null,
+    structuredWorkoutReport: activity.structuredWorkoutReport ?? null,
   };
+
   const tx = db.transaction(
-    ["activities", "activitySummaries", "activityTracks"],
+    ["activitySummaries", "activityTracks"],
     "readwrite"
   );
   await Promise.all([
-    tx.objectStore("activities").put(activity),
     tx.objectStore("activitySummaries").put(summary),
     tx.objectStore("activityTracks").put(track),
     tx.done,
@@ -186,32 +219,50 @@ export async function getStoredActivity(
   id: string
 ): Promise<StoredActivity | undefined> {
   const db = await getStore();
-  try {
-    const [summary, track] = await Promise.all([
-      db.get("activitySummaries", id),
-      db.get("activityTracks", id),
-    ]);
-    if (summary && track) {
-      return {
-        ...summary,
-        points: track.points || [],
-        maxPaceSecKm: track.maxPaceSecKm ?? null,
-        maxHr: track.maxHr ?? null,
-        notes: track.notes ?? null,
-      };
-    }
-  } catch {
-    // fallback
-  }
-  return db.get("activities", id);
+  const [summary, track] = await Promise.all([
+    db.get("activitySummaries", id),
+    db.get("activityTracks", id),
+  ]);
+
+  if (!summary) return undefined;
+
+  return {
+    ...summary,
+    points: track?.points || [],
+    maxPaceSecKm: track?.maxPaceSecKm ?? null,
+    maxHr: track?.maxHr ?? null,
+    notes: track?.notes ?? null,
+    workoutId: track?.workoutId ?? summary.workoutId ?? null,
+    structuredWorkoutReport:
+      track?.structuredWorkoutReport ?? summary.structuredWorkoutReport ?? null,
+  };
 }
 
 export async function getAllStoredActivities(): Promise<StoredActivity[]> {
   const db = await getStore();
-  const all = await db.getAll("activities");
-  return all.sort(
-    (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
-  );
+  const tx = db.transaction(["activitySummaries", "activityTracks"], "readonly");
+  const summaryIndex = tx.objectStore("activitySummaries").index("by-started");
+  const summaries = await summaryIndex.getAll();
+
+  // Reconstrução em lote ordenada por data descrescente
+  const sortedSummaries = summaries.reverse();
+  const results: StoredActivity[] = [];
+
+  for (const summary of sortedSummaries) {
+    const track = await tx.objectStore("activityTracks").get(summary.id);
+    results.push({
+      ...summary,
+      points: track?.points || [],
+      maxPaceSecKm: track?.maxPaceSecKm ?? null,
+      maxHr: track?.maxHr ?? null,
+      notes: track?.notes ?? null,
+      workoutId: track?.workoutId ?? summary.workoutId ?? null,
+      structuredWorkoutReport:
+        track?.structuredWorkoutReport ?? summary.structuredWorkoutReport ?? null,
+    });
+  }
+
+  return results;
 }
 
 /**
@@ -220,64 +271,73 @@ export async function getAllStoredActivities(): Promise<StoredActivity[]> {
  */
 export async function getAllStoredSummaries(): Promise<ActivitySummary[]> {
   const db = await getStore();
-  try {
-    const tx = db.transaction("activitySummaries", "readonly");
-    const index = tx.store.index("by-started");
-    const summaries = await index.getAll();
-    return summaries.reverse();
-  } catch {
-    // Fallback caso activitySummaries ainda esteja sendo inicializado
-    const tx = db.transaction("activities", "readonly");
-    const index = tx.store.index("by-started");
-    const summaries: ActivitySummary[] = [];
-    let cursor = await index.openCursor(null, "prev");
-    while (cursor) {
-      summaries.push(toActivitySummary(cursor.value));
-      cursor = await cursor.continue();
+  const tx = db.transaction("activitySummaries", "readonly");
+  const index = tx.store.index("by-started");
+  const summaries = await index.getAll();
+  return summaries.reverse();
+}
+
+/**
+ * Paginação estável por cursor determinístico combinando (startedAt, id)
+ */
+export async function listStoredActivitiesPaged(
+  limit = 50,
+  cursor?: ActivityPageCursor | null
+): Promise<ActivityPage> {
+  const db = await getStore();
+  const tx = db.transaction("activitySummaries", "readonly");
+  const index = tx.store.index("by-started");
+  const items: ActivitySummary[] = [];
+
+  let dbCursor = await index.openCursor(null, "prev");
+  let skipping = !!cursor;
+
+  while (dbCursor && items.length < limit + 1) {
+    const value = dbCursor.value;
+    if (skipping) {
+      if (value.startedAt === cursor!.startedAt && value.id === cursor!.id) {
+        skipping = false; // Encontrou o cursor anterior, começa na próxima iteração
+      }
+      dbCursor = await dbCursor.continue();
+      continue;
     }
-    return summaries;
+
+    items.push(value);
+    dbCursor = await dbCursor.continue();
   }
+
+  const hasMore = items.length > limit;
+  const pageItems = hasMore ? items.slice(0, limit) : items;
+  const lastItem = pageItems[pageItems.length - 1];
+  const nextCursor: ActivityPageCursor | null =
+    hasMore && lastItem
+      ? { startedAt: lastItem.startedAt, id: lastItem.id }
+      : null;
+
+  return {
+    items: pageItems,
+    nextCursor,
+    hasMore,
+  };
 }
 
 export async function listStoredActivitiesWithCursor(
   limit = 50
 ): Promise<ActivitySummary[]> {
-  const db = await getStore();
-  try {
-    const tx = db.transaction("activitySummaries", "readonly");
-    const index = tx.store.index("by-started");
-    const summaries: ActivitySummary[] = [];
-    let cursor = await index.openCursor(null, "prev");
-    while (cursor && summaries.length < limit) {
-      summaries.push(cursor.value);
-      cursor = await cursor.continue();
-    }
-    return summaries;
-  } catch {
-    const tx = db.transaction("activities", "readonly");
-    const index = tx.store.index("by-started");
-    const summaries: ActivitySummary[] = [];
-    let cursor = await index.openCursor(null, "prev");
-    while (cursor && summaries.length < limit) {
-      summaries.push(toActivitySummary(cursor.value));
-      cursor = await cursor.continue();
-    }
-    return summaries;
-  }
+  const page = await listStoredActivitiesPaged(limit);
+  return page.items;
 }
 
 export async function removeActivity(id: string): Promise<boolean> {
   const db = await getStore();
-  const existing =
-    (await db.get("activities", id)) ||
-    (await db.get("activitySummaries", id));
+  const existing = await db.get("activitySummaries", id);
   if (!existing) return false;
+
   const tx = db.transaction(
-    ["activities", "activitySummaries", "activityTracks"],
+    ["activitySummaries", "activityTracks"],
     "readwrite"
   );
   await Promise.all([
-    tx.objectStore("activities").delete(id),
     tx.objectStore("activitySummaries").delete(id),
     tx.objectStore("activityTracks").delete(id),
     tx.done,
@@ -309,7 +369,7 @@ export async function removeGear(id: string): Promise<boolean> {
 }
 
 export function toActivityDetail(stored: StoredActivity): ActivityDetail {
-  const points: TrackPoint[] = stored.points.map((p) => ({
+  const points: TrackPoint[] = (stored.points || []).map((p) => ({
     lat: p.lat,
     lng: p.lng,
     elevation: p.elevation,
@@ -326,6 +386,8 @@ export function toActivityDetail(stored: StoredActivity): ActivityDetail {
     movingTimeSec: (stored as any).movingTimeSec ?? stored.durationSec,
     elapsedTimeSec: (stored as any).elapsedTimeSec ?? stored.durationSec,
     routeId: (stored as any).routeId || null,
+    workoutId: stored.workoutId || null,
+    structuredWorkoutReport: stored.structuredWorkoutReport || null,
   };
 }
 
@@ -354,6 +416,8 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     fileName,
     gearId,
     routeId,
+    workoutId,
+    structuredWorkoutReport,
   } = stored;
   return {
     id,
@@ -385,6 +449,8 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     fileName,
     gearId: gearId || null,
     routeId: routeId || null,
+    workoutId: workoutId || null,
+    structuredWorkoutReport: structuredWorkoutReport || null,
   };
 }
 
@@ -415,7 +481,7 @@ export async function removeRoute(id: string): Promise<boolean> {
   return true;
 }
 
-// ── Structured Workouts (Feature 23) ────────────────────────────────────────
+// ── Structured Workouts ─────────────────────────────────────────────────────
 
 export async function putWorkout(workout: StructuredWorkout): Promise<void> {
   const db = await getStore();

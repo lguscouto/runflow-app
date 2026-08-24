@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, memo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Footprints, Trophy } from "lucide-react";
+import { ChevronRight, Footprints, Trophy, Loader2 } from "lucide-react";
 import type { ActivitySummary } from "@/lib/types";
 import { PRCategory } from "@/lib/prs";
 import {
@@ -26,7 +26,7 @@ const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
 };
 
 const ESTIMATED_ROW_HEIGHT = 74; // Altura média em px de cada linha de atividade
-const OVERSCAN_COUNT = 5; // Buffer de linhas acima e abaixo da viewport
+const OVERSCAN_COUNT = 6; // Buffer de linhas acima e abaixo da viewport
 
 interface ActivityRowProps {
   activity: ActivitySummary;
@@ -88,15 +88,22 @@ export function ActivityList({
   activities,
   emptyMessage,
   prMap = {},
+  onLoadMore,
+  hasMore = false,
+  loadingMore = false,
 }: {
   activities: ActivitySummary[];
   emptyMessage?: string;
   prMap?: Record<string, PRCategory[]>;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
 }) {
   const { t, language } = useI18n();
   const router = useRouter();
   const [creatingDemo, setCreatingDemo] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(800);
@@ -115,7 +122,6 @@ export function ActivityList({
         window.requestAnimationFrame(() => {
           if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
-            // Distância do topo do container em relação ao topo da janela
             const offsetTop = Math.max(0, -rect.top);
             setScrollTop(offsetTop);
           }
@@ -138,6 +144,23 @@ export function ActivityList({
       window.removeEventListener("resize", handleResize);
     };
   }, [activities.length]);
+
+  // Observer do sentinel para paginação contínua sob demanda
+  useEffect(() => {
+    if (!sentinelRef.current || !hasMore || loadingMore || !onLoadMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, onLoadMore]);
 
   async function handleLoadDemo() {
     setCreatingDemo(true);
@@ -174,11 +197,32 @@ export function ActivityList({
     );
   }
 
-  // Para listas pequenas (< 25), renderiza diretamente sem overhead
-  if (activities.length <= 25) {
-    return (
-      <div className="stat-card overflow-hidden p-0">
-        {activities.map((a) => (
+  const isVirtualized = activities.length > 25;
+  const totalCount = activities.length;
+  const startIndex = isVirtualized
+    ? Math.max(0, Math.floor(scrollTop / ESTIMATED_ROW_HEIGHT) - OVERSCAN_COUNT)
+    : 0;
+  const visibleCount = isVirtualized
+    ? Math.ceil(viewportHeight / ESTIMATED_ROW_HEIGHT) + 2 * OVERSCAN_COUNT
+    : totalCount;
+  const endIndex = isVirtualized
+    ? Math.min(totalCount, startIndex + visibleCount)
+    : totalCount;
+
+  const topPadding = isVirtualized ? startIndex * ESTIMATED_ROW_HEIGHT : 0;
+  const bottomPadding = isVirtualized
+    ? Math.max(0, (totalCount - endIndex) * ESTIMATED_ROW_HEIGHT)
+    : 0;
+  const visibleActivities = activities.slice(startIndex, endIndex);
+
+  return (
+    <div className="space-y-3">
+      <div ref={containerRef} className="stat-card overflow-hidden p-0">
+        {topPadding > 0 && (
+          <div style={{ height: `${topPadding}px` }} aria-hidden="true" />
+        )}
+
+        {visibleActivities.map((a) => (
           <ActivityRowItem
             key={a.id}
             activity={a}
@@ -187,41 +231,26 @@ export function ActivityList({
             t={t}
           />
         ))}
+
+        {bottomPadding > 0 && (
+          <div style={{ height: `${bottomPadding}px` }} aria-hidden="true" />
+        )}
       </div>
-    );
-  }
 
-  // Virtualização com janela deslizante para listas médias/grandes
-  const totalCount = activities.length;
-  const startIndex = Math.max(
-    0,
-    Math.floor(scrollTop / ESTIMATED_ROW_HEIGHT) - OVERSCAN_COUNT
-  );
-  const visibleCount = Math.ceil(viewportHeight / ESTIMATED_ROW_HEIGHT) + 2 * OVERSCAN_COUNT;
-  const endIndex = Math.min(totalCount, startIndex + visibleCount);
-
-  const topPadding = startIndex * ESTIMATED_ROW_HEIGHT;
-  const bottomPadding = Math.max(0, (totalCount - endIndex) * ESTIMATED_ROW_HEIGHT);
-  const visibleActivities = activities.slice(startIndex, endIndex);
-
-  return (
-    <div ref={containerRef} className="stat-card overflow-hidden p-0">
-      {topPadding > 0 && (
-        <div style={{ height: `${topPadding}px` }} aria-hidden="true" />
-      )}
-
-      {visibleActivities.map((a) => (
-        <ActivityRowItem
-          key={a.id}
-          activity={a}
-          prCategories={prMap[a.id]}
-          language={language}
-          t={t}
-        />
-      ))}
-
-      {bottomPadding > 0 && (
-        <div style={{ height: `${bottomPadding}px` }} aria-hidden="true" />
+      {/* Sentinel e fallback acessível de carregamento */}
+      {hasMore && (
+        <div ref={sentinelRef} className="py-2 text-center">
+          <button
+            type="button"
+            onClick={onLoadMore}
+            disabled={loadingMore}
+            aria-busy={loadingMore}
+            className="btn-ghost text-xs text-[var(--muted)] hover:text-[var(--text)] border border-[var(--border)] px-4 py-2 rounded-xl inline-flex items-center gap-2"
+          >
+            {loadingMore && <Loader2 size={14} className="animate-spin text-[var(--accent)]" />}
+            <span>{loadingMore ? t("common.loading") : "Carregar mais treinos"}</span>
+          </button>
+        </div>
       )}
     </div>
   );

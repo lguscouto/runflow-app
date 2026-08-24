@@ -1926,6 +1926,8 @@ export const translations = {
   },
 };
 
+import { getNativeAppLocale, setNativeAppLocale } from "@/lib/app-locale";
+
 interface I18nContextProps {
   language: Language;
   t: (key: string, variables?: Record<string, string | number>) => string;
@@ -1942,6 +1944,16 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function loadPreferredLanguage() {
       try {
+        const nativeLocale = await getNativeAppLocale();
+        if (nativeLocale) {
+          const normalized = nativeLocale.toLowerCase().slice(0, 2);
+          if (normalized === "en" || normalized === "pt") {
+            setLanguage(normalized as Language);
+            setLoading(false);
+            return;
+          }
+        }
+
         const profile = await getUserProfile();
         if (profile?.language) {
           setLanguage(profile.language);
@@ -1966,6 +1978,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const changeLanguage = async (nextLang: Language) => {
     setLanguage(nextLang);
     try {
+      await setNativeAppLocale(nextLang === "en" ? "en" : "pt-BR");
       const current = await getUserProfile();
       if (current) {
         const { updatedAt, ...rest } = current;
@@ -1979,7 +1992,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (err) {
-      console.error("Failed to save preferred language:", err);
+      console.error("Failed to persist language preference:", err);
     }
   };
 

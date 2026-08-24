@@ -28,6 +28,7 @@ import {
   syncWebDav,
 } from "@/lib/sync/webdav";
 import type { SyncReport, WebDavConfig } from "@/lib/types";
+import { requestLocalNetworkPermission } from "@/lib/local-network";
 
 interface SyncPanelProps {
   onSyncSuccess?: () => void;
@@ -83,7 +84,8 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
   // ── P2P Handlers ─────────────────────────────────────────────────────────
 
-  const handleStartHost = () => {
+  const handleStartHost = async () => {
+    await requestLocalNetworkPermission();
     // Limpar sessões anteriores
     activeHostSession.current?.destroy();
     activeJoinerSession.current?.destroy();
@@ -111,10 +113,11 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
     session.start();
   };
 
-  const handleStartJoin = (e: React.FormEvent) => {
+  const handleStartJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCodeInput.trim()) return;
 
+    await requestLocalNetworkPermission();
     activeHostSession.current?.destroy();
     activeJoinerSession.current?.destroy();
     setP2pError(null);

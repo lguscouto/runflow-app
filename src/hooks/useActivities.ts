@@ -6,6 +6,10 @@ import {
   getDashboardStats,
   listActivities,
 } from "@/lib/activities";
+import {
+  listStoredActivitiesPaged,
+  type ActivityPageCursor,
+} from "@/lib/storage";
 import type {
   ActivityDetail,
   ActivitySummary,
@@ -35,21 +39,37 @@ export function useDashboard() {
   return { stats, recent, loading, refresh };
 }
 
-export function useActivityList(limit = 200) {
+export function useActivityList(pageSize = 50) {
   const [activities, setActivities] = useState<ActivitySummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [cursor, setCursor] = useState<ActivityPageCursor | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
-    setActivities(await listActivities(limit));
+    const page = await listStoredActivitiesPaged(pageSize, null);
+    setActivities(page.items);
+    setCursor(page.nextCursor);
+    setHasMore(page.hasMore);
     setLoading(false);
-  }, [limit]);
+  }, [pageSize]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || !cursor) return;
+    setLoadingMore(true);
+    const page = await listStoredActivitiesPaged(pageSize, cursor);
+    setActivities((prev) => [...prev, ...page.items]);
+    setCursor(page.nextCursor);
+    setHasMore(page.hasMore);
+    setLoadingMore(false);
+  }, [pageSize, cursor, hasMore, loadingMore]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return { activities, loading, refresh };
+  return { activities, loading, loadingMore, hasMore, loadMore, refresh };
 }
 
 export function useActivityDetail(id: string | null) {

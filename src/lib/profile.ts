@@ -1,5 +1,11 @@
 import type { UserProfile } from "./types";
-import { getStore, PROFILE_KEY, type StoredActivity } from "./storage";
+import {
+  getStore,
+  PROFILE_KEY,
+  getAllStoredActivities,
+  putActivity,
+  type StoredActivity,
+} from "./storage";
 import { estimateActivityCalories, profileHasCalorieInputs } from "./calories";
 
 export async function getUserProfile(): Promise<UserProfile | null> {
@@ -25,8 +31,7 @@ export async function refreshEstimatedCalories(): Promise<number> {
   const profile = await getUserProfile();
   if (!profileHasCalorieInputs(profile)) return 0;
 
-  const db = await getStore();
-  const all = await db.getAll("activities");
+  const all = await getAllStoredActivities();
   let updated = 0;
 
   for (const activity of all) {
@@ -42,7 +47,7 @@ export async function refreshEstimatedCalories(): Promise<number> {
 
     if (kcal != null) {
       const next: StoredActivity = { ...activity, calories: kcal };
-      await db.put("activities", next);
+      await putActivity(next);
       updated += 1;
     }
   }

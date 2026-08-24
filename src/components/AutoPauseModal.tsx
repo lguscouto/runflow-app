@@ -5,6 +5,7 @@ import { PauseCircle, Check, X, Volume2, Gauge, ShieldAlert, Sparkles, Activity 
 import { useI18n } from "@/lib/i18n";
 import type { AutoPauseConfig } from "@/lib/types";
 import { DEFAULT_AUTO_PAUSE_CONFIG } from "@/lib/auto-pause";
+import { useModalA11y } from "@/hooks/useModalA11y";
 
 interface AutoPauseModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function AutoPauseModal({
   onSave,
 }: AutoPauseModalProps) {
   const { t } = useI18n();
+  const { modalRef } = useModalA11y({ isOpen, onClose });
   const [currentConfig, setCurrentConfig] = useState<AutoPauseConfig>(
     config || DEFAULT_AUTO_PAUSE_CONFIG
   );
@@ -39,8 +41,20 @@ export function AutoPauseModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="bg-[var(--surface)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[92vh] safe-area-bottom">
+    <div
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("auto_pause.title")}
+        className="bg-[var(--surface)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[92vh] safe-area-bottom"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="p-5 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-raised)]">
           <div className="flex items-center gap-3">

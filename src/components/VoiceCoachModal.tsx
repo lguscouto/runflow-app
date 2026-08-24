@@ -21,6 +21,7 @@ import {
 import type { VoiceCoachConfig, Sport } from "@/lib/types";
 import { DEFAULT_VOICE_COACH_CONFIG, playVoiceCoachPreview } from "@/lib/voice-coach";
 import { useI18n } from "@/lib/i18n";
+import { useModalA11y } from "@/hooks/useModalA11y";
 
 interface VoiceCoachModalProps {
   config: VoiceCoachConfig;
@@ -38,6 +39,7 @@ export function VoiceCoachModal({
   sport = "running",
 }: VoiceCoachModalProps) {
   const { t, language } = useI18n();
+  const { modalRef } = useModalA11y({ isOpen, onClose });
   const [config, setConfig] = useState<VoiceCoachConfig>({
     ...DEFAULT_VOICE_COACH_CONFIG,
     ...initialConfig,
@@ -74,6 +76,10 @@ export function VoiceCoachModal({
       }}
     >
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("voice_coach.title")}
         className="relative w-full max-w-lg max-h-[92vh] bg-[var(--surface)] border-t sm:border border-[var(--border)] rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden safe-area-bottom"
         onClick={(e) => e.stopPropagation()}
       >

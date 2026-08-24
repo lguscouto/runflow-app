@@ -25,7 +25,8 @@ const PersonalHeatmap = dynamic(
 
 export function ActivitiesPageClient() {
   const { t } = useI18n();
-  const { activities, loading } = useActivityList();
+  const { activities, loading, loadingMore, hasMore, loadMore } =
+    useActivityList();
   const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
   const [activeTab, setActiveTab] = useState<"list" | "stats" | "heatmap">("list");
 
@@ -96,7 +97,13 @@ export function ActivitiesPageClient() {
           {t("common.loading")}
         </div>
       ) : activeTab === "list" ? (
-        <ActivityList activities={activities} prMap={prMap} />
+        <ActivityList
+          activities={activities}
+          prMap={prMap}
+          onLoadMore={loadMore}
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+        />
       ) : activeTab === "stats" ? (
         <AdvancedStatsPanel activities={activities} />
       ) : (

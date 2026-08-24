@@ -1,4 +1,10 @@
-import { getStore, PROFILE_KEY, type StoredActivity } from "./storage";
+import {
+  getStore,
+  PROFILE_KEY,
+  getAllStoredActivities,
+  putActivity,
+  type StoredActivity,
+} from "./storage";
 import type { UserProfile, Gear } from "./types";
 import { shareOrDownloadFile } from "./share-file";
 
@@ -22,8 +28,8 @@ export async function exportBackup(): Promise<void> {
   // Buscar equipamentos
   const gear = await db.getAll("gear");
   
-  // Buscar todas as atividades
-  const activities = await db.getAll("activities");
+  // Buscar todas as atividades reconstruídas
+  const activities = await getAllStoredActivities();
 
   const payload: BackupPayload = {
     metadata: {
@@ -91,7 +97,7 @@ export async function importBackup(jsonString: string): Promise<ImportResult> {
   let activitiesCount = 0;
   if (Array.isArray(payload.activities)) {
     for (const act of payload.activities) {
-      await db.put("activities", act);
+      await putActivity(act);
       activitiesCount++;
     }
   }
