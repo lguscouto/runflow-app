@@ -44,3 +44,7 @@ android/local.properties
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# hermes artifacts
+.hermes/artifacts/
+

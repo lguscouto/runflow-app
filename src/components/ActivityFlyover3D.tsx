@@ -298,9 +298,19 @@ export function ActivityFlyover3D({
     };
   }, []);
 
-  // 3. Loop de Animação e Renderização da Câmera
+  // Refs para controle contínuo sem re-render do loop de 60fps
+  const isPlayingRef = useRef(isPlaying);
+  isPlayingRef.current = isPlaying;
+  const speedMultiplierRef = useRef(speedMultiplier);
+  speedMultiplierRef.current = speedMultiplier;
+  const cameraModeRef = useRef(cameraMode);
+  cameraModeRef.current = cameraMode;
+  const progressRef = useRef(progress);
+
+  // 3. Loop Estável de Animação e Renderização da Câmera (Single Loop desacoplado)
   useEffect(() => {
     let lastTime = performance.now();
+    let lastUiUpdateTime = performance.now();
 
     const animate = () => {
       const now = performance.now();
@@ -315,58 +325,57 @@ export function ActivityFlyover3D({
       const scene = sceneRef.current;
 
       if (curve && data && runner && camera && renderer && scene) {
-        // Atualiza progresso se estiver rodando
-        if (isPlaying && !isDraggingScrubber.current) {
-          const totalDuration = Math.max(10, data.totalDurationSec);
-          // Velocidade base: simula percurso em ~40 segundos na velocidade 1x
-          const increment = (deltaSec * speedMultiplier) / 45;
-          setProgress((prev) => {
-            const next = prev + increment;
-            if (next >= 1) {
-              setIsPlaying(false);
-              return 1;
-            }
-            return next;
-          });
+        // Atualiza progresso contínuo
+        if (isPlayingRef.current && !isDraggingScrubber.current) {
+          const increment = (deltaSec * speedMultiplierRef.current) / 45;
+          let next = progressRef.current + increment;
+          if (next >= 1) {
+            next = 1;
+            setIsPlaying(false);
+          }
+          progressRef.current = next;
         }
 
-        // Posição na curva
-        const clampedT = Math.max(0, Math.min(1, progress));
+        // Posição na curva Catmull-Rom
+        const clampedT = Math.max(0, Math.min(1, progressRef.current));
         const pos = curve.getPointAt(clampedT);
         const tangent = curve.getTangentAt(clampedT).normalize();
 
         runner.position.copy(pos);
 
-        // Atualiza Telemetria
-        const ptIndex = Math.min(
-          Math.floor(clampedT * data.points.length),
-          data.points.length - 1
-        );
-        const currentPt = data.points[ptIndex];
-        if (currentPt) {
-          setCurrentDistKm((currentPt.distanceM / 1000).toFixed(2));
-          setCurrentPace(formatPace(currentPt.paceSecKm));
-          setCurrentElevM(Math.round(currentPt.elevationM));
-          setCurrentHr(currentPt.hr || null);
-          setCurrentElapsedSec(Math.round(currentPt.elapsedSec));
+        // Atualização da UI React em frequência controlada (10 Hz) para poupar CPU/GC
+        if (now - lastUiUpdateTime >= 100) {
+          lastUiUpdateTime = now;
+          setProgress(clampedT);
+
+          const ptIndex = Math.min(
+            Math.floor(clampedT * data.points.length),
+            data.points.length - 1
+          );
+          const currentPt = data.points[ptIndex];
+          if (currentPt) {
+            setCurrentDistKm((currentPt.distanceM / 1000).toFixed(2));
+            setCurrentPace(formatPace(currentPt.paceSecKm));
+            setCurrentElevM(Math.round(currentPt.elevationM));
+            setCurrentHr(currentPt.hr || null);
+            setCurrentElapsedSec(Math.round(currentPt.elapsedSec));
+          }
         }
 
         // ── Atualização da Câmera por Modo ──
-        if (cameraMode === "chase") {
-          // Drone seguidor: atrás e acima
+        const currentMode = cameraModeRef.current;
+        if (currentMode === "chase") {
           const chaseOffset = tangent.clone().multiplyScalar(-14).add(new THREE.Vector3(0, 7, 0));
           const targetCamPos = pos.clone().add(chaseOffset);
           camera.position.lerp(targetCamPos, 0.08);
 
           const lookTarget = pos.clone().add(tangent.clone().multiplyScalar(8));
           camera.lookAt(lookTarget);
-        } else if (cameraMode === "aerial") {
-          // Visão Aérea / Top-Down
+        } else if (currentMode === "aerial") {
           const topOffset = new THREE.Vector3(0, 45, 15);
           camera.position.lerp(pos.clone().add(topOffset), 0.08);
           camera.lookAt(pos);
-        } else if (cameraMode === "free") {
-          // Órbita Livre ao redor do corredor
+        } else if (currentMode === "free") {
           const r = orbitAngles.current.radius;
           const theta = orbitAngles.current.theta;
           const phi = orbitAngles.current.phi;
@@ -403,7 +412,7 @@ export function ActivityFlyover3D({
         cancelAnimationFrame(animFrameIdRef.current);
       }
     };
-  }, [isPlaying, progress, speedMultiplier, cameraMode]);
+  }, []);
 
   // ── Controles de Toque / Mouse para Modo Órbita ──
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -596,6 +605,7 @@ export function ActivityFlyover3D({
             }}
             onChange={(e) => {
               const val = parseFloat(e.target.value);
+              progressRef.current = val;
               setProgress(val);
             }}
             className="w-full h-2 rounded-lg bg-white/20 accent-[var(--accent)] cursor-pointer"
@@ -611,7 +621,10 @@ export function ActivityFlyover3D({
             <button
               type="button"
               onClick={() => {
-                if (progress >= 1) setProgress(0);
+                if (progressRef.current >= 1) {
+                  progressRef.current = 0;
+                  setProgress(0);
+                }
                 setIsPlaying(!isPlaying);
               }}
               className="p-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white font-bold transition-all shadow-md active:scale-95"
@@ -623,6 +636,7 @@ export function ActivityFlyover3D({
             <button
               type="button"
               onClick={() => {
+                progressRef.current = 0;
                 setProgress(0);
                 setIsPlaying(true);
               }}

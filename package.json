@@ -9,6 +9,8 @@
     "build:mobile": "next build && npx cap sync android && cd android && gradlew assembleDebug",
     "start": "npx serve out",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",
     "cap:run": "npx cap run android"
@@ -50,8 +52,10 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9.27.0",
     "eslint-config-next": "^15.3.3",
+    "fake-indexeddb": "^6.2.5",
     "tailwindcss": "^4.1.8",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.11"
   },
   "capacitor": {
     "android": {

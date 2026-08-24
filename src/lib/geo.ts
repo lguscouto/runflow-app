@@ -76,35 +76,54 @@ function perpendicularDistanceM<T extends { lat: number; lng: number }>(
 }
 
 /**
- * Algoritmo Ramer-Douglas-Peucker (RDP) para simplificação geométrica de alta fidelidade.
+ * Algoritmo Ramer-Douglas-Peucker (RDP) iterativo de alta performance.
+ * Utiliza pilha e bitmap em Uint8Array para evitar estouro de pilha em trilhas com 50.000+ pontos.
  * Preserva esquinas, cotovelos e curvas de montanha sem deformação geométrica.
  */
 export function douglasPeucker<T extends { lat: number; lng: number }>(
   points: T[],
   epsilonMeters = 3.0
 ): T[] {
-  if (points.length <= 2) return points;
+  const len = points.length;
+  if (len <= 2) return points;
 
-  let maxDist = 0;
-  let maxIndex = 0;
-  const first = points[0];
-  const last = points[points.length - 1];
+  const kept = new Uint8Array(len);
+  kept[0] = 1;
+  kept[len - 1] = 1;
 
-  for (let i = 1; i < points.length - 1; i++) {
-    const dist = perpendicularDistanceM(points[i], first, last);
-    if (dist > maxDist) {
-      maxDist = dist;
-      maxIndex = i;
+  const stack: Array<[number, number]> = [[0, len - 1]];
+
+  while (stack.length > 0) {
+    const [start, end] = stack.pop()!;
+    if (end - start <= 1) continue;
+
+    let maxDist = 0;
+    let maxIndex = start;
+    const a = points[start];
+    const b = points[end];
+
+    for (let i = start + 1; i < end; i++) {
+      const dist = perpendicularDistanceM(points[i], a, b);
+      if (dist > maxDist) {
+        maxDist = dist;
+        maxIndex = i;
+      }
+    }
+
+    if (maxDist > epsilonMeters) {
+      kept[maxIndex] = 1;
+      stack.push([start, maxIndex]);
+      stack.push([maxIndex, end]);
     }
   }
 
-  if (maxDist > epsilonMeters) {
-    const left = douglasPeucker(points.slice(0, maxIndex + 1), epsilonMeters);
-    const right = douglasPeucker(points.slice(maxIndex), epsilonMeters);
-    return [...left.slice(0, -1), ...right];
+  const result: T[] = [];
+  for (let i = 0; i < len; i++) {
+    if (kept[i]) {
+      result.push(points[i]);
+    }
   }
-
-  return [first, last];
+  return result;
 }
 
 export function simplifyPoints<T extends { lat: number; lng: number }>(

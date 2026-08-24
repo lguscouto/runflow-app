@@ -4,9 +4,6 @@ const config: CapacitorConfig = {
   appId: "com.runflow.app",
   appName: "RunFlow",
   webDir: "out",
-  android: {
-    allowMixedContent: true,
-  },
   server: {
     androidScheme: "https",
   },

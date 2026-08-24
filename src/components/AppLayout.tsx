@@ -41,10 +41,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Desktop Navigation (>= sm / 640px) */}
-          <nav className="hidden sm:flex items-center gap-1">
+          <nav className="hidden sm:flex items-center gap-1" aria-label={t("nav.main_navigation")}>
             <Link
               href="/"
               onClick={handleNavClick}
+              aria-current={isHome ? "page" : undefined}
               className={`nav-link flex items-center gap-1.5 ${isHome ? "active text-[var(--accent)] font-semibold" : ""}`}
             >
               <Home size={16} />
@@ -53,6 +54,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               href="/gravar/"
               onClick={handleNavClick}
+              aria-current={isRecord ? "page" : undefined}
               className={`nav-link flex items-center gap-1.5 text-[var(--accent)] ${isRecord ? "active font-bold" : ""}`}
             >
               <Play size={16} />
@@ -61,6 +63,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               href="/atividades/"
               onClick={handleNavClick}
+              aria-current={isActivities ? "page" : undefined}
               className={`nav-link flex items-center gap-1.5 ${isActivities ? "active text-[var(--accent)] font-semibold" : ""}`}
             >
               <Activity size={16} />
@@ -69,6 +72,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               href="/importar/"
               onClick={handleNavClick}
+              aria-current={isImport ? "page" : undefined}
               className={`nav-link flex items-center gap-1.5 ${isImport ? "active text-[var(--accent)] font-semibold" : ""}`}
             >
               <Upload size={16} />
@@ -77,6 +81,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               href="/rotas/"
               onClick={handleNavClick}
+              aria-current={isRoutes ? "page" : undefined}
               className={`nav-link flex items-center gap-1.5 ${isRoutes ? "active text-[var(--accent)] font-semibold" : ""}`}
             >
               <MapPin size={16} />
@@ -85,6 +90,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               href="/perfil/"
               onClick={handleNavClick}
+              aria-current={isProfile ? "page" : undefined}
               className={`nav-link flex items-center gap-1.5 ${isProfile ? "active text-[var(--accent)] font-semibold" : ""}`}
             >
               <User size={16} />
@@ -97,6 +103,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               href="/importar/"
               onClick={handleNavClick}
+              aria-current={isImport ? "page" : undefined}
               className={`p-2 rounded-lg text-sm border border-[var(--border)] transition-colors ${
                 isImport
                   ? "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/40"
@@ -133,11 +140,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile Bottom Navigation Bar (< sm / 640px) */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bottom-nav-bar safe-area-bottom px-2 py-1 flex items-center justify-around shadow-2xl"
-        aria-label="Navegação Principal"
+        aria-label={t("nav.main_navigation")}
       >
         <Link
           href="/"
           onClick={handleNavClick}
+          aria-current={isHome ? "page" : undefined}
           className={`bottom-nav-link ${isHome ? "active font-bold" : ""}`}
         >
           <Home size={20} />
@@ -147,6 +155,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Link
           href="/atividades/"
           onClick={handleNavClick}
+          aria-current={isActivities ? "page" : undefined}
           className={`bottom-nav-link ${isActivities ? "active font-bold" : ""}`}
         >
           <Activity size={20} />
@@ -157,6 +166,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Link
           href="/gravar/"
           onClick={handleNavClick}
+          aria-current={isRecord ? "page" : undefined}
           className="bottom-nav-fab"
           aria-label={t("nav.record")}
           title={t("nav.record")}
@@ -167,6 +177,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Link
           href="/rotas/"
           onClick={handleNavClick}
+          aria-current={isRoutes ? "page" : undefined}
           className={`bottom-nav-link ${isRoutes ? "active font-bold" : ""}`}
         >
           <MapPin size={20} />
@@ -176,6 +187,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Link
           href="/perfil/"
           onClick={handleNavClick}
+          aria-current={isProfile ? "page" : undefined}
           className={`bottom-nav-link ${isProfile ? "active font-bold" : ""}`}
         >
           <User size={20} />

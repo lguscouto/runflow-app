@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo } from "react";
+import React, { useState, useEffect, useRef, memo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Footprints, Trophy } from "lucide-react";
@@ -25,6 +25,9 @@ const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
   bestPower: "prs.cycling_best_power",
 };
 
+const ESTIMATED_ROW_HEIGHT = 74; // Altura média em px de cada linha de atividade
+const OVERSCAN_COUNT = 5; // Buffer de linhas acima e abaixo da viewport
+
 interface ActivityRowProps {
   activity: ActivitySummary;
   prCategories?: PRCategory[];
@@ -43,6 +46,7 @@ const ActivityRowItem = memo(function ActivityRowItem({
       href={`/atividades/ver/?id=${activity.id}`}
       onClick={() => haptics.light()}
       className="activity-row cursor-pointer touch-target py-3.5"
+      style={{ minHeight: `${ESTIMATED_ROW_HEIGHT}px` }}
     >
       <div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -92,27 +96,48 @@ export function ActivityList({
   const { t, language } = useI18n();
   const router = useRouter();
   const [creatingDemo, setCreatingDemo] = useState(false);
-  const [visibleLimit, setVisibleLimit] = useState(25);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(800);
 
   const displayEmptyMessage = emptyMessage ?? t("activities.empty");
 
-  // Virtualização progressiva: carrega mais itens à medida que o usuário rola
+  // Virtualização de janela de renderização baseada na posição do scroll da janela
   useEffect(() => {
-    if (!loadMoreRef.current || visibleLimit >= activities.length) return;
+    if (typeof window === "undefined" || activities.length <= 25) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleLimit((prev) => Math.min(prev + 25, activities.length));
-        }
-      },
-      { rootMargin: "200px" }
-    );
+    setViewportHeight(window.innerHeight);
 
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [visibleLimit, activities.length]);
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            // Distância do topo do container em relação ao topo da janela
+            const offsetTop = Math.max(0, -rect.top);
+            setScrollTop(offsetTop);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    const handleResize = () => {
+      setViewportHeight(window.innerHeight);
+      handleScroll();
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [activities.length]);
 
   async function handleLoadDemo() {
     setCreatingDemo(true);
@@ -149,10 +174,42 @@ export function ActivityList({
     );
   }
 
-  const visibleActivities = activities.slice(0, visibleLimit);
+  // Para listas pequenas (< 25), renderiza diretamente sem overhead
+  if (activities.length <= 25) {
+    return (
+      <div className="stat-card overflow-hidden p-0">
+        {activities.map((a) => (
+          <ActivityRowItem
+            key={a.id}
+            activity={a}
+            prCategories={prMap[a.id]}
+            language={language}
+            t={t}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Virtualização com janela deslizante para listas médias/grandes
+  const totalCount = activities.length;
+  const startIndex = Math.max(
+    0,
+    Math.floor(scrollTop / ESTIMATED_ROW_HEIGHT) - OVERSCAN_COUNT
+  );
+  const visibleCount = Math.ceil(viewportHeight / ESTIMATED_ROW_HEIGHT) + 2 * OVERSCAN_COUNT;
+  const endIndex = Math.min(totalCount, startIndex + visibleCount);
+
+  const topPadding = startIndex * ESTIMATED_ROW_HEIGHT;
+  const bottomPadding = Math.max(0, (totalCount - endIndex) * ESTIMATED_ROW_HEIGHT);
+  const visibleActivities = activities.slice(startIndex, endIndex);
 
   return (
-    <div className="stat-card overflow-hidden p-0">
+    <div ref={containerRef} className="stat-card overflow-hidden p-0">
+      {topPadding > 0 && (
+        <div style={{ height: `${topPadding}px` }} aria-hidden="true" />
+      )}
+
       {visibleActivities.map((a) => (
         <ActivityRowItem
           key={a.id}
@@ -163,13 +220,8 @@ export function ActivityList({
         />
       ))}
 
-      {visibleLimit < activities.length && (
-        <div
-          ref={loadMoreRef}
-          className="py-4 text-center text-xs text-[var(--muted)] border-t border-[var(--border)]"
-        >
-          Carregando mais treinos ({visibleLimit} de {activities.length})...
-        </div>
+      {bottomPadding > 0 && (
+        <div style={{ height: `${bottomPadding}px` }} aria-hidden="true" />
       )}
     </div>
   );

@@ -14,6 +14,7 @@ export const translations = {
     "nav.import": "Importar",
     "nav.routes": "Rotas",
     "nav.profile": "Perfil",
+    "nav.main_navigation": "Navegação Principal",
     "footer.text": "RunFlow — open source, gratuito, dados no seu dispositivo.",
 
     // Common
@@ -972,6 +973,7 @@ export const translations = {
     "nav.import": "Import",
     "nav.routes": "Routes",
     "nav.profile": "Profile",
+    "nav.main_navigation": "Main Navigation",
     "footer.text": "RunFlow — open source, free, data stays on your device.",
 
     // Common
