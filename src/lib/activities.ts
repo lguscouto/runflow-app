@@ -43,7 +43,6 @@ export async function saveActivity(
   fileName?: string
 ): Promise<string> {
   const id = uuidv4();
-  const points = simplifyPoints(parsed.points, 1200);
   const calories = await resolveCalories(parsed);
   const profile = await getUserProfile();
 
@@ -65,14 +64,66 @@ export async function saveActivity(
   // Se for ciclismo, calcula métricas físicas científicas agregadas caso ainda não existam
   let cyclingStats: ReturnType<typeof computeCyclingActivityStats> | null = null;
   if (parsed.sport === "cycling") {
+    const cyclingMetricPoints = parsed.trackSegments
+      ? parsed.trackSegments.flatMap((segment, index) => {
+          if (index === 0 || segment.length === 0) return segment;
+          return [{ ...segment[0], autoPaused: true }, ...segment];
+        })
+      : parsed.points;
     cyclingStats = computeCyclingActivityStats(
-      points,
+      cyclingMetricPoints,
       parsed.movingTimeSec || parsed.durationSec,
       profile?.weightKg,
       defaultGear?.weightKg,
       defaultGear?.bikeType
     );
   }
+
+  const estimatedPowerByPoint =
+    cyclingStats == null
+      ? []
+      : parsed.trackSegments
+        ? parsed.trackSegments.flatMap((segment, segmentIndex) => {
+            let metricIndex = parsed.trackSegments
+              ?.slice(0, segmentIndex)
+              .reduce((total, previous) => total + previous.length + 1, 0) ?? 0;
+            return segment.map(() => cyclingStats?.powerSeriesWatts[metricIndex++] ?? 0);
+          })
+        : parsed.points.map((_, index) => cyclingStats?.powerSeriesWatts[index] ?? 0);
+  const points = simplifyPoints(
+    parsed.points.map((point, index) => ({
+      ...point,
+      watts: point.watts ?? (estimatedPowerByPoint[index] > 0 ? estimatedPowerByPoint[index] : undefined),
+    })),
+    1200
+  );
+
+  let segmentPointIndex = 0;
+  const trackSegments = parsed.trackSegments?.map((segment) => {
+    const simplifiedSegment = simplifyPoints(
+      segment.map((point) => ({
+        ...point,
+        watts:
+          point.watts ??
+          (estimatedPowerByPoint[segmentPointIndex] > 0
+            ? estimatedPowerByPoint[segmentPointIndex]
+            : undefined),
+      })),
+      1200
+    );
+    segmentPointIndex += segment.length;
+    return simplifiedSegment.map((p) => ({
+      lat: p.lat,
+      lng: p.lng,
+      elevation: p.elevation,
+      timestamp: p.timestamp?.toISOString(),
+      hr: p.hr,
+      watts: p.watts,
+      cadence: p.cadence,
+      speedKmh: p.speedKmh,
+      grade: p.grade,
+    }));
+  });
 
   const avgSpeedKmh =
     parsed.avgSpeedKmh ??
@@ -120,17 +171,18 @@ export async function saveActivity(
     gearId,
     workoutId: parsed.workoutId || null,
     structuredWorkoutReport: parsed.structuredWorkoutReport || null,
-    points: points.map((p, idx) => ({
+    points: points.map((p) => ({
       lat: p.lat,
       lng: p.lng,
       elevation: p.elevation,
       timestamp: p.timestamp?.toISOString(),
       hr: p.hr,
-      watts: p.watts ?? (cyclingStats && cyclingStats.powerSeriesWatts[idx] != null ? cyclingStats.powerSeriesWatts[idx] : undefined),
+      watts: p.watts,
       cadence: p.cadence,
       speedKmh: p.speedKmh,
       grade: p.grade,
     })),
+    trackSegments,
   };
 
   await putActivity(stored);

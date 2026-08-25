@@ -39,6 +39,7 @@ import type {
 } from "@/lib/types";
 import { haptics } from "@/lib/haptics";
 import { v4 as uuidv4 } from "uuid";
+import { useModalA11y } from "@/hooks/useModalA11y";
 
 interface BikeGarageManagerProps {
   bikes: GearWithUsage[];
@@ -105,6 +106,14 @@ export function BikeGarageManager({
   const [compBrandModel, setCompBrandModel] = useState("");
   const [compLimitKm, setCompLimitKm] = useState("2500");
   const [compNotes, setCompNotes] = useState("");
+  const { modalRef: replaceModalRef } = useModalA11y<HTMLFormElement>({
+    isOpen: Boolean(activeReplaceModal),
+    onClose: () => setActiveReplaceModal(null),
+  });
+  const { modalRef: addComponentModalRef } = useModalA11y<HTMLFormElement>({
+    isOpen: Boolean(activeAddComponentModal),
+    onClose: () => setActiveAddComponentModal(null),
+  });
 
   const handleAddBike = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -782,6 +791,10 @@ export function BikeGarageManager({
       {activeReplaceModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
           <form
+            ref={replaceModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("bike_garage.replace_component")}
             onSubmit={handleConfirmReplace}
             className="stat-card max-w-md w-full border-amber-500/50 bg-[var(--surface)] p-6 space-y-4 shadow-2xl"
           >
@@ -857,6 +870,10 @@ export function BikeGarageManager({
       {activeAddComponentModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
           <form
+            ref={addComponentModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("bike_garage.add_component")}
             onSubmit={handleConfirmAddComponent}
             className="stat-card max-w-md w-full border-amber-500/50 bg-[var(--surface)] p-6 space-y-4 shadow-2xl"
           >

@@ -22,6 +22,7 @@ import {
   type CardRenderOptions,
 } from "@/lib/social-card";
 import { shareOrDownloadImage } from "@/lib/share-file";
+import { useModalA11y } from "@/hooks/useModalA11y";
 
 interface SocialShareCardModalProps {
   activity: ActivityDetail;
@@ -59,6 +60,10 @@ export function SocialShareCardModal({
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { modalRef } = useModalA11y({
+    isOpen,
+    onClose: () => setIsOpen(false),
+  });
 
   // Render on change
   useEffect(() => {
@@ -170,7 +175,13 @@ export function SocialShareCardModal({
 
       {isOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md overflow-y-auto">
-          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("share_card.modal_title")}
+            className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] shrink-0">
               <div className="flex items-center gap-2.5">
@@ -189,6 +200,7 @@ export function SocialShareCardModal({
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
+                aria-label={language === "en" ? "Close modal" : "Fechar modal"}
                 className="w-8 h-8 rounded-lg bg-[var(--surface-hover)] text-[var(--muted)] hover:text-white flex items-center justify-center transition-all"
               >
                 <X size={18} />

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "maxRegressionRatio": 1.1,
+  "baselineTotalBytes": 2617937,
+  "baselineInitialBytes": 494163,
+  "forbiddenInitialPackages": ["three"],
+  "routes": {
+    "/_not-found/page": { "baselineJsBytes": 355228 },
+    "/layout": { "baselineJsBytes": 494163 },
+    "/gravar/page": { "baselineJsBytes": 769663 },
+    "/heatmap/page": { "baselineJsBytes": 480355 },
+    "/atividades/page": { "baselineJsBytes": 546530 },
+    "/atividades/ver/page": { "baselineJsBytes": 801333 },
+    "/importar/page": { "baselineJsBytes": 642647 },
+    "/page": { "baselineJsBytes": 572298 },
+    "/rotas/page": { "baselineJsBytes": 522425 },
+    "/perfil/page": { "baselineJsBytes": 687464 },
+    "/rotas/criar/page": { "baselineJsBytes": 477424 }
+  }
+}

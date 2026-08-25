@@ -9,64 +9,94 @@ import { useEffect, useRef } from "react";
  */
 export function useWakeLock(active: boolean) {
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+  const pendingRequestRef = useRef<Promise<WakeLockSentinel> | null>(null);
+  const activeRef = useRef(active);
+  const mountedRef = useRef(true);
+  activeRef.current = active;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof navigator === "undefined" || !("wakeLock" in navigator)) return;
 
-    async function acquireLock() {
-      try {
-        if (wakeLockRef.current) return; // already held
-        wakeLockRef.current = await (navigator as Navigator & { wakeLock: { request: (type: string) => Promise<WakeLockSentinel> } }).wakeLock.request("screen");
+    const wakeLock = (navigator as Navigator & {
+      wakeLock: { request: (type: string) => Promise<WakeLockSentinel> };
+    }).wakeLock;
 
-        // Re-acquire if the lock is released by the system (e.g. tab hidden)
-        wakeLockRef.current.addEventListener("release", () => {
-          wakeLockRef.current = null;
-        });
+    function attachReleaseListener(sentinel: WakeLockSentinel) {
+      sentinel.addEventListener("release", () => {
+        if (wakeLockRef.current === sentinel) wakeLockRef.current = null;
+      });
+    }
+
+    async function releaseSentinel(sentinel: WakeLockSentinel) {
+      try {
+        await sentinel.release();
       } catch {
-        // Not all environments support wake lock — fail silently
-        wakeLockRef.current = null;
+        // Ignore release failures during teardown.
       }
+    }
+
+    function acquireLock() {
+      if (
+        !activeRef.current ||
+        !mountedRef.current ||
+        wakeLockRef.current ||
+        pendingRequestRef.current
+      ) return;
+
+      let requestPromise: Promise<WakeLockSentinel>;
+      try {
+        requestPromise = wakeLock.request("screen");
+      } catch {
+        return;
+      }
+      pendingRequestRef.current = requestPromise;
+
+      void requestPromise
+        .then(async (sentinel) => {
+          if (pendingRequestRef.current === requestPromise) {
+            pendingRequestRef.current = null;
+          }
+          if (!activeRef.current || !mountedRef.current) {
+            await releaseSentinel(sentinel);
+            return;
+          }
+          wakeLockRef.current = sentinel;
+          attachReleaseListener(sentinel);
+        })
+        .catch(() => {
+          if (pendingRequestRef.current === requestPromise) {
+            pendingRequestRef.current = null;
+          }
+        });
     }
 
     async function releaseLock() {
-      try {
-        if (wakeLockRef.current) {
-          await wakeLockRef.current.release();
-          wakeLockRef.current = null;
-        }
-      } catch {
-        wakeLockRef.current = null;
-      }
+      const sentinel = wakeLockRef.current;
+      wakeLockRef.current = null;
+      if (sentinel) await releaseSentinel(sentinel);
     }
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") acquireLock();
+    };
+
     if (active) {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
       acquireLock();
     } else {
-      releaseLock();
+      void releaseLock();
     }
 
     return () => {
-      releaseLock();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      void releaseLock();
     };
-  }, [active]);
-
-  // Re-acquire when tab becomes visible again (browser releases lock on hide)
-  useEffect(() => {
-    if (!active) return;
-    if (typeof document === "undefined") return;
-    if (!("wakeLock" in navigator)) return;
-
-    async function handleVisibilityChange() {
-      if (document.visibilityState === "visible" && !wakeLockRef.current) {
-        try {
-          wakeLockRef.current = await (navigator as Navigator & { wakeLock: { request: (type: string) => Promise<WakeLockSentinel> } }).wakeLock.request("screen");
-        } catch {
-          // ignore
-        }
-      }
-    }
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [active]);
 }

@@ -1,23 +1,100 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { ParsedActivity, Sport, TrackPoint } from "./types";
-import { distanceFromPoints, elevationGainFromPoints, haversineM } from "./geo";
+import { haversineM } from "./geo";
 import { computeMovingTimeFromPoints } from "./auto-pause";
 
 const MIN_ACCURACY_M = 80;
-const MIN_SEGMENT_M = 3;
+export const MIN_SEGMENT_M = 3;
 const MAX_RUN_SPEED_MS = 12; // ~43 km/h para corrida/caminhada
 const MAX_CYCLING_SPEED_MS = 32; // ~115 km/h para bike (descidas rápidas)
+
+function hasValidCoordinates(lat: number, lng: number): boolean {
+  return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+}
+
+function hasValidTimestamp(timestamp?: Date): boolean {
+  return timestamp == null || (timestamp instanceof Date && Number.isFinite(timestamp.getTime()));
+}
+
+function hasValidElevation(elevation?: number): boolean {
+  return elevation == null || Number.isFinite(elevation);
+}
+
+function splitActivePointSegments(points: TrackPoint[]): TrackPoint[][] {
+  const segments: TrackPoint[][] = [];
+  let currentSegment: TrackPoint[] = [];
+
+  for (const point of points) {
+    if (point.autoPaused === true) {
+      if (currentSegment.length > 0) segments.push(currentSegment);
+      currentSegment = [];
+      continue;
+    }
+    currentSegment.push(point);
+  }
+
+  if (currentSegment.length > 0) segments.push(currentSegment);
+  return segments;
+}
+
+function distanceFromRecordedPoints(points: TrackPoint[]): number {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const segment = haversineM(points[i - 1].lat, points[i - 1].lng, points[i].lat, points[i].lng);
+    if (segment >= MIN_SEGMENT_M) total += segment;
+  }
+  return total;
+}
+
+function elevationGainFromRecordedPoints(points: TrackPoint[]): number {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    const segment = haversineM(points[i - 1].lat, points[i - 1].lng, points[i].lat, points[i].lng);
+    const previousElevation = points[i - 1].elevation;
+    const currentElevation = points[i].elevation;
+    if (
+      segment >= MIN_SEGMENT_M &&
+      previousElevation != null &&
+      currentElevation != null &&
+      Number.isFinite(previousElevation) &&
+      Number.isFinite(currentElevation) &&
+      currentElevation > previousElevation
+    ) {
+      total += currentElevation - previousElevation;
+    }
+  }
+  return total;
+}
+
+export interface ShouldAcceptPointOptions {
+  allowStationary?: boolean;
+}
 
 export function shouldAcceptPoint(
   points: TrackPoint[],
   candidate: TrackPoint,
-  sport: Sport = "running"
+  sport: Sport = "running",
+  options: ShouldAcceptPointOptions = {}
 ): boolean {
-  if (candidate.lat == null || candidate.lng == null) return false;
+  if (
+    !Number.isFinite(candidate.lat) ||
+    !Number.isFinite(candidate.lng) ||
+    !hasValidCoordinates(candidate.lat, candidate.lng) ||
+    !hasValidElevation(candidate.elevation) ||
+    !hasValidTimestamp(candidate.timestamp)
+  ) return false;
 
   const last = points[points.length - 1];
   if (!last) return true;
+
+  if (
+    !Number.isFinite(last.lat) ||
+    !Number.isFinite(last.lng) ||
+    !hasValidCoordinates(last.lat, last.lng) ||
+    !hasValidElevation(last.elevation) ||
+    !hasValidTimestamp(last.timestamp)
+  ) return false;
 
   const dist = haversineM(last.lat, last.lng, candidate.lat, candidate.lng);
   const dt =
@@ -27,7 +104,12 @@ export function shouldAcceptPoint(
 
   const maxSpeedMs = sport === "cycling" ? MAX_CYCLING_SPEED_MS : MAX_RUN_SPEED_MS;
   if (dt > 0 && dist / dt > maxSpeedMs) return false;
-  if (dist < MIN_SEGMENT_M && points.length > 0) return false;
+  if (
+    dist < MIN_SEGMENT_M &&
+    points.length > 0 &&
+    candidate.autoPaused !== true &&
+    !options.allowStationary
+  ) return false;
 
   return true;
 }
@@ -39,19 +121,27 @@ export function buildRecordedActivity(
   points: TrackPoint[],
   recordedMovingSec?: number
 ): ParsedActivity {
+  const activeSegments = splitActivePointSegments(points);
+  const activePoints = activeSegments.flat();
   const durationSec = Math.max(
     1,
     (endedAt.getTime() - startedAt.getTime()) / 1000
   );
-  const distanceM = distanceFromPoints(points);
-  const elevationGainM = elevationGainFromPoints(points);
+  const distanceM = activeSegments.reduce((total, segment) => total + distanceFromRecordedPoints(segment), 0);
+  const elevationGainM = activeSegments.reduce(
+    (total, segment) => total + elevationGainFromRecordedPoints(segment),
+    0
+  );
 
   let movingTimeSec: number;
   if (recordedMovingSec != null && recordedMovingSec > 0) {
     movingTimeSec = Math.min(durationSec, Math.round(recordedMovingSec));
   } else {
-    const analysis = computeMovingTimeFromPoints(points);
-    movingTimeSec = analysis.movingTimeSec > 0 ? analysis.movingTimeSec : durationSec;
+    const movingTimeFromSegments = activeSegments.reduce(
+      (total, segment) => total + computeMovingTimeFromPoints(segment).movingTimeSec,
+      0
+    );
+    movingTimeSec = movingTimeFromSegments > 0 ? movingTimeFromSegments : durationSec;
   }
 
   let avgPaceSecKm: number | undefined;
@@ -61,7 +151,7 @@ export function buildRecordedActivity(
     avgPaceSecKm = (effectiveSec / distanceM) * 1000;
   }
 
-  const hrPoints = points.filter((p) => p.hr != null);
+  const hrPoints = activePoints.filter((p) => p.hr != null);
   let avgHr: number | undefined;
   let maxHr: number | undefined;
   if (hrPoints.length > 0) {
@@ -71,7 +161,7 @@ export function buildRecordedActivity(
   }
 
   // Métricas de Cadência (RPM) dos sensores BLE
-  const cadencePoints = points.filter((p) => p.cadence != null && p.cadence > 0);
+  const cadencePoints = activePoints.filter((p) => p.cadence != null && p.cadence > 0);
   let avgCadenceRpm: number | undefined;
   let maxCadenceRpm: number | undefined;
   if (cadencePoints.length > 0) {
@@ -81,7 +171,7 @@ export function buildRecordedActivity(
   }
 
   // Métricas de Potência (Watts) dos sensores BLE
-  const wattsPoints = points.filter((p) => p.watts != null && p.watts > 0);
+  const wattsPoints = activePoints.filter((p) => p.watts != null && p.watts > 0);
   let avgWatts: number | undefined;
   let maxWatts: number | undefined;
   if (wattsPoints.length > 0) {
@@ -115,7 +205,8 @@ export function buildRecordedActivity(
     maxCadenceRpm,
     avgWatts,
     maxWatts,
-    points,
+    points: activePoints,
+    trackSegments: activeSegments,
   };
 }
 
@@ -123,13 +214,15 @@ export function validateRecordedWorkout(
   points: TrackPoint[],
   durationSec: number
 ): string | null {
-  if (points.length < 2) {
+  const activeSegments = splitActivePointSegments(points);
+  const activePoints = activeSegments.flat();
+  if (activePoints.length < 2) {
     return "Poucos pontos GPS. Aguarde o sinal e tente de novo.";
   }
   if (durationSec < 15) {
     return "Treino muito curto (mínimo 15 segundos).";
   }
-  const distanceM = distanceFromPoints(points);
+  const distanceM = activeSegments.reduce((total, segment) => total + distanceFromRecordedPoints(segment), 0);
   if (distanceM < 20) {
     return "Distância muito curta (mínimo 20 metros).";
   }
@@ -138,5 +231,5 @@ export function validateRecordedWorkout(
 
 export function acceptGpsReading(accuracy?: number): boolean {
   if (accuracy == null) return true;
-  return accuracy <= MIN_ACCURACY_M;
+  return Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= MIN_ACCURACY_M;
 }

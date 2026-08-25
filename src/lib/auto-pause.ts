@@ -1,5 +1,24 @@
 import type { AutoPauseConfig, TrackPoint, Sport } from "./types";
 import { haversineM } from "./geo";
+import {
+  cancelVoiceCoachSpeech,
+  DEFAULT_VOICE_COACH_CONFIG,
+  speakWithConfig,
+} from "./voice-coach";
+
+function getUsableSpeechSynthesis(): SpeechSynthesis | null {
+  if (typeof window === "undefined") return null;
+  const synthesis = window.speechSynthesis;
+  if (
+    !synthesis ||
+    typeof synthesis.cancel !== "function" ||
+    typeof synthesis.speak !== "function" ||
+    typeof SpeechSynthesisUtterance !== "function"
+  ) {
+    return null;
+  }
+  return synthesis;
+}
 
 export const AUTO_PAUSE_THRESHOLDS = {
   running: 1.5, // 1.5 km/h (≈ 40:00/km) — Padrão corrida
@@ -37,32 +56,66 @@ export function computeInstantSpeedKmh(
   windowSec = 4
 ): number {
   if (points.length < 2) return 0;
+  if (!Number.isFinite(windowSec) || windowSec <= 0) return 0;
 
   const lastPoint = points[points.length - 1];
+  if (lastPoint.autoPaused === true) return 0;
   if (!lastPoint.timestamp) return 0;
 
   const lastTime = lastPoint.timestamp.getTime();
+  if (!Number.isFinite(lastTime)) return 0;
   let windowDistanceM = 0;
   let oldestTime = lastTime;
 
   for (let i = points.length - 1; i >= 1; i--) {
     const current = points[i];
     const prev = points[i - 1];
+    if (current.autoPaused === true || prev.autoPaused === true) break;
     if (!current.timestamp || !prev.timestamp) continue;
 
     const dt = (lastTime - prev.timestamp.getTime()) / 1000;
     if (dt > windowSec && windowDistanceM > 0) break;
 
     const segDist = haversineM(prev.lat, prev.lng, current.lat, current.lng);
+    if (!Number.isFinite(segDist) || segDist < 0) continue;
     windowDistanceM += segDist;
     oldestTime = prev.timestamp.getTime();
   }
 
   const totalDt = (lastTime - oldestTime) / 1000;
-  if (totalDt <= 0.5) return 0;
+  if (!Number.isFinite(totalDt) || totalDt <= 0.5) return 0;
 
   const speedMs = windowDistanceM / totalDt;
-  return speedMs * 3.6; // m/s -> km/h
+  const speedKmh = speedMs * 3.6;
+  return Number.isFinite(speedKmh) && speedKmh >= 0 ? speedKmh : 0; // m/s -> km/h
+}
+
+/**
+ * Calcula a velocidade usada exclusivamente para detectar retomada do Auto-Pause.
+ * A marca autoPaused é ignorada neste caminho para que o detector não fique
+ * permanentemente parado enquanto as métricas continuam segmentadas.
+ */
+export function computeAutoPauseResumeSpeedKmh(
+  points: TrackPoint[],
+  windowSec = 4
+): number {
+  if (points.length < 2) return 0;
+  const probePoints = points.map((point) =>
+    point.autoPaused === true ? { ...point, autoPaused: false } : point
+  );
+  return computeInstantSpeedKmh(probePoints, windowSec);
+}
+
+export function appendAutoPauseResumePoint(points: TrackPoint[]): TrackPoint[] {
+  const latestPoint = points[points.length - 1];
+  if (!latestPoint || latestPoint.autoPaused !== true) return points;
+  return [...points, { ...latestPoint, autoPaused: false }];
+}
+
+export function appendAutoPauseBoundaryPoint(points: TrackPoint[]): TrackPoint[] {
+  const latestPoint = points[points.length - 1];
+  if (!latestPoint || latestPoint.autoPaused === true) return points;
+  return [...points, { ...latestPoint, autoPaused: true }];
 }
 
 /**
@@ -143,11 +196,25 @@ export function computeMovingTimeFromPoints(
   };
 }
 
+export function cancelAutoPauseSound(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const speechSynthesis = getUsableSpeechSynthesis();
+    if (speechSynthesis) {
+      speechSynthesis.cancel();
+    } else {
+      cancelVoiceCoachSpeech();
+    }
+  } catch {
+    // Silently ignore if the platform speech engine is unavailable.
+  }
+}
+
 /**
  * Toca áudio ou vibração sutil ao pausar/retomar via Auto-Pause
  */
 export function playAutoPauseSound(isPaused: boolean, language = "pt", sport: Sport = "running") {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  if (typeof window === "undefined") return;
 
   try {
     let text = "";
@@ -169,12 +236,17 @@ export function playAutoPauseSound(isPaused: boolean, language = "pt", sport: Sp
         : "Workout resumed";
     }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === "pt" ? "pt-BR" : "en-US";
-    utterance.rate = 1.1;
-    utterance.volume = 0.9;
-    window.speechSynthesis.speak(utterance);
+    const speechSynthesis = getUsableSpeechSynthesis();
+    if (speechSynthesis) {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language === "pt" ? "pt-BR" : "en-US";
+      utterance.rate = 1.1;
+      utterance.volume = 0.9;
+      speechSynthesis.speak(utterance);
+    } else {
+      speakWithConfig(text, DEFAULT_VOICE_COACH_CONFIG, language === "pt" ? "pt" : "en");
+    }
   } catch {
     // Silently ignore if audio is blocked or unavailable
   }

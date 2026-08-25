@@ -13,6 +13,33 @@ import java.util.Locale;
 @CapacitorPlugin(name = "AppLocale")
 public class AppLocalePlugin extends Plugin {
 
+    static String normalizeLanguageTag(String rawLanguage) {
+        if (rawLanguage == null || rawLanguage.trim().isEmpty()) {
+            return null;
+        }
+
+        String candidate = rawLanguage.trim().replace('_', '-');
+        if (candidate.chars().anyMatch(Character::isWhitespace)) {
+            return null;
+        }
+
+        Locale locale = Locale.forLanguageTag(candidate);
+        String language = locale.getLanguage();
+        if (language.isEmpty() || "und".equalsIgnoreCase(language)) {
+            return null;
+        }
+
+        String normalized = locale.toLanguageTag();
+        if (normalized.isEmpty() || "und".equalsIgnoreCase(normalized)) {
+            return null;
+        }
+
+        // Locale.forLanguageTag silently truncates malformed input such as
+        // "en--US" to "en". Reject anything that does not round-trip after
+        // the intentional underscore-to-hyphen normalization above.
+        return normalized.equalsIgnoreCase(candidate) ? normalized : null;
+    }
+
     @PluginMethod
     public void getAppLocale(PluginCall call) {
         JSObject ret = new JSObject();
@@ -27,22 +54,27 @@ public class AppLocalePlugin extends Plugin {
                 }
             }
         }
-        ret.put("language", Locale.getDefault().toLanguageTag());
+        ret.put("language", "");
         call.resolve(ret);
     }
 
     @PluginMethod
     public void setAppLocale(PluginCall call) {
-        String lang = call.getString("language");
-        if (lang != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        String normalized = normalizeLanguageTag(call.getString("language"));
+        boolean success = false;
+
+        if (normalized != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             LocaleManager localeManager = getContext().getSystemService(LocaleManager.class);
             if (localeManager != null) {
-                LocaleList localeList = LocaleList.forLanguageTags(lang);
-                localeManager.setApplicationLocales(localeList);
+                localeManager.setApplicationLocales(LocaleList.forLanguageTags(normalized));
+                LocaleList applied = localeManager.getApplicationLocales();
+                success = !applied.isEmpty()
+                    && normalized.equalsIgnoreCase(applied.get(0).toLanguageTag());
             }
         }
+
         JSObject ret = new JSObject();
-        ret.put("success", true);
+        ret.put("success", success);
         call.resolve(ret);
     }
 }

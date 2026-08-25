@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { MapContainer, TileLayer, Polyline, CircleMarker, useMapEvents } from "react-leaflet";
+import { MapContainer, Polyline, CircleMarker, useMapEvents } from "react-leaflet";
+import { PrivacyAwareTileLayer } from "@/components/PrivacyAwareTileLayer";
 import type { RoutePoint } from "@/lib/types";
 import "leaflet/dist/leaflet.css";
 
@@ -62,7 +63,8 @@ export function DrawMap({
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom
       >
-        <TileLayer
+        <PrivacyAwareTileLayer
+          provider="OpenStreetMap"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />

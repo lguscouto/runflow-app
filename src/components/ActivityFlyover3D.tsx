@@ -20,6 +20,7 @@ import {
 import { useI18n } from "@/lib/i18n";
 import type { TrackPoint } from "@/lib/types";
 import { processTrackPoints3D, type Track3DData } from "@/lib/flyover3d/coordinates";
+import { selectFlyoverQuality } from "@/lib/flyover3d/quality";
 import { formatDuration, formatPace } from "@/lib/format";
 
 interface ActivityFlyover3DProps {
@@ -43,7 +44,9 @@ export function ActivityFlyover3D({
   const [progress, setProgress] = useState(0); // 0 a 1
   const [speedMultiplier, setSpeedMultiplier] = useState(5);
   const [cameraMode, setCameraMode] = useState<"chase" | "aerial" | "free">("chase");
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(() =>
+    typeof document !== "undefined" && !!document.fullscreenElement,
+  );
 
   // Current Telemetry
   const [currentDistKm, setCurrentDistKm] = useState("0.00");
@@ -61,6 +64,8 @@ export function ActivityFlyover3D({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
+  const rafScheduledRef = useRef(false);
+  const rendererDisposedRef = useRef(false);
   const isDraggingScrubber = useRef(false);
 
   // Free Orbit Touch/Mouse Drag State
@@ -96,6 +101,13 @@ export function ActivityFlyover3D({
 
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 500;
+    const quality = selectFlyoverQuality({
+      width,
+      height,
+      devicePixelRatio: window.devicePixelRatio || 1,
+      antialias: true,
+      segments: Math.min(data.points.length * 3, 1_500),
+    });
 
     // Cena
     const scene = new THREE.Scene();
@@ -111,14 +123,15 @@ export function ActivityFlyover3D({
     // Renderizador
     const renderer = new THREE.WebGLRenderer({
       canvas,
-      antialias: true,
+      antialias: quality.antialias,
       powerPreference: "high-performance",
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(quality.pixelRatio);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
     rendererRef.current = renderer;
+    rendererDisposedRef.current = false;
 
     // Iluminação
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -151,7 +164,7 @@ export function ActivityFlyover3D({
     scene.add(ground);
 
     // ── Construção da Trilha 3D com Gradiente de Ritmo ───────────────────────
-    const tubularSegments = Math.min(data.points.length * 3, 1500);
+    const tubularSegments = quality.segments;
     const tubeGeo = new THREE.TubeGeometry(curve, tubularSegments, 0.65, 8, false);
 
     // Atribui cores de vértices com base nos ritmos normalizados
@@ -266,6 +279,8 @@ export function ActivityFlyover3D({
     window.addEventListener("resize", handleResize);
 
     return () => {
+      if (rendererDisposedRef.current) return;
+      rendererDisposedRef.current = true;
       window.removeEventListener("resize", handleResize);
 
       // Desalocação profunda recursiva de objetos WebGL/Three.js (Prevenção de Leaks de RAM/VRAM)
@@ -311,9 +326,22 @@ export function ActivityFlyover3D({
   useEffect(() => {
     let lastTime = performance.now();
     let lastUiUpdateTime = performance.now();
+    let mounted = true;
 
-    const animate = () => {
-      const now = performance.now();
+    const scheduleNextFrame = () => {
+      if (!mounted || document.hidden || rafScheduledRef.current) return;
+
+      rafScheduledRef.current = true;
+      const frameId = requestAnimationFrame((timestamp) => {
+        rafScheduledRef.current = false;
+        animFrameIdRef.current = null;
+        if (!mounted || document.hidden) return;
+        animate(timestamp);
+      });
+      animFrameIdRef.current = frameId;
+    };
+
+    const animate = (now: number) => {
       const deltaSec = (now - lastTime) / 1000;
       lastTime = now;
 
@@ -391,26 +419,35 @@ export function ActivityFlyover3D({
         renderer.render(scene, camera);
       }
 
-      if (!document.hidden) {
-        animFrameIdRef.current = requestAnimationFrame(animate);
-      }
+      scheduleNextFrame();
     };
 
     const handleVisibility = () => {
-      if (!document.hidden) {
-        lastTime = performance.now();
-        animFrameIdRef.current = requestAnimationFrame(animate);
+      if (document.hidden) {
+        if (animFrameIdRef.current !== null) {
+          cancelAnimationFrame(animFrameIdRef.current);
+          animFrameIdRef.current = null;
+          rafScheduledRef.current = false;
+        }
+        return;
       }
-    };
-    document.addEventListener("visibilitychange", handleVisibility);
 
-    animFrameIdRef.current = requestAnimationFrame(animate);
+      lastTime = performance.now();
+      scheduleNextFrame();
+    };
+
+    rafScheduledRef.current = false;
+    document.addEventListener("visibilitychange", handleVisibility);
+    scheduleNextFrame();
 
     return () => {
+      mounted = false;
       document.removeEventListener("visibilitychange", handleVisibility);
-      if (animFrameIdRef.current) {
+      if (animFrameIdRef.current !== null) {
         cancelAnimationFrame(animFrameIdRef.current);
       }
+      animFrameIdRef.current = null;
+      rafScheduledRef.current = false;
     };
   }, []);
 
@@ -462,10 +499,8 @@ export function ActivityFlyover3D({
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen().catch((err) => console.error(err));
-      setIsFullscreen(true);
     } else {
       document.exitFullscreen().catch((err) => console.error(err));
-      setIsFullscreen(false);
     }
   };
 

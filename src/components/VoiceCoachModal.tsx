@@ -101,6 +101,7 @@ export function VoiceCoachModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label={language === "en" ? "Close modal" : "Fechar modal"}
             className="p-1.5 text-[var(--muted)] hover:text-white rounded-lg transition hover:bg-[var(--surface-hover)]"
           >
             <X size={20} />

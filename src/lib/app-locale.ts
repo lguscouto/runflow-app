@@ -1,7 +1,7 @@
 import { registerPlugin } from "@capacitor/core";
 
 export interface AppLocalePluginInterface {
-  getAppLocale(): Promise<{ language: string }>;
+  getAppLocale(): Promise<{ language: string | null }>;
   setAppLocale(options: { language: string }): Promise<{ success: boolean }>;
 }
 
@@ -10,7 +10,7 @@ const AppLocale = registerPlugin<AppLocalePluginInterface>("AppLocale");
 export async function getNativeAppLocale(): Promise<string | null> {
   try {
     const res = await AppLocale.getAppLocale();
-    return res.language;
+    return res.language || null;
   } catch {
     return null;
   }

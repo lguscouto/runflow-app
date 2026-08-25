@@ -4,10 +4,10 @@ import { useEffect, useMemo } from "react";
 import {
   MapContainer,
   Polyline,
-  TileLayer,
   CircleMarker,
   useMap,
 } from "react-leaflet";
+import { PrivacyAwareTileLayer } from "@/components/PrivacyAwareTileLayer";
 import type { TrackPoint, RoutePoint } from "@/lib/types";
 import { boundsFromPoints, simplifyPoints } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
@@ -81,7 +81,8 @@ export function RouteMapOverlay({
         style={{ height: "100%", width: "100%" }}
         scrollWheelZoom
       >
-        <TileLayer
+        <PrivacyAwareTileLayer
+          provider="OpenStreetMap"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />

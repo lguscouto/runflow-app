@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "description": "Matriz visual APK reversível para o RunFlow. O executor nunca inicia um emulador.",
+  "avd": {
+    "requireVisible": true,
+    "recommended": [
+      {
+        "name": "API33_4GB",
+        "api": 33,
+        "ramMb": 4096
+      },
+      {
+        "name": "API34_smoke",
+        "api": 34
+      },
+      {
+        "name": "API35_smoke",
+        "api": 35
+      },
+      {
+        "name": "API36_smoke",
+        "api": 36
+      },
+      {
+        "name": "API37_4GB",
+        "api": 37,
+        "ramMb": 4096
+      },
+      {
+        "name": "API37_8GB",
+        "api": 37,
+        "ramMb": 8192
+      }
+    ]
+  },
+  "app": {
+    "package": "com.runflow.app",
+    "activity": "com.runflow.app/.MainActivity",
+    "launchEachCase": true,
+    "settleMs": 1200
+  },
+  "matrix": [
+    {
+      "id": "phone-compact-portrait-100-gesture",
+      "label": "360x640, fonte 100%, gestos",
+      "size": "360x640",
+      "density": 420,
+      "fontScale": 1,
+      "rotation": 0,
+      "navigation": "gesture"
+    },
+    {
+      "id": "phone-compact-portrait-200-gesture",
+      "label": "360x640, fonte 200%, gestos",
+      "size": "360x640",
+      "density": 420,
+      "fontScale": 2,
+      "rotation": 0,
+      "navigation": "gesture"
+    },
+    {
+      "id": "phone-portrait-150-gesture",
+      "label": "412x915, fonte 150%, gestos",
+      "size": "412x915",
+      "density": 440,
+      "fontScale": 1.5,
+      "rotation": 0,
+      "navigation": "gesture"
+    },
+    {
+      "id": "phone-landscape-100-three-buttons",
+      "label": "844x390, fonte 100%, três botões",
+      "size": "844x390",
+      "density": 420,
+      "fontScale": 1,
+      "rotation": 1,
+      "navigation": "three-buttons"
+    },
+    {
+      "id": "phone-landscape-200-gesture",
+      "label": "844x390, fonte 200%, gestos",
+      "size": "844x390",
+      "density": 420,
+      "fontScale": 2,
+      "rotation": 1,
+      "navigation": "gesture"
+    },
+    {
+      "id": "tablet-portrait-100-three-buttons",
+      "label": "800x1280, fonte 100%, três botões",
+      "size": "800x1280",
+      "density": 320,
+      "fontScale": 1,
+      "rotation": 0,
+      "navigation": "three-buttons"
+    },
+    {
+      "id": "tablet-landscape-200-gesture",
+      "label": "1280x800, fonte 200%, gestos",
+      "size": "1280x800",
+      "density": 320,
+      "fontScale": 2,
+      "rotation": 1,
+      "navigation": "gesture"
+    }
+  ]
+}

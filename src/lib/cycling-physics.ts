@@ -7,6 +7,7 @@ import { haversineM } from "./geo";
 export const AIR_DENSITY_KG_M3 = 1.225; // Densidade do ar ao nível do mar (15°C, 1013.25 hPa)
 export const GRAVITY_M_S2 = 9.80665; // Aceleração da gravidade terrestre
 export const DRIVETRAIN_EFFICIENCY = 0.975; // Eficiência mecânica da transmissão (~97.5% com corrente lubrificada)
+const MIN_SEGMENT_M = 3;
 
 /**
  * Coeficiente de arrasto aerodinâmico × Área frontal (CdA em m²) por tipo de bike
@@ -55,24 +56,31 @@ export interface CyclingPowerBreakdown {
  * P_total = (P_aero + P_climb + P_rolling) / η
  */
 export function calculateCyclingPower(params: CyclingPhysicsParams): CyclingPowerBreakdown {
+  if (!Number.isFinite(params.speedMs)) {
+    return { totalWatts: 0, aeroWatts: 0, climbWatts: 0, rollingWatts: 0 };
+  }
   const v = Math.max(0, params.speedMs);
   if (v <= 0.2) {
     return { totalWatts: 0, aeroWatts: 0, climbWatts: 0, rollingWatts: 0 };
   }
 
-  const riderMass = params.riderMassKg && params.riderMassKg > 30 ? params.riderMassKg : 75;
-  const bikeMass = params.bikeMassKg && params.bikeMassKg > 0 ? params.bikeMassKg : 9.0;
+  const riderMass =
+    Number.isFinite(params.riderMassKg) && params.riderMassKg! > 30 ? params.riderMassKg! : 75;
+  const bikeMass =
+    Number.isFinite(params.bikeMassKg) && params.bikeMassKg! > 0 ? params.bikeMassKg! : 9.0;
   const totalMassKg = riderMass + bikeMass;
 
   const bikeType: BikeType = params.bikeType || "road";
   const cdA = BIKE_CDA_MAP[bikeType] ?? 0.32;
   const crr = BIKE_CRR_MAP[bikeType] ?? 0.0040;
 
-  const gradeRatio = (params.gradePercent || 0) / 100;
+  const gradePercent = Number.isFinite(params.gradePercent) ? params.gradePercent : 0;
+  const gradeRatio = gradePercent / 100;
   const thetaRad = Math.atan(gradeRatio);
 
   // 1. Resistência Aerodinâmica (Arrasto do ar)
-  const relativeAirSpeed = v + (params.windSpeedMs || 0);
+  const windSpeedMs = Number.isFinite(params.windSpeedMs) ? params.windSpeedMs! : 0;
+  const relativeAirSpeed = v + windSpeedMs;
   const fAero = 0.5 * AIR_DENSITY_KG_M3 * cdA * Math.pow(relativeAirSpeed, 2);
   const aeroWatts = fAero * v;
 
@@ -121,6 +129,7 @@ export function computeInstantGradePercent(
   if (points.length < 2) return 0;
 
   const lastPoint = points[points.length - 1];
+  if (lastPoint.autoPaused === true) return 0;
   if (lastPoint.elevation == null) return 0;
 
   let cumDist = 0;
@@ -129,6 +138,7 @@ export function computeInstantGradePercent(
   for (let i = points.length - 1; i >= 1; i--) {
     const curr = points[i];
     const prev = points[i - 1];
+    if (curr.autoPaused === true || prev.autoPaused === true) break;
     const segDist = haversineM(prev.lat, prev.lng, curr.lat, curr.lng);
     cumDist += segDist;
 
@@ -236,12 +246,21 @@ export function computeCyclingActivityStats(
   let maxGrade = 0;
   let elevationGainM = 0;
   const powerSeries: number[] = [];
+  const alignedPowerSeries = Array.from({ length: points.length }, () => 0);
 
   for (let i = 1; i < points.length; i++) {
     const prev = points[i - 1];
     const curr = points[i];
 
+    if (prev.autoPaused === true || curr.autoPaused === true) continue;
+
+    if (prev.timestamp && curr.timestamp) {
+      const rawDtSec = (curr.timestamp.getTime() - prev.timestamp.getTime()) / 1000;
+      if (rawDtSec <= 0) continue;
+    }
+
     const segDist = haversineM(prev.lat, prev.lng, curr.lat, curr.lng);
+    if (!Number.isFinite(segDist) || segDist < MIN_SEGMENT_M) continue;
     totalDistanceM += segDist;
 
     let dtSec = 1;
@@ -269,7 +288,7 @@ export function computeCyclingActivityStats(
 
     // Se o ponto já tiver watts (ex: de arquivo FIT com sensor CPS), usa nativo; senão estima por física
     const pointWatts =
-      curr.watts != null
+      curr.watts != null && Number.isFinite(curr.watts) && curr.watts >= 0
         ? curr.watts
         : calculateCyclingPower({
             speedMs: segSpeedMs,
@@ -280,6 +299,7 @@ export function computeCyclingActivityStats(
           }).totalWatts;
 
     powerSeries.push(pointWatts);
+    alignedPowerSeries[i] = pointWatts;
   }
 
   const avgSpeedKmh =
@@ -306,6 +326,6 @@ export function computeCyclingActivityStats(
     normalizedPowerWatts: np,
     vamMh: vam > 0 ? vam : null,
     maxGradePercent: maxGrade > 0 ? Number(maxGrade.toFixed(1)) : null,
-    powerSeriesWatts: powerSeries,
+    powerSeriesWatts: alignedPowerSeries,
   };
 }

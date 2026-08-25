@@ -18,11 +18,10 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getUserProfile } from "@/lib/profile";
-import { listActivities } from "@/lib/activities";
 import { getPersonalRecords, getActivityPRs, type PRCategory } from "@/lib/prs";
 import { calculateVO2MaxFromWorkout, classifyVO2Max } from "@/lib/vo2max";
 import { useI18n } from "@/lib/i18n";
-import { getAllStoredGear } from "@/lib/storage";
+import { getAllStoredGear, getAllStoredSummaries } from "@/lib/storage";
 import { associateGearToActivity } from "@/lib/gear";
 import type { Gear, UserProfile } from "@/lib/types";
 import { PowerDurationCurve } from "@/components/PowerDurationCurve";
@@ -97,7 +96,7 @@ import {
 export function ActivityDetailClient() {
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const { activity, loading, notFound } = useActivityDetail(id);
+  const { activity, loading, notFound, error, refresh } = useActivityDetail(id);
   const [prCategories, setPrCategories] = useState<PRCategory[]>([]);
   const [view3D, setView3D] = useState(false);
   const { t, language } = useI18n();
@@ -147,7 +146,7 @@ export function ActivityDetailClient() {
       try {
         const [profile, allActivities] = await Promise.all([
           getUserProfile(),
-          listActivities(1000),
+          getAllStoredSummaries(),
         ]);
         if (profile) {
           setUserProfile(profile);
@@ -187,6 +186,17 @@ export function ActivityDetailClient() {
           {t("common.back")}
         </Link>
       </p>
+    );
+  }
+
+  if (error) {
+    return (
+      <div role="alert" className="stat-card flex flex-col items-start gap-3">
+        <p className="text-[var(--muted)]">{t(error)}</p>
+        <button type="button" className="btn-ghost" onClick={() => void refresh()}>
+          {t("common.retry")}
+        </button>
+      </div>
     );
   }
 

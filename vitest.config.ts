@@ -6,6 +6,12 @@ export default defineConfig({
     environment: "node",
     globals: true,
     setupFiles: ["./tests/setup/indexeddb.ts"],
+    exclude: ["**/node_modules/**", "tests/e2e/**"],
+  },
+  oxc: {
+    jsx: {
+      runtime: "automatic",
+    },
   },
   resolve: {
     alias: {

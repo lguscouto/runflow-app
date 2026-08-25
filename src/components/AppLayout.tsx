@@ -30,9 +30,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="border-b border-[var(--border)] bg-[var(--surface)]/80 backdrop-blur sticky top-0 z-50 safe-area-top">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link
+            prefetch={false}
             href="/"
             onClick={handleNavClick}
-            className="flex items-center gap-2 font-bold text-lg shrink-0"
+            className="touch-target flex items-center gap-2 font-bold text-lg shrink-0"
           >
             <span className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white text-sm shadow-sm font-black tracking-tighter">
               RF
@@ -43,6 +44,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           {/* Desktop Navigation (>= sm / 640px) */}
           <nav className="hidden sm:flex items-center gap-1" aria-label={t("nav.main_navigation")}>
             <Link
+              prefetch={false}
               href="/"
               onClick={handleNavClick}
               aria-current={isHome ? "page" : undefined}
@@ -52,6 +54,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <span>{t("nav.home")}</span>
             </Link>
             <Link
+              prefetch={false}
               href="/gravar/"
               onClick={handleNavClick}
               aria-current={isRecord ? "page" : undefined}
@@ -61,6 +64,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <span>{t("nav.record")}</span>
             </Link>
             <Link
+              prefetch={false}
               href="/atividades/"
               onClick={handleNavClick}
               aria-current={isActivities ? "page" : undefined}
@@ -70,6 +74,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <span>{t("nav.activities")}</span>
             </Link>
             <Link
+              prefetch={false}
               href="/importar/"
               onClick={handleNavClick}
               aria-current={isImport ? "page" : undefined}
@@ -79,6 +84,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <span>{t("nav.import")}</span>
             </Link>
             <Link
+              prefetch={false}
               href="/rotas/"
               onClick={handleNavClick}
               aria-current={isRoutes ? "page" : undefined}
@@ -88,6 +94,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <span>{t("nav.routes")}</span>
             </Link>
             <Link
+              prefetch={false}
               href="/perfil/"
               onClick={handleNavClick}
               aria-current={isProfile ? "page" : undefined}
@@ -101,10 +108,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           {/* Mobile Top Header Quick Action (Import GPX/FIT) */}
           <div className="flex sm:hidden items-center gap-2">
             <Link
+              prefetch={false}
               href="/importar/"
               onClick={handleNavClick}
               aria-current={isImport ? "page" : undefined}
-              className={`p-2 rounded-lg text-sm border border-[var(--border)] transition-colors ${
+              className={`touch-target p-2 rounded-lg text-sm border border-[var(--border)] transition-colors ${
                 isImport
                   ? "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/40"
                   : "text-[var(--muted)] hover:text-[var(--text)] bg-[var(--surface)]"
@@ -143,6 +151,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         aria-label={t("nav.main_navigation")}
       >
         <Link
+          prefetch={false}
           href="/"
           onClick={handleNavClick}
           aria-current={isHome ? "page" : undefined}
@@ -153,6 +162,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </Link>
 
         <Link
+          prefetch={false}
           href="/atividades/"
           onClick={handleNavClick}
           aria-current={isActivities ? "page" : undefined}
@@ -164,6 +174,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Center Prominent Record FAB */}
         <Link
+          prefetch={false}
           href="/gravar/"
           onClick={handleNavClick}
           aria-current={isRecord ? "page" : undefined}
@@ -175,6 +186,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </Link>
 
         <Link
+          prefetch={false}
           href="/rotas/"
           onClick={handleNavClick}
           aria-current={isRoutes ? "page" : undefined}
@@ -185,6 +197,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </Link>
 
         <Link
+          prefetch={false}
           href="/perfil/"
           onClick={handleNavClick}
           aria-current={isProfile ? "page" : undefined}

@@ -9,8 +9,8 @@ import { WeeklyGoalsCard } from "@/components/WeeklyGoalsCard";
 import { useDashboard } from "@/hooks/useActivities";
 import { formatDistance, formatDuration } from "@/lib/format";
 import { getUserProfile } from "@/lib/profile";
-import { listActivities } from "@/lib/activities";
 import { getPersonalRecords, getPRMap, type PersonalRecords, type PRCategory } from "@/lib/prs";
+import { getAllStoredSummaries } from "@/lib/storage";
 import { PersonalRecordsCard } from "@/components/PersonalRecordsCard";
 import { ConsistencyStreakCard } from "@/components/ConsistencyStreakCard";
 import { estimateUserVO2Max, calculateRacePredictions } from "@/lib/vo2max";
@@ -21,7 +21,7 @@ import { useI18n } from "@/lib/i18n";
 
 export function HomePageClient() {
   const { t } = useI18n();
-  const { stats, recent, loading } = useDashboard();
+  const { stats, recent, loading, error, refresh } = useDashboard();
   const [activitiesList, setActivitiesList] = useState<ActivitySummary[]>([]);
   const [prs, setPrs] = useState<PersonalRecords | null>(null);
   const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
@@ -35,7 +35,7 @@ export function HomePageClient() {
       try {
         const [profile, allActivities] = await Promise.all([
           getUserProfile(),
-          listActivities(1000),
+          getAllStoredSummaries(),
         ]);
         setActivitiesList(allActivities);
         if (profile?.name) {
@@ -72,6 +72,7 @@ export function HomePageClient() {
       </section>
 
       <Link
+        prefetch={false}
         href="/gravar/"
         className="block stat-card border-[var(--accent)]/50 bg-[var(--accent-soft)] hover:border-[var(--accent)] transition-colors"
       >
@@ -89,14 +90,15 @@ export function HomePageClient() {
       </Link>
 
       <div className="flex flex-wrap gap-3">
-        <Link href="/importar/" className="btn-ghost">
+        <Link prefetch={false} href="/importar/" className="btn-ghost">
           <Upload size={18} />
           {t("home.import_btn")}
         </Link>
-        <Link href="/atividades/" className="btn-ghost">
+        <Link prefetch={false} href="/atividades/" className="btn-ghost">
           {t("home.view_all_btn")}
         </Link>
         <Link
+          prefetch={false}
           href="/heatmap/"
           className="btn-ghost text-orange-400 border border-orange-500/30 hover:border-orange-500/60 hover:bg-orange-500/10 transition-all"
         >
@@ -123,7 +125,14 @@ export function HomePageClient() {
         </>
       )}
 
-      {loading || !stats ? (
+      {error ? (
+        <div role="alert" className="stat-card flex flex-col items-start gap-3">
+          <p className="text-[var(--muted)]">{t(error)}</p>
+          <button type="button" className="btn-ghost" onClick={() => void refresh()}>
+            {t("common.retry")}
+          </button>
+        </div>
+      ) : loading || !stats ? (
         <p className="text-[var(--muted)]">{t("home.loading_stats")}</p>
       ) : (
         <>

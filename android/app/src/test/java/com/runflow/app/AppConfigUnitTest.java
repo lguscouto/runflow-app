@@ -1,16 +1,15 @@
 package com.runflow.app;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
 public class AppConfigUnitTest {
 
     @Test
-    public void appPackageConstantsAreValid() {
-        String expectedPackage = "com.runflow.app";
-        assertNotNull(expectedPackage);
-        assertEquals("com.runflow.app", expectedPackage);
+    public void buildConfigMatchesReleaseContract() {
+        assertEquals("com.runflow.app", BuildConfig.APPLICATION_ID);
+        assertEquals("0.9.6", BuildConfig.VERSION_NAME);
+        assertEquals(3, BuildConfig.VERSION_CODE);
     }
 }

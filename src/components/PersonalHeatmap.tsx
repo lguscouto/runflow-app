@@ -4,11 +4,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   MapContainer,
-  TileLayer,
   Polyline,
   Popup,
   useMap,
 } from "react-leaflet";
+import { PrivacyAwareTileLayer } from "@/components/PrivacyAwareTileLayer";
 import "leaflet/dist/leaflet.css";
 import {
   Flame,
@@ -23,7 +23,8 @@ import {
   Activity,
   Compass,
 } from "lucide-react";
-import { getAllStoredActivities, getAllStoredRoutes, type StoredActivity } from "@/lib/storage";
+import { getAllStoredRoutes } from "@/lib/storage";
+import { forEachHeatmapBatch, type HeatmapTrack } from "@/lib/heatmap-data";
 import type { SavedRoute, Sport } from "@/lib/types";
 import { formatPace, formatSpeed, formatWatts, formatDistance, formatDuration } from "@/lib/format";
 import { simplifyPoints } from "@/lib/geo";
@@ -32,20 +33,6 @@ import { useI18n } from "@/lib/i18n";
 export type HeatmapTheme = "flame" | "cyan" | "sunset" | "lime" | "strava" | "velo";
 export type HeatmapBasemap = "dark" | "light" | "osm" | "satellite";
 export type HeatmapStroke = "thin" | "medium" | "thick";
-
-export interface HeatmapTrack {
-  id: string;
-  name: string;
-  sport: Sport;
-  startedAt: string;
-  distanceM: number;
-  durationSec: number;
-  avgPaceSecKm: number | null;
-  avgSpeedKmh?: number | null;
-  avgWatts?: number | null;
-  points: [number, number][];
-  isRoute?: boolean;
-}
 
 export const HEATMAP_THEMES: Record<
   HeatmapTheme,
@@ -171,7 +158,8 @@ export function PersonalHeatmap({
   const { t, language } = useI18n();
 
   // Data states
-  const [activities, setActivities] = useState<StoredActivity[]>([]);
+  const [tracks, setTracks] = useState<HeatmapTrack[]>([]);
+  const [availableYears, setAvailableYears] = useState<string[]>([]);
   const [routes, setRoutes] = useState<SavedRoute[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -187,78 +175,70 @@ export function PersonalHeatmap({
   const [showControls, setShowControls] = useState(false);
   const [recenterCount, setRecenterCount] = useState(0);
 
-  // Load activities and routes
+  // Load routes once; activity tracks are streamed separately below.
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true);
-        const [acts, rts] = await Promise.all([
-          getAllStoredActivities(),
-          getAllStoredRoutes(),
-        ]);
-        setActivities(acts);
-        setRoutes(rts);
-      } catch (err) {
-        console.error("Failed to load heatmap data:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    let mounted = true;
+    getAllStoredRoutes()
+      .then((storedRoutes) => {
+        if (mounted) setRoutes(storedRoutes);
+      })
+      .catch((err) => {
+        if (mounted) console.error("Failed to load heatmap routes:", err);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Compute available years
-  const availableYears = useMemo(() => {
-    const years = new Set<string>();
-    activities.forEach((act) => {
-      if (act.startedAt) {
-        years.add(new Date(act.startedAt).getFullYear().toString());
-      }
-    });
-    return Array.from(years).sort((a, b) => Number(b) - Number(a));
-  }, [activities]);
+  // Stream only the tracks matching the current filters.
+  useEffect(() => {
+    const controller = new AbortController();
+    let mounted = true;
+    setLoading(true);
+    setTracks([]);
 
-  // Process & filter tracks
+    void forEachHeatmapBatch(
+      {
+        batchSize: 25,
+        signal: controller.signal,
+        filter: (summary) => {
+          if (selectedSport !== "all" && summary.sport !== selectedSport) {
+            return false;
+          }
+          if (selectedYear !== "all") {
+            return new Date(summary.startedAt).getFullYear().toString() === selectedYear;
+          }
+          return true;
+        },
+      },
+      async (batch) => {
+        if (mounted) setTracks((current) => [...current, ...batch]);
+      },
+    )
+      .then((result) => {
+        if (mounted) setAvailableYears(result.availableYears);
+      })
+      .catch((err) => {
+        if (mounted && err instanceof Error && err.name !== "AbortError") {
+          console.error("Failed to stream heatmap data:", err);
+        }
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+      controller.abort();
+    };
+  }, [selectedSport, selectedYear]);
+
+
+  // Tracks are already filtered and simplified by the streaming loader.
   const filteredTracks = useMemo<HeatmapTrack[]>(() => {
-    const list: HeatmapTrack[] = [];
+    const list = [...tracks];
 
-    // Filter Activities
-    activities.forEach((act) => {
-      if (!act.points || act.points.length < 2) return;
-
-      // Sport filter
-      if (selectedSport !== "all" && act.sport !== selectedSport) {
-        return;
-      }
-
-      // Year filter
-      if (selectedYear !== "all") {
-        const actYear = new Date(act.startedAt).getFullYear().toString();
-        if (actYear !== selectedYear) return;
-      }
-
-      // Simplify points for rendering performance
-      const simplified = simplifyPoints(act.points, 400);
-      const points: [number, number][] = simplified.map((p) => [p.lat, p.lng]);
-
-      if (points.length >= 2) {
-        list.push({
-          id: act.id,
-          name: act.name || t("common.no_data"),
-          sport: act.sport,
-          startedAt: act.startedAt,
-          distanceM: act.distanceM,
-          durationSec: act.durationSec,
-          avgPaceSecKm: act.avgPaceSecKm,
-          avgSpeedKmh: act.avgSpeedKmh,
-          avgWatts: act.avgWatts,
-          points,
-          isRoute: false,
-        });
-      }
-    });
-
-    // Add Saved Routes if enabled
     if (includeRoutes) {
       routes.forEach((route) => {
         if (!route.points || route.points.length < 2) return;
@@ -281,7 +261,7 @@ export function PersonalHeatmap({
     }
 
     return list;
-  }, [activities, routes, selectedSport, selectedYear, includeRoutes, t]);
+  }, [tracks, routes, includeRoutes]);
 
   // Flattened points for center and bounds
   const allPoints = useMemo<[number, number][]>(() => {
@@ -603,7 +583,8 @@ export function PersonalHeatmap({
             scrollWheelZoom
           >
             {/* Tile Base Layer */}
-            <TileLayer
+            <PrivacyAwareTileLayer
+              provider={basemap === "satellite" ? "Esri" : basemap === "osm" ? "OpenStreetMap" : "CARTO"}
               url={BASEMAP_URLS[basemap].url}
               attribution={BASEMAP_URLS[basemap].attribution}
               maxZoom={BASEMAP_URLS[basemap].maxZoom}

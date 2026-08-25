@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { streamHeatmapPoints } from "./heatmap-data";
+import { forEachHeatmapBatch } from "./heatmap-data";
 import { putActivity, resetStoreForTesting } from "./storage";
 import { generateSyntheticActivities } from "../../tests/fixtures/datasets";
 
@@ -12,18 +12,54 @@ describe("Heatmap Data Streaming", () => {
     await resetStoreForTesting(true);
   });
 
-  it("processes activities in batches without memory leaks", async () => {
+  it("streams bounded simplified track batches and returns lightweight metadata", async () => {
     const activities = generateSyntheticActivities(50);
     for (const act of activities) {
       await putActivity(act);
     }
 
-    let batchCallCount = 0;
-    const points = await streamHeatmapPoints(10, () => {
-      batchCallCount++;
-    });
+    const batchSizes: number[] = [];
+    const batchReferences: unknown[] = [];
+    const result = await forEachHeatmapBatch(
+      { batchSize: 10 },
+      async (batch) => {
+        batchSizes.push(batch.length);
+        batchReferences.push(batch);
+      },
+    );
 
-    expect(points.length).toBeGreaterThan(0);
-    expect(batchCallCount).toBeGreaterThan(0);
+    expect(Math.max(...batchSizes)).toBeLessThanOrEqual(10);
+    expect(new Set(batchReferences).size).toBe(batchReferences.length);
+    expect(result).toEqual({
+      activities: 50,
+      renderedPoints: expect.any(Number),
+      availableYears: expect.any(Array),
+    });
+    expect(Object.keys(result).sort()).toEqual([
+      "activities",
+      "availableYears",
+      "renderedPoints",
+    ]);
   });
+
+  it("stops reading when the consumer aborts the signal", async () => {
+    const activities = generateSyntheticActivities(30);
+    for (const act of activities) {
+      await putActivity(act);
+    }
+
+    const controller = new AbortController();
+    let consumed = 0;
+    await expect(
+      forEachHeatmapBatch(
+        { batchSize: 5, signal: controller.signal },
+        async () => {
+          consumed += 1;
+          controller.abort();
+        },
+      ),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(consumed).toBe(1);
+  });
+
 });

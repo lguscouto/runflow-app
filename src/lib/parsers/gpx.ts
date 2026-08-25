@@ -1,10 +1,23 @@
 import type { ParsedActivity, Sport, TrackPoint } from "../types";
 import { distanceFromPoints, elevationGainFromPoints } from "../geo";
+import {
+  normalizeCadence,
+  normalizeElevation,
+  normalizeHeartRate,
+  normalizePower,
+} from "./telemetry";
 
 function parseGpxTime(value: string | undefined): Date | undefined {
   if (!value) return undefined;
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
+function parseFiniteNumber(value: string | undefined, integer = false): number | undefined {
+  if (!value?.trim()) return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return undefined;
+  return integer ? Math.trunc(parsed) : parsed;
 }
 
 function extractTag(block: string, tag: string): string | undefined {
@@ -24,9 +37,16 @@ export function parseTrackPoints(xml: string): TrackPoint[] {
   while ((match = trkptRegex.exec(xml)) !== null) {
     const attrs = match[1];
     const inner = match[2];
-    const lat = parseFloat(attrs.match(/lat="([^"]+)"/i)?.[1] ?? "");
-    const lng = parseFloat(attrs.match(/lon="([^"]+)"/i)?.[1] ?? "");
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+    const lat = parseFiniteNumber(attrs.match(/lat="([^"]+)"/i)?.[1]);
+    const lng = parseFiniteNumber(attrs.match(/lon="([^"]+)"/i)?.[1]);
+    if (
+      lat == null ||
+      lng == null ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) continue;
 
     const eleStr = extractTag(inner, "ele");
     const timeStr = extractTag(inner, "time");
@@ -46,11 +66,11 @@ export function parseTrackPoints(xml: string): TrackPoint[] {
     points.push({
       lat,
       lng,
-      elevation: eleStr ? parseFloat(eleStr) : undefined,
+      elevation: normalizeElevation(parseFiniteNumber(eleStr)),
       timestamp: parseGpxTime(timeStr),
-      hr: hrStr ? parseInt(hrStr, 10) : undefined,
-      watts: powerStr ? parseFloat(powerStr) : undefined,
-      cadence: cadStr ? parseInt(cadStr, 10) : undefined,
+      hr: normalizeHeartRate(parseFiniteNumber(hrStr, true)),
+      watts: normalizePower(parseFiniteNumber(powerStr)),
+      cadence: normalizeCadence(parseFiniteNumber(cadStr, true)),
     });
   }
 
@@ -83,6 +103,15 @@ export function parseGpx(content: string, fileName: string): ParsedActivity {
   const points = parseTrackPoints(content);
   if (points.length < 2) {
     throw new Error("GPX sem pontos de trajeto suficientes.");
+  }
+
+  let previousTimestamp: Date | undefined;
+  for (const point of points) {
+    const current = point.timestamp;
+    if (current && previousTimestamp && current.getTime() < previousTimestamp.getTime()) {
+      throw new Error("GPX com timestamps fora de ordem temporal.");
+    }
+    if (current) previousTimestamp = current;
   }
 
   const nameMatch = content.match(/<name>([^<]*)<\/name>/i);

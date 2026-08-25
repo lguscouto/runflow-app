@@ -1,89 +1,133 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
 interface UseModalA11yOptions {
   isOpen: boolean;
   onClose: () => void;
-  initialFocusRef?: React.RefObject<HTMLElement | null>;
+  initialFocusRef?: RefObject<HTMLElement | null>;
 }
 
-export function useModalA11y({
+const FOCUSABLE_SELECTOR = [
+  'button:not([disabled]):not([tabindex="-1"])',
+  'a[href]:not([tabindex="-1"])',
+  'input:not([disabled]):not([type="hidden"]):not([tabindex="-1"])',
+  'select:not([disabled]):not([tabindex="-1"])',
+  'textarea:not([disabled]):not([tabindex="-1"])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
+function getFocusableElements(modal: HTMLElement): HTMLElement[] {
+  return Array.from(modal.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) =>
+      !element.hasAttribute("hidden") &&
+      element.getAttribute("aria-hidden") !== "true" &&
+      !element.closest('[aria-hidden="true"]')
+  );
+}
+
+function getActiveDialog(): Element | null {
+  const activeElement = document.activeElement;
+  return activeElement instanceof Element
+    ? activeElement.closest('[role="dialog"]')
+    : null;
+}
+
+export function useModalA11y<T extends HTMLElement = HTMLDivElement>({
   isOpen,
   onClose,
   initialFocusRef,
 }: UseModalA11yOptions) {
-  const modalRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<T>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  const initialFocusRefRef = useRef(initialFocusRef);
+
+  // Keep callbacks current without restarting the modal lifecycle when a parent
+  // passes an inline callback on every render.
+  onCloseRef.current = onClose;
+  initialFocusRefRef.current = initialFocusRef;
 
   useEffect(() => {
     if (!isOpen) return;
 
-    // Guarda o elemento focado antes da abertura do modal para restauração
-    previousActiveElement.current = document.activeElement as HTMLElement | null;
+    previousActiveElement.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-    // Trava scroll do body
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    // Foco inicial
-    const timeout = setTimeout(() => {
-      if (initialFocusRef?.current) {
-        initialFocusRef.current.focus();
-      } else if (modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length > 0) {
-          focusable[0].focus();
-        }
-      }
-    }, 50);
+    const focusInitialControl = () => {
+      const modal = modalRef.current;
+      if (!modal) return;
 
-    // Tecla Escape & Trap de foco
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        onClose();
+      const requestedInitialFocus = initialFocusRefRef.current?.current;
+      if (requestedInitialFocus && modal.contains(requestedInitialFocus)) {
+        requestedInitialFocus.focus();
         return;
       }
 
-      if (e.key === "Tab" && modalRef.current) {
-        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
+      const firstFocusable = getFocusableElements(modal)[0];
+      if (firstFocusable) {
+        firstFocusable.focus();
+      } else {
+        modal.focus();
+      }
+    };
 
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
+    focusInitialControl();
 
-        if (e.shiftKey) {
-          if (document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          }
-        }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const modal = modalRef.current;
+      if (!modal) return;
+
+      // A builder can be opened inside the library modal. Only the topmost
+      // dialog should consume keyboard events in that case.
+      const activeDialog = getActiveDialog();
+      if (activeDialog && activeDialog !== modal) return;
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== "Tab" || !modal.contains(document.activeElement)) return;
+
+      const focusable = getFocusableElements(modal);
+      if (focusable.length === 0) {
+        event.preventDefault();
+        modal.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      clearTimeout(timeout);
       document.body.style.overflow = originalOverflow;
       window.removeEventListener("keydown", handleKeyDown);
 
-      // Restaura o foco para o elemento original
-      if (previousActiveElement.current) {
-        previousActiveElement.current.focus?.();
+      const elementToRestore = previousActiveElement.current;
+      previousActiveElement.current = null;
+      if (elementToRestore?.isConnected) {
+        elementToRestore.focus();
       }
     };
-  }, [isOpen, onClose, initialFocusRef]);
+  }, [isOpen]);
 
   return { modalRef };
 }

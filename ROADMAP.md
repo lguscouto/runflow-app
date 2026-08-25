@@ -1,6 +1,6 @@
 # RunFlow — Roadmap & Benchmark de Mercado
 
-Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da categoria (**Strava**, **Garmin Connect / Edge**, **Wahoo Fitness**, **Komoot**, **Nike Run Club - NRC** e **Bikemap**), mantendo o compromisso central do RunFlow: **100% offline, local-first, gratuito e com privacidade total de dados**.
+Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da categoria (**Strava**, **Garmin Connect / Edge**, **Wahoo Fitness**, **Komoot**, **Nike Run Club - NRC** e **Bikemap**), mantendo o compromisso central do RunFlow: **local-first e gratuito**. Treinos e configurações ficam no dispositivo, com Android Auto Backup desabilitado. P2P/WebDAV, tiles de mapa (OpenStreetMap/CARTO/Esri) e correção de altimetria (Open-Meteo) usam rede somente após ação e consentimento explícitos; tiles revelam a área solicitada e a altimetria envia coordenadas exatas.
 
 ---
 
@@ -8,7 +8,7 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 
 | Aplicativo | Pontos Fortes em UI/UX & Ciclismo | O que o RunFlow oferece / supera |
 |---|---|---|
-| **Strava** | • Métricas de velocidade em km/h e potência estimada<br>• Cadastro de Bikes e componentes<br>• Heatmaps e Segmentos | • No Strava, recursos analíticos e heatmaps são pagos ($$$). No RunFlow, tudo é 100% gratuito e local.<br>• Cards de Stories sem marcas de paywall. |
+| **Strava** | • Métricas de velocidade em km/h e potência estimada<br>• Cadastro de Bikes e componentes<br>• Heatmaps e Segmentos | • No Strava, recursos analíticos e heatmaps são pagos ($$$). No RunFlow, os dados e recursos analíticos são locais e gratuitos; rede é opt-in para sincronização, tiles e altimetria externa.<br>• Cards de Stories sem marcas de paywall. |
 | **Garmin Connect / Edge** | • Sensores BLE de Cadência (RPM) e Potência (Watts)<br>• Zonas de Potência (Coggan) e Zonas de FC (Z1-Z5)<br>• Análise de subidas em tempo real (ClimbPro) | • Transformar qualquer smartphone em um ciclocomputador GPS completo com sensores BLE sem exigir aparelhos caros. |
 | **Wahoo Fitness & Cadence** | • Tela de Ciclocomputador limpa com números grandes<br>• Modo Paisagem (Landscape) para suporte de guidão<br>• Avisos de voz configuráveis para ciclismo | • HUD de alto contraste (Outdoor Sun Mode) otimizado para sol direto no guidão da bicicleta. |
 | **Komoot & Bikemap** | • Perfil altimétrico de elevação da rota<br>• Alertas de manutenção preventiva de bike por quilometragem | • Gestão completa da garagem de bikes com histórico de desgaste de corrente, pneus e pastilhas. |
@@ -20,9 +20,9 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 | Fase | Descrição | Status |
 |---|---|---|
 | **Fase 1.0: Core do App** | Importação GPX/FIT, Altimetria, Splits, PRs, Gráficos, BLE HR, Metas, Dashboard Anual | ✅ 100% Concluído |
-| **Fase 2.0: Avançada** | Sincronização P2P/WebDAV, Navegação Offline, Flyover 3D, Card Social, Voice Coach, Auto-Pause, Heatmap Térmico, Treinos Intervalados, VO2 Max, Micro-Interações Táteis & Modo Sol | ✅ 100% Concluído |
+| **Fase 2.0: Avançada** | Sincronização P2P/WebDAV, navegação local de rotas com tiles online opt-in, Flyover 3D, Card Social, Voice Coach, Auto-Pause, Heatmap Térmico, Treinos Intervalados, VO2 Max, Micro-Interações Táteis & Modo Sol | ✅ Implementação concluída |
 | **Fase 3.0: Ecossistema de Ciclismo** | Garagem de Bikes, Potência Watts, Cadência RPM, Velocidade km/h, Ciclocomputador HUD, Sensores BLE (CSCS/CPS), Auto-Pause Ciclismo, ClimbPro, Treinos FTP/Coggan, Curva de Potência e Heatmap Velo | ✅ 100% Concluído |
-| **Fase 4.0: Fine-Tuning & Performance** | Visual Multi-Resoluções, Otimização de Memória (4GB-8GB), Modernização Android 13 a 17 & Remoção de Legado (12 Etapas) | ✅ 100% Concluído |
+| **Fase 4.0: Fine-Tuning & Performance** | Implementação visual/performance e Android 13–16; matriz completa, benchmarks formais e hardware físico ainda pendentes | ⚠️ Implementada; validação formal parcial |
 | **Fase Final: Publicação** | Google Play Store Release Assinado (.aab, Proguard/R8, Keystore, Data Safety) | ⏳ Próxima |
 
 ---
@@ -33,17 +33,17 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 
 ---
 
-# 🚀 Fase 4.0: Fine-Tuning, Performance E2E & Modernização Android (13 a 17) — ✅ 100% Concluído
+# 🚀 Fase 4.0: Fine-Tuning, Performance E2E & Android 13 a 16 — ⚠️ Implementação concluída; validação formal parcial
 
 Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos fundamentais, antecedendo a publicação oficial.
 
 ---
 
-## 🎨 Pilar 1: Fine-Tuning Visual & Multi-Resoluções (5 Etapas) — ✅ Concluído
+## 🎨 Pilar 1: Fine-Tuning Visual & Multi-Resoluções (5 Etapas) — ⚠️ Implementado; matriz completa pendente
 
 ### 1. Design System Responsivo & Multi-Breakpoints (360dp a 1440dp)
-**Esforço:** M · **Prioridade:** Alta · **Foco:** Responsividade & Escala · **Status:** ✅ Concluído
-- [x] Mapeamento e testes em proporções de aspecto 16:9, 18:9, 19.5:9, 20:9, 21:9 e compactos (360x640 até 1440x3120px)
+**Esforço:** M · **Prioridade:** Alta · **Foco:** Responsividade & Escala · **Status:** ⚠️ Implementado / validação parcial
+- [ ] Completar a matriz formal de proporções 16:9, 18:9, 19.5:9, 20:9 e 21:9 entre 360x640 e 1440x3120px; o E2E atual cobre apenas um subconjunto documentado em `docs/quality/current-state.md`
 - [x] Tipografia fluida com escala relativa (`clamp()`, `rem`, `dvh`/`dvw`) para evitar overflow horizontal ou corte de telemetria
 - [x] Suporte à escala de fonte de acessibilidade do Android (até 200%) em cards estatísticos, listas e modais
 
@@ -80,7 +80,7 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 
 ---
 
-## ⚡ Pilar 2: Performance E2E & Gestão de Memória 4GB-8GB (5 Etapas) — ✅ Concluído
+## ⚡ Pilar 2: Performance E2E & Gestão de Memória 4GB-8GB (5 Etapas) — ⚠️ Implementado; baseline formal pendente
 
 ### 6. Otimização do Armazenamento IndexedDB & Paginamento de Dados
 **Esforço:** M · **Prioridade:** Alta · **Foco:** Redução de Consumo de RAM Heap · **Status:** ✅ Concluído
@@ -91,23 +91,24 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 ---
 
 ### 7. Virtualização de Listas Longas & Redução da Árvore DOM
-**Esforço:** M · **Prioridade:** Alta · **Foco:** Scrolling Fluido 60/120fps · **Status:** ✅ Concluído
+**Esforço:** M · **Prioridade:** Alta · **Foco:** Virtualização e redução de DOM · **Status:** ✅ Implementação concluída / benchmark formal pendente
 - [x] Virtualização de listas no `ActivityList`, `BikeGarageManager` e tabelas de splits com dezenas de voltas
-- [x] Reutilização eficiente de nós DOM, eliminando engasgos de renderização (INP/FID < 50ms) e reduzindo a pressão do Garbage Collector em aparelhos de 4GB RAM
+- [ ] Medir INP e fluidez de scrolling em jornadas legítimas e registrar baseline/P50/P95/P99; o smoke atual deixou INP como `not_executed`
+- [x] E2E visual cobre listas com 0, 25 e 1000 atividades, sem overflow ou quebra de renderização; a evidência atual não é substituto para o benchmark formal de interação
 
 ---
 
 ### 8. Ciclo de Vida e Desalocação Estrita de Memória em WebGL / Three.js (Flyover 3D)
-**Esforço:** M · **Prioridade:** Alta · **Foco:** Prevenção de Memory Leaks · **Status:** ✅ Concluído
+**Esforço:** M · **Prioridade:** Alta · **Foco:** Prevenção de Memory Leaks · **Status:** ⚠️ Implementado / quantificação pendente
 - [x] Rotina completa de desalocação (`dispose()` de geometrias, materiais, texturas e buffers) ao fechar o Flyover 3D
 - [x] Liberação explícita de contexto WebGL (`renderer.dispose()`) e pausa do `requestAnimationFrame` em background (`visibilitychange`)
-- [x] Recuperação de até 150MB+ de memória VRAM/RAM imediatamente após a reprodução
+- [ ] Quantificar recuperação de VRAM/RAM com baseline reproduzível; os smokes atuais não sustentam um valor em MB
 
 ---
 
 ### 9. Simplificação Adaptativa de Trajetos GPS (Douglas-Peucker) & Leaflet
 **Esforço:** M · **Prioridade:** Média · **Foco:** Eficiência Gráfica em Mapas · **Status:** ✅ Concluído
-- [x] Implementação do algoritmo Douglas-Peucker com tolerância dinâmica conforme nível de zoom (redução de até 85% dos pontos renderizados na PolyLine)
+- [x] Implementação do algoritmo Douglas-Peucker com tolerância dinâmica conforme nível de zoom; o percentual de redução depende do trajeto e ainda não possui benchmark formal
 - [x] Desalocação imediata de TileLayers e PolyLines no Leaflet e `PersonalHeatmap` ao desmontar componentes
 
 ---
@@ -116,16 +117,18 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 **Esforço:** S · **Prioridade:** Média · **Foco:** Tempo de Inicialização & CPU · **Status:** ✅ Concluído
 - [x] Code splitting dinâmico (`next/dynamic` com SSR desativado) para bibliotecas pesadas (`leaflet`, `three`, `canvas-confetti`, `peerjs`)
 - [x] Memoização com `useMemo`/`useCallback`/`React.memo` em cálculos intensivos (NP™ Coggan, Zonas de Potência, ClimbPro, VO2 Max)
+- [x] Bundle final medido em `2.688.935` bytes total e `498.164` bytes inicial, dentro do orçamento documentado
 
 ---
 
-## 📱 Pilar 3: Modernização Android 13-17 & Limpeza de Legado (2 Etapas) — ✅ Concluído
+## 📱 Pilar 3: Android 13-16 & Limpeza de Legado (2 Etapas) — ✅ Concluído
 
-### 11. Elevação de Linha de Base: Android 13 a 17 (minSdkVersion = 33, targetSdk = 35+)
+### 11. Elevação de Linha de Base: Android 13 a 16 (minSdkVersion = 33, targetSdk = 36)
 **Esforço:** S · **Prioridade:** Alta · **Foco:** Arquitetura Nativa Atual · **Status:** ✅ Concluído
-- [x] Atualização do `variables.gradle`: `minSdkVersion = 33` e `compileSdkVersion` / `targetSdkVersion = 35` (com suporte e validação para APIs 36 e 37)
+- [x] `variables.gradle`: `minSdkVersion = 33` e `compileSdkVersion` / `targetSdkVersion` = 36, dentro da faixa suportada pelo AGP 8.13.2
+- [x] Execução em emulador API 37 tratada como compatibilidade futura, sem declarar `targetSdk=37`
 - [x] Habilitação de Predictive Back Gestures (`android:enableOnBackInvokedCallback="true"`)
-- [x] Configuração nativa de suporte a idiomas por app (Per-App Language Preferences) e permissão em tempo de execução `POST_NOTIFICATIONS`
+- [x] Configuração nativa de suporte a idiomas por app (Per-App Language Preferences) e permissões modernas de localização/BLE
 
 ---
 
@@ -137,6 +140,19 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 
 ---
 
+## 🔒 Auditoria Android API 37, Áudio Nativo & Lifecycle — ✅ Implementado / validado localmente
+
+- [x] Voice Coach nativo via Capacitor quando o WebView Android não fornece `speechSynthesis`, incluindo tratamento de exceções síncronas da ponte.
+- [x] Inicialização do `TextToSpeech` protegida contra callback imediato/obsoleto, retry, stop e teardown concorrentes.
+- [x] Cancelamento de timers, TTS/chimes e alertas de áudio em stop, reset, background e unmount.
+- [x] Invalidação de watchers GPS e operações assíncronas de início que resolvem após stop/reset/unmount.
+- [x] Métricas de elevação idempotentes, pontos de Auto-Pause excluídos do artefato salvo, serialização das preferências com proteção contra carregamento obsoleto, guards idempotentes de start/pause/resume/stop, GPS finito, callbacks de rota sem estado obsoleto, throttling de alertas fora de rota e lifecycle cancelável para BLE com validação de payloads; a persistência mantém fronteiras de pausa e alinha a série de potência aos pontos ativos.
+- [x] Back com handlers LIFO, fechamento do onboarding antes do histórico e preservação da gravação ativa.
+- [x] Regressões web, unitárias Android, E2E e connected Android API 37 executadas no checkout local.
+- [ ] Matriz Android API 33–36, hardware físico, medição acústica e primeira execução de CI hospedado continuam pendentes.
+
+---
+
 # 🚀 Fase Final: Publicação na Google Play Store & Release de Produção
 
 ### 13. Publicação na Play Store & Release Final Assinado
@@ -145,7 +161,7 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 - [ ] Configuração do Gradle para build de **Android App Bundle (`.aab`)** otimizado com Proguard/R8 para a Google Play Store
 - [ ] Geração de APK de Release assinado para download direto (GitHub Releases / F-Droid)
 - [ ] Ícones adaptativos em alta resolução (Material You Themed Icons + Adaptive Icons) e splash screen nativa
-- [ ] Documento formal de Política de Privacidade Local-First (declaração de dados 100% locais sem telemetria externa)
+- [ ] Documento formal de Política de Privacidade Local-First
 
 ---
 
@@ -165,13 +181,14 @@ flowchart TD
     P8 --> P9[9 Simplificação GPS Douglas-Peucker]
     P9 --> P10[10 Code Splitting & Memoização]
     
-    P10 --> M11[11 Android 13 a 17 minSdk 33]
+    P10 --> M11[11 Android 13 a 16 minSdk 33]
     M11 --> M12[12 Limpeza de Permissões & Legado]
   end
 
   subgraph ReleaseFinal["Fase Final: Distribuição"]
     M12 --> PUB[13 Publicação Play Store & AAB Assinado]
   end
+
 ```
 
-*Última atualização: agosto 2026 — Início da Fase 4.0: Fine-Tuning, Performance E2E & Modernização Android (13 a 17)*
+*Última atualização: agosto 2026 — etapa 7 registrada como implementação concluída, com benchmark formal pendente; timeout de body WebDAV coberto por regressão.*

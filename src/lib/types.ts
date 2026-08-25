@@ -1,3 +1,9 @@
+export type Language = "pt" | "en";
+
+export function isSupportedLanguage(value: unknown): value is Language {
+  return value === "pt" || value === "en";
+}
+
 export type Sport = "running" | "walking" | "cycling" | "other";
 
 export interface UserProfile {
@@ -24,7 +30,7 @@ export interface UserProfile {
   /** Configuração de Auto-Pause Inteligente. */
   autoPause?: AutoPauseConfig;
   /** Idioma preferido do usuário ("pt" ou "en"). */
-  language?: "pt" | "en";
+  language?: Language;
   updatedAt: string;
 }
 
@@ -193,6 +199,8 @@ export interface TrackPoint {
   lng: number;
   elevation?: number;
   timestamp?: Date;
+  /** Marca pontos recebidos durante Auto-Pause para não persistir segmentos inativos. */
+  autoPaused?: boolean;
   hr?: number;
   /** Potência mecânica em Watts (nativo de sensor ou calculado por física) */
   watts?: number;
@@ -230,6 +238,8 @@ export interface ParsedActivity {
   workoutId?: string | null;
   structuredWorkoutReport?: StructuredWorkoutReport | null;
   points: TrackPoint[];
+  /** Segmentos ativos preservados apenas durante o pipeline de gravação. */
+  trackSegments?: TrackPoint[][];
 }
 
 export interface ActivitySummary {
@@ -259,7 +269,6 @@ export interface ActivitySummary {
   gearId: string | null;
   routeId?: string | null;
   workoutId?: string | null;
-  structuredWorkoutReport?: StructuredWorkoutReport | null;
 }
 
 export interface ActivityDetail extends ActivitySummary {
@@ -267,6 +276,8 @@ export interface ActivityDetail extends ActivitySummary {
   maxHr: number | null;
   notes: string | null;
   points: TrackPoint[];
+  trackSegments?: TrackPoint[][];
+  structuredWorkoutReport?: StructuredWorkoutReport | null;
 }
 
 export type GearType = "shoes" | "bike";

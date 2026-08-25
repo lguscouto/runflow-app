@@ -17,18 +17,22 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import {
-  generatePairingCode,
+  generatePairingToken,
   P2PHostSession,
   P2PJoinerSession,
   type P2PStatus,
 } from "@/lib/sync/p2p";
 import {
   getWebDavConfig,
+  markWebDavConfigSynced,
   saveWebDavConfig,
   syncWebDav,
 } from "@/lib/sync/webdav";
 import type { SyncReport, WebDavConfig } from "@/lib/types";
-import { requestLocalNetworkPermission } from "@/lib/local-network";
+import {
+  isLocalNetworkPermissionGranted,
+  requestLocalNetworkPermissionStatus,
+} from "@/lib/local-network";
 
 interface SyncPanelProps {
   onSyncSuccess?: () => void;
@@ -51,6 +55,7 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
   const activeHostSession = useRef<P2PHostSession | null>(null);
   const activeJoinerSession = useRef<P2PJoinerSession | null>(null);
+  const mountedRef = useRef(true);
 
   // WebDAV State
   const [webdavUrl, setWebdavUrl] = useState("");
@@ -76,7 +81,9 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
   // Cleanup de sessões P2P ao desmontar
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       activeHostSession.current?.destroy();
       activeJoinerSession.current?.destroy();
     };
@@ -85,26 +92,34 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
   // ── P2P Handlers ─────────────────────────────────────────────────────────
 
   const handleStartHost = async () => {
-    await requestLocalNetworkPermission();
+    const permissionStatus = await requestLocalNetworkPermissionStatus();
+    if (!mountedRef.current) return;
+    if (!isLocalNetworkPermissionGranted(permissionStatus)) {
+      setP2pError(t("sync.local_network_denied"));
+      return;
+    }
     // Limpar sessões anteriores
     activeHostSession.current?.destroy();
     activeJoinerSession.current?.destroy();
     setP2pError(null);
     setP2pReport(null);
 
-    const code = generatePairingCode();
+    const code = generatePairingToken();
     setHostCode(code);
 
     const session = new P2PHostSession(code, {
       onStatusChange: (status, msg) => {
+        if (!mountedRef.current) return;
         setP2pStatus(status);
         if (msg) setStatusMessage(msg);
       },
       onReport: (report) => {
+        if (!mountedRef.current) return;
         setP2pReport(report);
         onSyncSuccess?.();
       },
       onError: (err) => {
+        if (!mountedRef.current) return;
         setP2pError(err);
       },
     });
@@ -117,7 +132,12 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
     e.preventDefault();
     if (!joinCodeInput.trim()) return;
 
-    await requestLocalNetworkPermission();
+    const permissionStatus = await requestLocalNetworkPermissionStatus();
+    if (!mountedRef.current) return;
+    if (!isLocalNetworkPermissionGranted(permissionStatus)) {
+      setP2pError(t("sync.local_network_denied"));
+      return;
+    }
     activeHostSession.current?.destroy();
     activeJoinerSession.current?.destroy();
     setP2pError(null);
@@ -125,14 +145,17 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
     const session = new P2PJoinerSession(joinCodeInput, {
       onStatusChange: (status, msg) => {
+        if (!mountedRef.current) return;
         setP2pStatus(status);
         if (msg) setStatusMessage(msg);
       },
       onReport: (report) => {
+        if (!mountedRef.current) return;
         setP2pReport(report);
         onSyncSuccess?.();
       },
       onError: (err) => {
+        if (!mountedRef.current) return;
         setP2pError(err);
       },
     });
@@ -165,18 +188,19 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
       remotePath: webdavPath.trim() || "runflow/vault.json",
     };
 
-    saveWebDavConfig(config);
-
     try {
       const report = await syncWebDav(config);
+      if (!mountedRef.current) return;
+      const syncedConfig = markWebDavConfigSynced(config);
+      saveWebDavConfig(syncedConfig);
       setWebdavReport(report);
-      setWebdavLastSynced(new Date().toISOString());
+      setWebdavLastSynced(syncedConfig.lastSyncedAt || null);
       onSyncSuccess?.();
     } catch (err: any) {
       console.error("WebDAV sync error:", err);
-      setWebdavError(err.message || t("common.error"));
+      if (mountedRef.current) setWebdavError(err.message || t("common.error"));
     } finally {
-      setWebdavLoading(false);
+      if (mountedRef.current) setWebdavLoading(false);
     }
   };
 
@@ -292,7 +316,7 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
               <form onSubmit={handleStartJoin} className="space-y-3 pt-2">
                 <input
                   type="text"
-                  maxLength={6}
+                  maxLength={47}
                   value={joinCodeInput}
                   onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
                   placeholder={t("sync.enter_code")}

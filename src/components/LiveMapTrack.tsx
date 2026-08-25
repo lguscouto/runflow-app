@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { CircleMarker, MapContainer, Polyline, TileLayer, useMap } from "react-leaflet";
+import { CircleMarker, MapContainer, Polyline, useMap } from "react-leaflet";
+import { PrivacyAwareTileLayer } from "@/components/PrivacyAwareTileLayer";
 import type { TrackPoint } from "@/lib/types";
 import { boundsFromPoints } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
@@ -70,7 +71,8 @@ export function LiveMapTrack({
         scrollWheelZoom={false}
         zoomControl={false}
       >
-        <TileLayer
+        <PrivacyAwareTileLayer
+          provider="OpenStreetMap"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />

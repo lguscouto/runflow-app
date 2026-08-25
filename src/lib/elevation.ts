@@ -1,5 +1,6 @@
 import { getStoredActivity, putActivity } from "./storage";
 import { elevationGainFromPoints } from "./geo";
+import { requireElevationConsent } from "./external-privacy";
 
 export async function enrichActivityElevation(activityId: string): Promise<number> {
   const activity = await getStoredActivity(activityId);
@@ -9,6 +10,7 @@ export async function enrichActivityElevation(activityId: string): Promise<numbe
 
   const points = activity.points;
   if (!points || points.length === 0) return 0;
+  requireElevationConsent();
 
   const BATCH_SIZE = 150;
   const fetchPromises: Promise<number[]>[] = [];

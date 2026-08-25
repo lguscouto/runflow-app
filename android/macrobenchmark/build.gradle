@@ -1,0 +1,41 @@
+apply plugin: 'com.android.test'
+apply plugin: 'kotlin-android'
+
+android {
+    namespace "com.runflow.app.macrobenchmark"
+    compileSdk rootProject.ext.compileSdkVersion
+
+    defaultConfig {
+        // Macrobenchmark supports API 29+ and the app itself remains minSdk 33.
+        minSdkVersion 29
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["androidx.benchmark.suppressErrors"] = "EMULATOR"
+    }
+
+    targetProjectPath = ":app"
+
+    buildTypes {
+        benchmark {
+            debuggable true
+            matchingFallbacks = ['release']
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    // Keep the benchmark test process separate from the target app process.
+    experimentalProperties["android.experimental.self-instrumenting"] = true
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+}
+
+dependencies {
+    implementation "androidx.benchmark:benchmark-macro-junit4:1.4.1"
+    implementation "androidx.test.ext:junit:$androidxJunitVersion"
+    implementation "androidx.test:runner:1.6.2"
+    implementation "androidx.test.uiautomator:uiautomator:2.3.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.25"
+}

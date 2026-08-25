@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { openDB } from "idb";
 import {
   putActivity,
   getStoredActivity,
@@ -33,6 +34,15 @@ describe("Storage Detail Preservation", () => {
     });
 
     await putActivity(activity);
+
+    const db = await openDB("runflow");
+    const summary = await db.get("activitySummaries", activity.id);
+    const track = await db.get("activityTracks", activity.id);
+    db.close();
+
+    expect(summary).toBeDefined();
+    expect(summary).not.toHaveProperty("structuredWorkoutReport");
+    expect(track?.structuredWorkoutReport).toEqual(report);
 
     const restored = await getStoredActivity(activity.id);
     expect(restored).toBeDefined();

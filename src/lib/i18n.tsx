@@ -1,9 +1,11 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { getUserProfile, saveUserProfile } from "@/lib/profile";
+import { createSerializedAsyncQueue } from "@/lib/serialized-async-queue";
+import { isSupportedLanguage, type Language } from "./types";
 
-export type Language = "pt" | "en";
+export type { Language } from "./types";
 
 export const translations = {
   pt: {
@@ -25,6 +27,7 @@ export const translations = {
     "common.error": "Erro",
     "common.cancel": "Cancelar",
     "common.confirm": "Confirmar",
+    "common.retry": "Tentar novamente",
     "common.no_data": "Sem registro",
     "common.total": "Total",
     "common.average": "Médio",
@@ -229,6 +232,8 @@ export const translations = {
     "activities.empty": "Nenhum treino ainda.",
     "activities.import_btn": "Importar treino",
     "activities.recorded_on": "Gravado no RunFlow",
+    "activities.load_error": "Não foi possível carregar as atividades.",
+    "activities.stats_load_error": "Não foi possível carregar as estatísticas.",
 
     // Activity Detail
     "detail.not_found": "Treino não encontrado.",
@@ -583,6 +588,8 @@ export const translations = {
 
     // Map
     "map.no_gps": "Sem dados de GPS para exibir o mapa.",
+    "map.load_online_tiles": "Carregar mapa online",
+    "map.online_tiles_privacy": "Ao continuar, o provedor receberá a área visualizada:",
 
     // Import Guide Page
     "import.page_title": "Importar treinos",
@@ -665,6 +672,7 @@ export const translations = {
     "detail.correct_elevation_btn": "Corrigir Altitude",
     "detail.correct_elevation_loading": "Corrigindo...",
     "detail.correct_elevation_success": "Altimetria corrigida com sucesso via Open-Meteo!",
+    "detail.correct_elevation_consent": "A correção enviará as coordenadas exatas desta atividade à API Open-Meteo. Deseja continuar?",
     "detail.route": "Rota seguida",
     "detail.actual_route": "Trajeto real",
     "detail.planned_route": "Rota planejada",
@@ -758,6 +766,7 @@ export const translations = {
     "sync.p2p_join_desc": "Digite o código gerado no outro aparelho para se conectar e sincronizar.",
     "sync.enter_code": "Digite o código (ex.: ABC123)",
     "sync.connect_btn": "Conectar & Sincronizar",
+    "sync.local_network_denied": "Acesso à rede local negado. Permita-o nas configurações do Android e tente novamente.",
     "sync.status_connecting": "Conectando ao outro aparelho...",
     "sync.status_exchanging": "Trocando dados e aplicando diferenças...",
     "sync.status_completed": "Sincronização P2P concluída com sucesso!",
@@ -984,6 +993,7 @@ export const translations = {
     "common.error": "Error",
     "common.cancel": "Cancel",
     "common.confirm": "Confirm",
+    "common.retry": "Try again",
     "common.no_data": "No record",
     "common.total": "Total",
     "common.average": "Average",
@@ -1188,6 +1198,8 @@ export const translations = {
     "activities.empty": "No workouts yet.",
     "activities.import_btn": "Import workout",
     "activities.recorded_on": "Recorded on RunFlow",
+    "activities.load_error": "Could not load activities.",
+    "activities.stats_load_error": "Could not load statistics.",
 
     // Activity Detail
     "detail.not_found": "Workout not found.",
@@ -1542,6 +1554,8 @@ export const translations = {
 
     // Map
     "map.no_gps": "No GPS data to display map.",
+    "map.load_online_tiles": "Load online map",
+    "map.online_tiles_privacy": "By continuing, the provider will receive the viewed area:",
 
     // Import Guide Page
     "import.page_title": "Import workouts",
@@ -1624,6 +1638,7 @@ export const translations = {
     "detail.correct_elevation_btn": "Correct Elevation",
     "detail.correct_elevation_loading": "Correcting...",
     "detail.correct_elevation_success": "Elevation successfully corrected via Open-Meteo!",
+    "detail.correct_elevation_consent": "Elevation correction will send this activity's exact coordinates to the Open-Meteo API. Continue?",
     "detail.route": "Route followed",
     "detail.actual_route": "Actual path",
     "detail.planned_route": "Planned route",
@@ -1717,6 +1732,7 @@ export const translations = {
     "sync.p2p_join_desc": "Enter the code generated on the other device to connect and sync.",
     "sync.enter_code": "Enter code (e.g. ABC123)",
     "sync.connect_btn": "Connect & Sync",
+    "sync.local_network_denied": "Local network access was denied. Allow it in Android settings and try again.",
     "sync.status_connecting": "Connecting to other device...",
     "sync.status_exchanging": "Exchanging data and applying diffs...",
     "sync.status_completed": "P2P sync successfully completed!",
@@ -1940,14 +1956,41 @@ const I18nContext = createContext<I18nContextProps | undefined>(undefined);
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>("pt");
   const [loading, setLoading] = useState(true);
+  const languageIntentGenerationRef = useRef(0);
+  const languagePersistenceQueueRef = useRef(
+    createSerializedAsyncQueue(async (nextLang: Language) => {
+      try {
+        await setNativeAppLocale(nextLang === "en" ? "en" : "pt-BR");
+        const current = await getUserProfile();
+        if (current) {
+          const { updatedAt, ...rest } = current;
+          await saveUserProfile({
+            ...rest,
+            language: nextLang,
+          });
+        } else {
+          await saveUserProfile({
+            language: nextLang,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to persist language preference:", err);
+      }
+    }),
+  );
 
   useEffect(() => {
+    let active = true;
+    const initialGeneration = languageIntentGenerationRef.current;
+    const mayApplyInitialPreference = () =>
+      active && languageIntentGenerationRef.current === initialGeneration;
+
     async function loadPreferredLanguage() {
       try {
         const nativeLocale = await getNativeAppLocale();
         if (nativeLocale) {
           const normalized = nativeLocale.toLowerCase().slice(0, 2);
-          if (normalized === "en" || normalized === "pt") {
+          if ((normalized === "en" || normalized === "pt") && mayApplyInitialPreference()) {
             setLanguage(normalized as Language);
             setLoading(false);
             return;
@@ -1955,7 +1998,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         }
 
         const profile = await getUserProfile();
-        if (profile?.language) {
+        if (!mayApplyInitialPreference()) return;
+        if (isSupportedLanguage(profile?.language) && mayApplyInitialPreference()) {
           setLanguage(profile.language);
         } else {
           // Detect system browser language, fallback to Portuguese
@@ -1969,35 +2013,25 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         console.error("Failed to load preferred language:", err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     }
     loadPreferredLanguage();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const changeLanguage = async (nextLang: Language) => {
+    if (!isSupportedLanguage(nextLang)) return;
+    languageIntentGenerationRef.current += 1;
     setLanguage(nextLang);
-    try {
-      await setNativeAppLocale(nextLang === "en" ? "en" : "pt-BR");
-      const current = await getUserProfile();
-      if (current) {
-        const { updatedAt, ...rest } = current;
-        await saveUserProfile({
-          ...rest,
-          language: nextLang,
-        });
-      } else {
-        await saveUserProfile({
-          language: nextLang,
-        });
-      }
-    } catch (err) {
-      console.error("Failed to persist language preference:", err);
-    }
+    setLoading(false);
+    await languagePersistenceQueueRef.current(nextLang);
   };
 
   const t = (key: string, variables?: Record<string, string | number>): string => {
-    const dictionary = translations[language];
+    const dictionary = translations[language] ?? translations.pt;
     let text =
       dictionary[key as keyof typeof dictionary] ||
       translations["pt"][key as keyof typeof translations["pt"]] ||

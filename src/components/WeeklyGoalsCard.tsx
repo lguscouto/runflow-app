@@ -72,6 +72,7 @@ export function WeeklyGoalsCard() {
   if (!progress.anyGoalSet) {
     return (
       <Link
+        prefetch={false}
         href="/perfil/"
         className="stat-card block hover:border-[var(--accent)] transition-colors"
       >
@@ -96,6 +97,7 @@ export function WeeklyGoalsCard() {
           {t("profile.weekly_goals")}
         </h2>
         <Link
+          prefetch={false}
           href="/perfil/"
           className="text-[var(--muted)] hover:text-[var(--text)]"
           title={t("profile.weekly_goals")}

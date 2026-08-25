@@ -73,6 +73,7 @@ export function AutoPauseModal({
           <button
             onClick={onClose}
             type="button"
+            aria-label="Fechar modal"
             className="p-2 text-[var(--muted)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface)] transition-colors"
           >
             <X size={20} />

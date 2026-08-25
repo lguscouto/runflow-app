@@ -1,0 +1,136 @@
+name: RunFlow quality gates
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runflow-gates-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  web:
+    name: Web gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.15.0
+          cache: npm
+
+      - name: Install locked web dependencies
+        run: npm ci
+
+      - name: Check version and Android metadata consistency
+        run: npm run quality:versions
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run TypeScript check
+        run: npx --no-install tsc --noEmit
+
+      - name: Run unit tests
+        run: npm run test
+
+      - name: Build the static web app
+        run: npm run build
+
+      - name: Enforce the bundle budget
+        run: npm run perf:bundle
+
+      - name: Install the pinned Playwright browser and OS dependencies
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Run Playwright end-to-end tests
+        run: npm run test:e2e
+
+  android:
+    name: Android gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.15.0
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up Android SDK tooling
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
+        with:
+          accept-android-sdk-licenses: true
+          packages: >-
+            platform-tools
+            platforms;android-37
+            build-tools;35.0.0
+
+      - name: Verify the required Android SDK components
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdkmanager --version
+          sdk_root="${ANDROID_SDK_ROOT:-${ANDROID_HOME:?ANDROID_HOME is not set}}"
+          test -d "$sdk_root/platforms/android-37"
+          test -d "$sdk_root/build-tools/35.0.0"
+          test -x "$sdk_root/platform-tools/adb"
+
+      - name: Install locked web dependencies
+        run: npm ci
+
+      - name: Build web assets for Capacitor
+        run: npm run build
+
+      - name: Synchronize Capacitor Android assets
+        run: npx --no-install cap sync android
+
+      - name: Make the Gradle wrapper executable in the Linux checkout
+        run: chmod +x android/gradlew
+
+      - name: Run Android unit, lint, APK, and benchmark compile gates
+        working-directory: android
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew --no-daemon --stacktrace \
+            :app:testDebugUnitTest \
+            :app:lintDebug \
+            :app:lintRelease \
+            :app:assembleDebug \
+            :app:assembleAndroidTest \
+            :app:assembleRelease \
+            :app:assembleBenchmark \
+            :macrobenchmark:assembleBenchmark
+
+      - name: Run the fail-closed Android legacy permission audit
+        run: npm run quality:legacy
+
+      # Connected tests and macrobenchmark execution require an AVD; this job
+      # intentionally covers the deterministic compile/unit/lint gates only.

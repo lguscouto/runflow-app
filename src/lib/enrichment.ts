@@ -2,6 +2,7 @@ import { getStoredActivity, putActivity } from "./storage";
 import { parseFit } from "./parsers/fit";
 import type { TrackPoint, ParsedActivity } from "./types";
 import { elevationGainFromPoints } from "./geo";
+import { requireElevationConsent } from "./external-privacy";
 
 /**
  * Extrai a lógica de merge de HR dos pontos FIT para os pontos GPX,
@@ -174,6 +175,7 @@ export async function enrichActivityElevationWithRetry(
 
   const points = activity.points;
   if (!points || points.length === 0) return 0;
+  requireElevationConsent();
 
   const BATCH_SIZE = 150;
   const results: number[] = [];

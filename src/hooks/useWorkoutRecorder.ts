@@ -41,8 +41,12 @@ import {
 } from "@/lib/voice-coach";
 import {
   DEFAULT_AUTO_PAUSE_CONFIG,
+  appendAutoPauseBoundaryPoint,
+  appendAutoPauseResumePoint,
+  computeAutoPauseResumeSpeedKmh,
   computeInstantSpeedKmh,
   playAutoPauseSound,
+  cancelAutoPauseSound,
   getDefaultAutoPauseSpeed,
 } from "@/lib/auto-pause";
 import {
@@ -57,6 +61,8 @@ import {
   CSC_MEASUREMENT_CHAR,
   POWER_SERVICE,
   POWER_MEASUREMENT_CHAR,
+  hasValidCscMeasurementPayload,
+  hasValidCyclingPowerMeasurementPayload,
 } from "@/lib/ble-cycling-parsers";
 import type { BikeType } from "@/lib/types";
 import { getAllStoredGear } from "@/lib/storage";
@@ -75,10 +81,36 @@ import {
   playCountdownPip,
   speakWorkoutStep,
   playStartBlockChime,
+  stopWorkoutAudio,
 } from "@/lib/workout-audio";
+import { createGpsWatchLifecycle, createMountedLifecycle } from "@/lib/gps-watch-lifecycle";
+import { accumulatePositiveElevationGain } from "@/lib/recorder-metrics";
+import { shouldAnnounceOffRoute } from "@/lib/route-alerts";
+import { canStopRecorder } from "@/lib/recorder-state";
+import { calculateElapsedSec, calculateMovingSec } from "@/lib/recorder-time";
 
 const HEART_RATE_SERVICE = "0000180d-0000-1000-8000-00805f9b34fb";
 const HEART_RATE_MEASUREMENT_CHARACTERISTIC = "00002a37-0000-1000-8000-00805f9b34fb";
+
+async function cleanupBleConnection(
+  deviceId: string,
+  service: string,
+  characteristic: string,
+  notificationsStarted: boolean
+) {
+  if (notificationsStarted) {
+    try {
+      await BleClient.stopNotifications(deviceId, service, characteristic);
+    } catch (err) {
+      console.error("Error stopping stale BLE notifications:", err);
+    }
+  }
+  try {
+    await BleClient.disconnect(deviceId);
+  } catch (err) {
+    console.error("Error disconnecting stale BLE device:", err);
+  }
+}
 
 export type RecorderStatus = "idle" | "recording" | "paused" | "saving";
 
@@ -141,6 +173,8 @@ export function useWorkoutRecorder() {
   const [routeConfig, setRouteConfigState] = useState<RouteConfig | null>(null);
   const [offRouteState, setOffRouteState] = useState<OffRouteState | null>(null);
   const [routePoints, setRoutePoints] = useState<{ lat: number; lng: number; elevation?: number }[]>([]);
+  const routeConfigRef = useRef<RouteConfig | null>(null);
+  const routePointsRef = useRef<{ lat: number; lng: number; elevation?: number }[]>([]);
 
   // ClimbPro States (Etapa 6)
   const [detectedClimbs, setDetectedClimbs] = useState<ClimbSegment[]>([]);
@@ -207,8 +241,16 @@ export function useWorkoutRecorder() {
   const startedAtRef = useRef<Date | null>(null);
   const pausedAtRef = useRef<Date | null>(null);
   const totalPausedMsRef = useRef(0);
+  const autoPausedAtRef = useRef<number | null>(null);
+  const totalAutoPausedMsRef = useRef(0);
   const pointsRef = useRef<TrackPoint[]>([]);
   const stopWatchRef = useRef<(() => void) | null>(null);
+  const gpsWatchLifecycleRef = useRef(createGpsWatchLifecycle());
+  const startOperationLifecycleRef = useRef(createGpsWatchLifecycle());
+  const routeLoadLifecycleRef = useRef(createGpsWatchLifecycle());
+  const startInFlightTokenRef = useRef<number | null>(null);
+  const resumeInFlightRef = useRef(false);
+  const mountedLifecycleRef = useRef(createMountedLifecycle());
   const lastPaceRef = useRef<{ dist: number; time: number } | null>(null);
   const distanceMRef = useRef(0);
 
@@ -243,7 +285,19 @@ export function useWorkoutRecorder() {
   const bikeTypeRef = useRef<BikeType>("road");
   const maxSpeedKmhRef = useRef<number>(0);
   const totalElevationGainRef = useRef<number>(0);
+  const elevationProcessedPointCountRef = useRef<number>(0);
   const accumulatedWattsRef = useRef<number[]>([]);
+
+  const profilePersistenceQueueRef = useRef<Promise<void>>(Promise.resolve());
+  const preferenceRevisionRef = useRef(0);
+  const stopInFlightRef = useRef(false);
+
+  const hrLifecycleRef = useRef(createGpsWatchLifecycle());
+  const cscLifecycleRef = useRef(createGpsWatchLifecycle());
+  const powerLifecycleRef = useRef(createGpsWatchLifecycle());
+
+  const wasOffRouteRef = useRef(false);
+  const lastOffRouteAlertAtRef = useRef<number | null>(null);
 
   // Manual Laps (Feature 28)
   const [manualLaps, setManualLaps] = useState<ManualLap[]>([]);
@@ -277,6 +331,7 @@ export function useWorkoutRecorder() {
   // Load Voice Coach & Auto Pause preferences on mount
   useEffect(() => {
     async function loadUserPreferences() {
+      const loadRevision = preferenceRevisionRef.current;
       try {
         const profile = await getUserProfile();
         userProfileRef.current = profile;
@@ -285,11 +340,11 @@ export function useWorkoutRecorder() {
             riderWeightRef.current = profile.weightKg;
           }
           userHrZonesRef.current = calculateHrZones(profile);
-          if (profile.voiceCoach) {
+          if (profile.voiceCoach && preferenceRevisionRef.current === loadRevision) {
             setVoiceCoachConfigState(profile.voiceCoach);
             voiceCoachConfigRef.current = profile.voiceCoach;
           }
-          if (profile.autoPause) {
+          if (profile.autoPause && preferenceRevisionRef.current === loadRevision) {
             setAutoPauseConfigState(profile.autoPause);
             autoPauseConfigRef.current = profile.autoPause;
           }
@@ -311,60 +366,98 @@ export function useWorkoutRecorder() {
   }, []);
 
   const updateVoiceCoachConfig = useCallback(async (newConfig: VoiceCoachConfig) => {
+    preferenceRevisionRef.current += 1;
     setVoiceCoachConfigState(newConfig);
     voiceCoachConfigRef.current = newConfig;
-    try {
-      const profile = await getUserProfile();
-      await saveUserProfile({
-        ...(profile || {}),
-        voiceCoach: newConfig,
+    profilePersistenceQueueRef.current = profilePersistenceQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        const profile = await getUserProfile();
+        await saveUserProfile({
+          ...(profile || {}),
+          voiceCoach: newConfig,
+        });
+      })
+      .catch((e) => {
+        console.error("Erro ao persistir preferências do Voice Coach:", e);
       });
-    } catch (e) {
-      console.error("Erro ao persistir preferências do Voice Coach:", e);
-    }
+    await profilePersistenceQueueRef.current;
   }, []);
 
   const updateAutoPauseConfig = useCallback(async (newConfig: AutoPauseConfig) => {
+    preferenceRevisionRef.current += 1;
     setAutoPauseConfigState(newConfig);
     autoPauseConfigRef.current = newConfig;
-    try {
-      const profile = await getUserProfile();
-      await saveUserProfile({
-        ...(profile || {}),
-        autoPause: newConfig,
-      });
-    } catch (e) {
-      console.error("Erro ao persistir preferências de Auto-Pause:", e);
+    if (!newConfig.enabled) {
+      lowSpeedCountRef.current = 0;
+      if (isAutoPausedRef.current) {
+        if (autoPausedAtRef.current != null) {
+          totalAutoPausedMsRef.current += Math.max(0, Date.now() - autoPausedAtRef.current);
+          autoPausedAtRef.current = null;
+        }
+        isAutoPausedRef.current = false;
+        setIsAutoPaused(false);
+        setStats((previous) => ({ ...previous, isAutoPaused: false }));
+        cancelAutoPauseSound();
+      }
     }
+    profilePersistenceQueueRef.current = profilePersistenceQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        const profile = await getUserProfile();
+        await saveUserProfile({
+          ...(profile || {}),
+          autoPause: newConfig,
+        });
+      })
+      .catch((e) => {
+        console.error("Erro ao persistir preferências de Auto-Pause:", e);
+      });
+    await profilePersistenceQueueRef.current;
   }, []);
 
   const setRouteConfig = useCallback(async (config: RouteConfig | null) => {
-    setRouteConfigState(config);
-    if (config?.routeId) {
-      const route = await getStoredRoute(config.routeId);
-      const pts = route?.points || [];
-      setRoutePoints(pts);
-      const climbs = detectClimbs(pts);
-      setDetectedClimbs(climbs);
-      detectedClimbsRef.current = climbs;
-      lastApproachedClimbIdRef.current = null;
-      lastStartedClimbIdRef.current = null;
-      lastCompletedClimbIdRef.current = null;
-      wasInClimbRef.current = false;
-      activeClimbRef.current = null;
+    const routeToken = routeLoadLifecycleRef.current.begin();
+    const isCurrentRouteLoad = () =>
+      mountedLifecycleRef.current.isMounted() && routeLoadLifecycleRef.current.isCurrent(routeToken);
 
-      setOffRouteState({
-        isOffRoute: false,
-        distanceFromRouteM: 0,
-        nearestPoint: null,
-        estimatedDistanceM: 0,
-        totalRouteDistanceM: route?.distanceM || 0,
-      });
-    } else {
-      setRoutePoints([]);
-      setDetectedClimbs([]);
-      detectedClimbsRef.current = [];
-      setOffRouteState(null);
+    setRouteConfigState(config);
+    routeConfigRef.current = config;
+    setRoutePoints([]);
+    routePointsRef.current = [];
+    setDetectedClimbs([]);
+    detectedClimbsRef.current = [];
+    setOffRouteState(null);
+
+    if (config?.routeId) {
+      try {
+        const route = await getStoredRoute(config.routeId);
+        if (!isCurrentRouteLoad()) return;
+
+        const pts = route?.points || [];
+        setRoutePoints(pts);
+        routePointsRef.current = pts;
+        const climbs = detectClimbs(pts);
+        setDetectedClimbs(climbs);
+        detectedClimbsRef.current = climbs;
+        lastApproachedClimbIdRef.current = null;
+        lastStartedClimbIdRef.current = null;
+        lastCompletedClimbIdRef.current = null;
+        wasInClimbRef.current = false;
+        activeClimbRef.current = null;
+
+        setOffRouteState({
+          isOffRoute: false,
+          distanceFromRouteM: 0,
+          nearestPoint: null,
+          estimatedDistanceM: 0,
+          totalRouteDistanceM: route?.distanceM || 0,
+        });
+      } catch (e) {
+        if (isCurrentRouteLoad()) {
+          setError(e instanceof Error ? e.message : "Erro ao carregar rota");
+        }
+      }
     }
   }, []);
 
@@ -394,15 +487,7 @@ export function useWorkoutRecorder() {
   }, []);
 
   const speak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language === "pt" ? "pt-BR" : "en-US";
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.error("TTS failed:", e);
-    }
+    speakWithConfig(text, voiceCoachConfigRef.current, language);
   }, [language]);
 
   /**
@@ -483,14 +568,31 @@ export function useWorkoutRecorder() {
 
   const getElapsedSec = useCallback(() => {
     if (!startedAtRef.current) return 0;
-    const now = Date.now();
-    const end =
-      status === "paused" && pausedAtRef.current
-        ? pausedAtRef.current.getTime()
-        : now;
-    const raw = (end - startedAtRef.current.getTime()) / 1000;
-    return Math.max(0, raw - totalPausedMsRef.current / 1000);
-  }, [status]);
+    return calculateElapsedSec(
+      startedAtRef.current.getTime(),
+      Date.now(),
+      statusRef.current,
+      pausedAtRef.current?.getTime(),
+      totalPausedMsRef.current,
+    );
+  }, []);
+
+  const finalizeAutoPause = useCallback((nowMs: number) => {
+    if (autoPausedAtRef.current == null) return;
+    totalAutoPausedMsRef.current += Math.max(0, nowMs - autoPausedAtRef.current);
+    autoPausedAtRef.current = null;
+  }, []);
+
+  const getMovingSec = useCallback((nowMs = Date.now()) => {
+    const movingSec = calculateMovingSec(
+      getElapsedSec(),
+      nowMs,
+      autoPausedAtRef.current ?? undefined,
+      totalAutoPausedMsRef.current,
+    );
+    movingSecRef.current = movingSec;
+    return movingSec;
+  }, [getElapsedSec]);
 
   const skipStructuredWorkoutStep = useCallback(() => {
     const elapsed = getElapsedSec();
@@ -524,7 +626,12 @@ export function useWorkoutRecorder() {
       let currentPaceSecKm: number | null = null;
       const last = pts[pts.length - 1];
       const prev = pts[pts.length - 2];
-      if (last?.timestamp && prev?.timestamp) {
+      if (
+        last?.timestamp &&
+        prev?.timestamp &&
+        last.autoPaused !== true &&
+        prev.autoPaused !== true
+      ) {
         const segDist = haversineM(prev.lat, prev.lng, last.lat, last.lng);
         const segTime = (last.timestamp.getTime() - prev.timestamp.getTime()) / 1000;
         if (segDist > 0 && segTime > 0) {
@@ -542,17 +649,16 @@ export function useWorkoutRecorder() {
           ? (distanceM / effectiveMovingSec) * 3.6
           : 0;
 
-      // Elevation Gain & Grade %
-      if (pts.length >= 2) {
-        const lastP = pts[pts.length - 1];
-        const prevP = pts[pts.length - 2];
-        if (lastP.elevation != null && prevP.elevation != null) {
-          const elevDelta = lastP.elevation - prevP.elevation;
-          if (elevDelta > 0 && !isAutoPausedNow) {
-            totalElevationGainRef.current += elevDelta;
-          }
-        }
-      }
+      // Elevation Gain & Grade % — process each GPS segment once. This function
+      // also runs on the one-second stats tick, so re-reading the last segment
+      // here would inflate elevation and VAM without a new GPS point.
+      const elevation = accumulatePositiveElevationGain(
+        pts,
+        elevationProcessedPointCountRef.current,
+        Boolean(isAutoPausedNow)
+      );
+      totalElevationGainRef.current += elevation.deltaM;
+      elevationProcessedPointCountRef.current = elevation.nextPointCount;
       const currentGradePercent = computeInstantGradePercent(pts, 30);
 
       // Potência: sensor BLE > estimativa física
@@ -784,16 +890,7 @@ export function useWorkoutRecorder() {
 
           const isBike = sportRef.current === "cycling";
           // Compute cumulative elevation gain from points
-          let elevGainM = 0;
-          if (pointsRef.current.length > 1) {
-            for (let i = 1; i < pointsRef.current.length; i++) {
-              const ePrev = pointsRef.current[i - 1].elevation;
-              const eCurr = pointsRef.current[i].elevation;
-              if (ePrev !== undefined && eCurr !== undefined && eCurr > ePrev) {
-                elevGainM += eCurr - ePrev;
-              }
-            }
-          }
+          const elevGainM = accumulatePositiveElevationGain(pointsRef.current, 0, false).deltaM;
 
           const coachStats: VoiceCoachStats = {
             sport: sportRef.current,
@@ -893,8 +990,16 @@ export function useWorkoutRecorder() {
       const elapsed = getElapsedSec();
       const apConfig = autoPauseConfigRef.current;
 
-      if (apConfig && apConfig.enabled && pointsRef.current.length >= 2) {
-        const speedKmh = computeInstantSpeedKmh(pointsRef.current, 3);
+      if (!apConfig?.enabled) {
+        lowSpeedCountRef.current = 0;
+        if (isAutoPausedRef.current) {
+          isAutoPausedRef.current = false;
+          setIsAutoPaused(false);
+          setStats((previous) => ({ ...previous, isAutoPaused: false }));
+          cancelAutoPauseSound();
+        }
+      } else if (pointsRef.current.length >= 2) {
+        const speedKmh = computeAutoPauseResumeSpeedKmh(pointsRef.current, 3);
         const currentSport = sportRef.current;
         const minSpeed = apConfig.minSpeedKmh || getDefaultAutoPauseSpeed(currentSport);
         const delay = apConfig.pauseDelaySec || 3;
@@ -902,6 +1007,7 @@ export function useWorkoutRecorder() {
         if (speedKmh < minSpeed) {
           lowSpeedCountRef.current += 1;
           if (lowSpeedCountRef.current >= delay && !isAutoPausedRef.current) {
+            autoPausedAtRef.current = Date.now();
             isAutoPausedRef.current = true;
             setIsAutoPaused(true);
             if (apConfig.audioFeedback) {
@@ -911,6 +1017,12 @@ export function useWorkoutRecorder() {
         } else {
           lowSpeedCountRef.current = 0;
           if (isAutoPausedRef.current) {
+            finalizeAutoPause(Date.now());
+            const resumedPoints = appendAutoPauseResumePoint(pointsRef.current);
+            if (resumedPoints !== pointsRef.current) {
+              pointsRef.current = resumedPoints;
+              setPoints(resumedPoints);
+            }
             isAutoPausedRef.current = false;
             setIsAutoPaused(false);
             if (apConfig.audioFeedback) {
@@ -920,14 +1032,11 @@ export function useWorkoutRecorder() {
         }
       }
 
-      if (!isAutoPausedRef.current) {
-        movingSecRef.current += 1;
-      }
-
-      recomputeStats(pointsRef.current, elapsed, movingSecRef.current, isAutoPausedRef.current);
+      const movingSec = getMovingSec();
+      recomputeStats(pointsRef.current, elapsed, movingSec, isAutoPausedRef.current);
     }, 1000);
     return () => clearInterval(tick);
-  }, [status, getElapsedSec, recomputeStats, language]);
+  }, [status, getElapsedSec, getMovingSec, finalizeAutoPause, recomputeStats, language]);
 
   const addPoint = useCallback(
     (lat: number, lng: number, elevation?: number, accuracy?: number) => {
@@ -941,33 +1050,43 @@ export function useWorkoutRecorder() {
         lng,
         elevation,
         timestamp: now,
+        autoPaused: isAutoPausedRef.current,
         hr: currentHrRef.current ?? undefined,
         cadence: currentCadenceRef.current ?? powerCadenceRef.current ?? undefined,
         watts: currentPowerRef.current ?? undefined,
       };
 
-      if (!shouldAcceptPoint(pointsRef.current, p, sportRef.current)) {
+      if (
+        !shouldAcceptPoint(pointsRef.current, p, sportRef.current, {
+          allowStationary: autoPauseConfigRef.current.enabled,
+        })
+      ) {
         return;
       }
 
       const prev = pointsRef.current[pointsRef.current.length - 1];
-      if (prev && !isAutoPausedRef.current) {
+      if (prev && !isAutoPausedRef.current && prev.autoPaused !== true) {
         const segDist = haversineM(prev.lat, prev.lng, p.lat, p.lng);
-        distanceMRef.current += segDist;
+        if (segDist >= 3) {
+          distanceMRef.current += segDist;
+        }
       }
 
       pointsRef.current.push(p);
       setPoints([...pointsRef.current]);
 
       const elapsed = getElapsedSec();
-      recomputeStats(pointsRef.current, elapsed, movingSecRef.current, isAutoPausedRef.current);
+      const movingSec = getMovingSec();
+      recomputeStats(pointsRef.current, elapsed, movingSec, isAutoPausedRef.current);
 
-      if (routePoints.length > 0) {
+      const currentRoutePoints = routePointsRef.current;
+      const currentRouteConfig = routeConfigRef.current;
+      if (currentRoutePoints.length > 0) {
         const proximity = pointToPolylineDistanceM(
           { lat: p.lat, lng: p.lng },
-          routePoints
+          currentRoutePoints
         );
-        const tolerance = routeConfig?.offRouteToleranceM || 50;
+        const tolerance = currentRouteConfig?.offRouteToleranceM || 50;
         const offRoute = proximity.distanceM > tolerance;
         setOffRouteState({
           isOffRoute: offRoute,
@@ -978,175 +1097,332 @@ export function useWorkoutRecorder() {
         });
       }
     },
-    [getElapsedSec, recomputeStats, routePoints, routeConfig]
+    [getElapsedSec, getMovingSec, recomputeStats]
   );
 
-  const startGpsWatch = useCallback(async () => {
-    const stop = await startWatchingPosition(
-      (pos) => addPoint(pos.lat, pos.lng, pos.elevation, pos.accuracy),
-      (msg) => setError(msg)
-    );
-    stopWatchRef.current = stop;
+  const startGpsWatch = useCallback(async (): Promise<boolean> => {
+    const token = gpsWatchLifecycleRef.current.begin();
+    try {
+      const stop = await startWatchingPosition(
+        (pos) => {
+          if (gpsWatchLifecycleRef.current.isCurrent(token)) {
+            addPoint(pos.lat, pos.lng, pos.elevation, pos.accuracy);
+          }
+        },
+        (msg) => {
+          if (gpsWatchLifecycleRef.current.isCurrent(token)) {
+            setError(msg);
+          }
+        }
+      );
+      if (!gpsWatchLifecycleRef.current.isCurrent(token)) {
+        try {
+          stop();
+        } catch {
+          // Ignore teardown failures for a watcher that is already obsolete.
+        }
+        return false;
+      }
+      const previousStop = stopWatchRef.current;
+      stopWatchRef.current = stop;
+      if (previousStop && previousStop !== stop) {
+        try {
+          previousStop();
+        } catch {
+          // Ignore teardown failures while replacing an obsolete watcher.
+        }
+      }
+      return true;
+    } catch (e) {
+      if (gpsWatchLifecycleRef.current.isCurrent(token)) {
+        gpsWatchLifecycleRef.current.invalidate();
+        stopWatchRef.current = null;
+        setError(e instanceof Error ? e.message : "Não foi possível iniciar o GPS");
+      }
+      return false;
+    }
   }, [addPoint]);
 
   const stopGpsWatch = useCallback(() => {
+    gpsWatchLifecycleRef.current.invalidate();
     stopWatchRef.current?.();
     stopWatchRef.current = null;
   }, []);
 
   const start = useCallback(
     async (gConfig?: GhostConfig, sWorkout?: StructuredWorkout | null) => {
-      setError(null);
-      const ok = await requestLocationPermission();
-      if (!ok) {
-        setError(
-          "Permissão de localização negada. Ative o GPS nas configurações do app."
-        );
-        return false;
-      }
+      if (statusRef.current !== "idle" || startInFlightTokenRef.current !== null) return false;
+      const startToken = startOperationLifecycleRef.current.begin();
+      startInFlightTokenRef.current = startToken;
+      const isCurrentStart = () =>
+        mountedLifecycleRef.current.isMounted() && startOperationLifecycleRef.current.isCurrent(startToken);
+      try {
+        stopWorkoutAudio();
+        setError(null);
+        let ok = false;
+        try {
+          ok = await requestLocationPermission();
+        } catch (error) {
+          if (isCurrentStart()) {
+            setError(error instanceof Error ? error.message : "Não foi possível solicitar a permissão de localização");
+          }
+          return false;
+        }
+        if (!isCurrentStart()) return false;
+        if (!ok) {
+          setError(
+            "Permissão de localização negada. Ative o GPS nas configurações do app."
+          );
+          return false;
+        }
 
-      // Reset Ghost Runner TTS trackers
-      lastSpokenKmRef.current = 0;
-      lastSpokenMinRef.current = 0;
-      ghostRefPointsRef.current = [];
-
-      // Reset Voice Coach trackers
-      lastVoiceCoachDistMilestoneRef.current = 0;
-      lastVoiceCoachTimeMilestoneRef.current = 0;
-      lastCompletedKmRef.current = 0;
-      kmStartTimeSecRef.current = 0;
-      latestKmSplitRef.current = null;
-
-      // Reset Structured Workout
-      if (sWorkout) {
-        setStructuredWorkoutState(sWorkout);
-        structuredWorkoutRef.current = sWorkout;
-        const flattened = flattenWorkoutItems(sWorkout.items);
-        setFlatSteps(flattened);
-        flatStepsRef.current = flattened;
-        setCurrentStepIndex(0);
+        // Reset every session-owned accumulator before any new GPS/audio work.
+        maxSpeedKmhRef.current = 0;
+        totalElevationGainRef.current = 0;
+        elevationProcessedPointCountRef.current = 0;
+        accumulatedWattsRef.current = [];
+        accumulatedCadenceRef.current = [];
+        manualLapsRef.current = [];
+        setManualLaps([]);
+        lapStartSecRef.current = 0;
+        lapStartDistMRef.current = 0;
+        lapNumberRef.current = 1;
+        setCurrentLapNumber(1);
+        setLastCompletedLap(null);
+        setClimbProgressState(null);
+        climbProgressRef.current = null;
+        lastApproachedClimbIdRef.current = null;
+        lastStartedClimbIdRef.current = null;
+        lastCompletedClimbIdRef.current = null;
+        wasInClimbRef.current = false;
+        activeClimbRef.current = null;
         currentStepIndexRef.current = 0;
+        setCurrentStepIndex(0);
         stepStartTimeSecRef.current = 0;
         stepStartDistanceMRef.current = 0;
         executedStepsReportRef.current = [];
         lastPipSecRef.current = null;
 
-        if (flattened.length > 0) {
-          speakWorkoutStep(
-            flattened[0],
-            voiceCoachConfigRef.current,
-            language,
-            userProfileRef.current?.cyclingFtpWatts
-          );
-        }
-      } else {
-        setStructuredWorkoutState(null);
-        structuredWorkoutRef.current = null;
-        setFlatSteps([]);
-        flatStepsRef.current = [];
-      }
+        // Reset Ghost Runner TTS trackers
+        lastSpokenKmRef.current = 0;
+        lastSpokenMinRef.current = 0;
+        ghostRefPointsRef.current = [];
 
-      // Load past activity points if Ghost mode is activity
-      if (gConfig && gConfig.mode === "activity" && gConfig.activityId) {
-        try {
-          const act = await getActivity(gConfig.activityId);
-          if (act && act.points && act.points.length > 0) {
-            const refPts = act.points;
-            const validPts = refPts.filter((p) => p.timestamp);
-            if (validPts.length > 0) {
-              const startT = new Date(validPts[0].timestamp!).getTime();
-              let cumD = 0;
-              const mappedRefPts = [{ elapsedSec: 0, cumDistanceM: 0 }];
-              for (let i = 1; i < validPts.length; i++) {
-                const p1 = validPts[i - 1];
-                const p2 = validPts[i];
-                const d = haversineM(p1.lat, p1.lng, p2.lat, p2.lng);
-                cumD += d;
-                const elapsed = (new Date(p2.timestamp!).getTime() - startT) / 1000;
-                mappedRefPts.push({ elapsedSec: elapsed, cumDistanceM: cumD });
-              }
-              ghostRefPointsRef.current = mappedRefPts;
-            }
+        // Reset Voice Coach trackers
+        lastVoiceCoachDistMilestoneRef.current = 0;
+        lastVoiceCoachTimeMilestoneRef.current = 0;
+        lastCompletedKmRef.current = 0;
+        kmStartTimeSecRef.current = 0;
+        latestKmSplitRef.current = null;
+        wasOffRouteRef.current = false;
+        lastOffRouteAlertAtRef.current = null;
+
+        // Reset Structured Workout
+        if (sWorkout) {
+          setStructuredWorkoutState(sWorkout);
+          structuredWorkoutRef.current = sWorkout;
+          const flattened = flattenWorkoutItems(sWorkout.items);
+          setFlatSteps(flattened);
+          flatStepsRef.current = flattened;
+
+          if (flattened.length > 0) {
+            speakWorkoutStep(
+              flattened[0],
+              voiceCoachConfigRef.current,
+              language,
+              userProfileRef.current?.cyclingFtpWatts
+            );
           }
-        } catch (e) {
-          console.error("Error loading ghost runner activity reference:", e);
+        } else {
+          setStructuredWorkoutState(null);
+          structuredWorkoutRef.current = null;
+          setFlatSteps([]);
+          flatStepsRef.current = [];
+        }
+
+        // Load past activity points if Ghost mode is activity
+        if (gConfig && gConfig.mode === "activity" && gConfig.activityId) {
+          try {
+            const act = await getActivity(gConfig.activityId);
+            if (!isCurrentStart()) return false;
+            if (act && act.points && act.points.length > 0) {
+              const refPts = act.points;
+              const validPts = refPts.filter((p) => p.timestamp);
+              if (validPts.length > 0) {
+                const startT = new Date(validPts[0].timestamp!).getTime();
+                let cumD = 0;
+                const mappedRefPts = [{ elapsedSec: 0, cumDistanceM: 0 }];
+                for (let i = 1; i < validPts.length; i++) {
+                  const p1 = validPts[i - 1];
+                  const p2 = validPts[i];
+                  const d = haversineM(p1.lat, p1.lng, p2.lat, p2.lng);
+                  cumD += d;
+                  const elapsed = (new Date(p2.timestamp!).getTime() - startT) / 1000;
+                  mappedRefPts.push({ elapsedSec: elapsed, cumDistanceM: cumD });
+                }
+                ghostRefPointsRef.current = mappedRefPts;
+              }
+            }
+          } catch (e) {
+            console.error("Error loading ghost runner activity reference:", e);
+          }
+        }
+
+        if (!isCurrentStart()) return false;
+
+        // Reset Auto-Pause trackers
+        movingSecRef.current = 0;
+        autoPausedAtRef.current = null;
+        totalAutoPausedMsRef.current = 0;
+        lowSpeedCountRef.current = 0;
+        isAutoPausedRef.current = false;
+        setIsAutoPaused(false);
+
+        const initial = await getCurrentPosition();
+        if (!isCurrentStart()) return false;
+        pointsRef.current = [];
+        distanceMRef.current = 0;
+        totalPausedMsRef.current = 0;
+        pausedAtRef.current = null;
+        startedAtRef.current = new Date();
+
+        if (initial) {
+          const p: TrackPoint = {
+            lat: initial.lat,
+            lng: initial.lng,
+            elevation: initial.elevation,
+            timestamp: initial.timestamp,
+            autoPaused: false,
+          };
+          if (acceptGpsReading(initial.accuracy) && shouldAcceptPoint([], p, sportRef.current)) {
+            pointsRef.current = [p];
+            setPoints([p]);
+          } else {
+            setPoints([]);
+          }
+        } else {
+          setPoints([]);
+        }
+
+        const activeConfig = gConfig || { mode: "disabled", audioAlerts: false, audioFreq: "1km" };
+        setGhostConfig(activeConfig);
+        ghostConfigRef.current = activeConfig;
+        setGhostStats(activeConfig.mode !== "disabled" ? { distanceM: 0, diffM: 0, status: "tied" } : null);
+
+        statusRef.current = "recording";
+        setStatus("recording");
+        const gpsStarted = await startGpsWatch();
+        if (!isCurrentStart()) return false;
+        if (!gpsStarted) {
+          statusRef.current = "idle";
+          setStatus("idle");
+          startedAtRef.current = null;
+          stopWorkoutAudio();
+          return false;
+        }
+        recomputeStats(pointsRef.current, 0, 0, false);
+        return true;
+      } finally {
+        if (startInFlightTokenRef.current === startToken) {
+          startInFlightTokenRef.current = null;
         }
       }
-
-      // Reset Auto-Pause trackers
-      movingSecRef.current = 0;
-      lowSpeedCountRef.current = 0;
-      isAutoPausedRef.current = false;
-      setIsAutoPaused(false);
-
-      const initial = await getCurrentPosition();
-      pointsRef.current = [];
-      distanceMRef.current = 0;
-      totalPausedMsRef.current = 0;
-      pausedAtRef.current = null;
-      startedAtRef.current = new Date();
-
-      if (initial) {
-        const p: TrackPoint = {
-          lat: initial.lat,
-          lng: initial.lng,
-          elevation: initial.elevation,
-          timestamp: initial.timestamp,
-        };
-        pointsRef.current = [p];
-        setPoints([p]);
-      } else {
-        setPoints([]);
-      }
-
-      const activeConfig = gConfig || { mode: "disabled", audioAlerts: false, audioFreq: "1km" };
-      setGhostConfig(activeConfig);
-      ghostConfigRef.current = activeConfig;
-      setGhostStats(activeConfig.mode !== "disabled" ? { distanceM: 0, diffM: 0, status: "tied" } : null);
-
-      setStatus("recording");
-      await startGpsWatch();
-      recomputeStats(pointsRef.current, 0, 0, false);
-      return true;
     },
     [recomputeStats, startGpsWatch, language]
   );
 
   const pause = useCallback(() => {
-    if (status !== "recording") return;
+    if (statusRef.current !== "recording") return;
+    startOperationLifecycleRef.current.invalidate();
+    startInFlightTokenRef.current = null;
     stopGpsWatch();
+    finalizeAutoPause(Date.now());
+    const pausedPoints = appendAutoPauseBoundaryPoint(pointsRef.current);
+    if (pausedPoints !== pointsRef.current) {
+      pointsRef.current = pausedPoints;
+      setPoints(pausedPoints);
+    }
+    lowSpeedCountRef.current = 0;
+    isAutoPausedRef.current = false;
+    setIsAutoPaused(false);
     pausedAtRef.current = new Date();
+    statusRef.current = "paused";
     setStatus("paused");
-  }, [status, stopGpsWatch]);
+  }, [finalizeAutoPause, stopGpsWatch]);
 
   const resume = useCallback(async () => {
-    if (status !== "paused" || !pausedAtRef.current) return;
-    totalPausedMsRef.current += Date.now() - pausedAtRef.current.getTime();
-    pausedAtRef.current = null;
-    setStatus("recording");
-    await startGpsWatch();
-  }, [status, startGpsWatch]);
+    if (
+      statusRef.current !== "paused" ||
+      !pausedAtRef.current ||
+      resumeInFlightRef.current
+    ) return false;
+
+    const resumeToken = startOperationLifecycleRef.current.begin();
+    resumeInFlightRef.current = true;
+    const pauseStartedAt = pausedAtRef.current;
+    try {
+      const gpsStarted = await startGpsWatch();
+      if (
+        !mountedLifecycleRef.current.isMounted() ||
+        !startOperationLifecycleRef.current.isCurrent(resumeToken) ||
+        statusRef.current !== "paused"
+      ) return false;
+      if (!gpsStarted) {
+        statusRef.current = "paused";
+        setStatus("paused");
+        return false;
+      }
+      if (pauseStartedAt) {
+        totalPausedMsRef.current += Date.now() - pauseStartedAt.getTime();
+      }
+      pausedAtRef.current = null;
+      lowSpeedCountRef.current = 0;
+      isAutoPausedRef.current = false;
+      setIsAutoPaused(false);
+      statusRef.current = "recording";
+      setStatus("recording");
+      return true;
+    } finally {
+      resumeInFlightRef.current = false;
+    }
+  }, [startGpsWatch]);
 
   const stop = useCallback(async (): Promise<string | null> => {
+    if (stopInFlightRef.current || !canStopRecorder(statusRef.current)) return null;
+    stopInFlightRef.current = true;
+    try {
+    startOperationLifecycleRef.current.invalidate();
+    startInFlightTokenRef.current = null;
+    resumeInFlightRef.current = false;
     stopGpsWatch();
-    setStatus("saving");
-
+    stopWorkoutAudio();
     const endedAt = new Date();
+    finalizeAutoPause(endedAt.getTime());
+    if (statusRef.current === "paused" && pausedAtRef.current) {
+      totalPausedMsRef.current += endedAt.getTime() - pausedAtRef.current.getTime();
+      pausedAtRef.current = null;
+    }
+    statusRef.current = "saving";
+    if (mountedLifecycleRef.current.isMounted()) setStatus("saving");
+
     const startedAt = startedAtRef.current ?? endedAt;
     const elapsedSec = getElapsedSec();
+    const movingSec = Math.max(0, Math.round(getMovingSec(endedAt.getTime())));
     const pts = pointsRef.current;
 
     const validationError = validateRecordedWorkout(pts, elapsedSec);
     if (validationError) {
-      setStatus("idle");
+      pausedAtRef.current = pausedAtRef.current ?? new Date();
+      statusRef.current = "paused";
+      setStatus("paused");
       setError(validationError);
       return null;
     }
 
     try {
-      const parsed = buildRecordedActivity(sport, startedAt, endedAt, pts, movingSecRef.current);
+      const parsed = buildRecordedActivity(sport, startedAt, endedAt, pts, movingSec);
       parsed.durationSec = elapsedSec;
-      parsed.movingTimeSec = movingSecRef.current > 0 ? movingSecRef.current : elapsedSec;
+      parsed.movingTimeSec = movingSec > 0 ? movingSec : elapsedSec;
       parsed.elapsedTimeSec = elapsedSec;
 
       // Finalize Structured Workout Report if active
@@ -1205,20 +1481,33 @@ export function useWorkoutRecorder() {
       }
 
       const id = await saveActivity(parsed, "recorded");
-      setStatus("idle");
+      statusRef.current = "idle";
+      if (mountedLifecycleRef.current.isMounted()) setStatus("idle");
       pointsRef.current = [];
-      setPoints([]);
+      if (mountedLifecycleRef.current.isMounted()) setPoints([]);
       startedAtRef.current = null;
       return id;
     } catch (e) {
-      setStatus("idle");
-      setError(e instanceof Error ? e.message : "Erro ao salvar treino");
+      pausedAtRef.current = pausedAtRef.current ?? new Date();
+      statusRef.current = "paused";
+      if (mountedLifecycleRef.current.isMounted()) {
+        setStatus("paused");
+        setError(e instanceof Error ? e.message : "Erro ao salvar treino");
+      }
       return null;
     }
-  }, [getElapsedSec, sport, stopGpsWatch]);
+    } finally {
+      stopInFlightRef.current = false;
+    }
+  }, [finalizeAutoPause, getElapsedSec, getMovingSec, sport, stopGpsWatch]);
 
   const reset = useCallback(() => {
+    startOperationLifecycleRef.current.invalidate();
+    startInFlightTokenRef.current = null;
+    resumeInFlightRef.current = false;
     stopGpsWatch();
+    stopWorkoutAudio();
+    statusRef.current = "idle";
     setStatus("idle");
     setPoints([]);
     pointsRef.current = [];
@@ -1245,6 +1534,7 @@ export function useWorkoutRecorder() {
     });
     maxSpeedKmhRef.current = 0;
     totalElevationGainRef.current = 0;
+    elevationProcessedPointCountRef.current = 0;
     accumulatedWattsRef.current = [];
     accumulatedCadenceRef.current = [];
     setGhostConfig(null);
@@ -1259,6 +1549,8 @@ export function useWorkoutRecorder() {
     kmStartTimeSecRef.current = 0;
     latestKmSplitRef.current = null;
     movingSecRef.current = 0;
+    autoPausedAtRef.current = null;
+    totalAutoPausedMsRef.current = 0;
     lowSpeedCountRef.current = 0;
     isAutoPausedRef.current = false;
     setIsAutoPaused(false);
@@ -1278,6 +1570,15 @@ export function useWorkoutRecorder() {
     lapNumberRef.current = 1;
     setCurrentLapNumber(1);
     setLastCompletedLap(null);
+    setClimbProgressState(null);
+    climbProgressRef.current = null;
+    lastApproachedClimbIdRef.current = null;
+    lastStartedClimbIdRef.current = null;
+    lastCompletedClimbIdRef.current = null;
+    wasInClimbRef.current = false;
+    activeClimbRef.current = null;
+    wasOffRouteRef.current = false;
+    lastOffRouteAlertAtRef.current = null;
   }, [stopGpsWatch]);
 
   const triggerManualLap = useCallback(() => {
@@ -1316,17 +1617,24 @@ export function useWorkoutRecorder() {
   const connectHr = useCallback(async () => {
     if (typeof window === "undefined") return;
 
+    const token = hrLifecycleRef.current.begin();
+    const isCurrent = () => mountedLifecycleRef.current.isMounted() && hrLifecycleRef.current.isCurrent(token);
+    let deviceId: string | null = null;
+    let notificationsStarted = false;
     setHrStatus("connecting");
     setError(null);
 
     try {
       await BleClient.initialize();
+      if (!isCurrent()) return;
 
       if (Capacitor.isNativePlatform()) {
         const enabled = await BleClient.isEnabled();
+        if (!isCurrent()) return;
         if (!enabled) {
           try {
             await BleClient.requestEnable();
+            if (!isCurrent()) return;
           } catch (e) {
             throw new Error("Por favor, ative o Bluetooth do aparelho.");
           }
@@ -1336,32 +1644,38 @@ export function useWorkoutRecorder() {
       const device = await BleClient.requestDevice({
         services: [HEART_RATE_SERVICE],
       });
+      if (!isCurrent()) return;
 
-      const deviceId = device.deviceId;
+      deviceId = device.deviceId;
       hrDeviceIdRef.current = deviceId;
       setHrDeviceName(device.name || "Sensor de FC");
 
       const onDisconnected = (disconnectedId: string) => {
-        if (hrDeviceIdRef.current === disconnectedId) {
-          setHrStatus("disconnected");
-          setHrBpm(null);
-          setHrDeviceName(null);
-          currentHrRef.current = null;
-          hrDeviceIdRef.current = null;
-        }
+        if (!isCurrent() || hrDeviceIdRef.current !== disconnectedId) return;
+        hrLifecycleRef.current.invalidate();
+        setHrStatus("disconnected");
+        setHrBpm(null);
+        setHrDeviceName(null);
+        currentHrRef.current = null;
+        hrDeviceIdRef.current = null;
       };
 
-      await BleClient.connect(deviceId, onDisconnected);
+      await BleClient.connect(deviceId!, onDisconnected);
+      if (!isCurrent()) {
+        await cleanupBleConnection(deviceId!, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, false);
+        return;
+      }
 
       await BleClient.startNotifications(
-        deviceId,
+        deviceId!,
         HEART_RATE_SERVICE,
         HEART_RATE_MEASUREMENT_CHARACTERISTIC,
         (value: DataView) => {
-          if (!value) return;
+          if (!isCurrent() || !value || value.byteLength < 2) return;
 
           const flags = value.getUint8(0);
           const rate16Bits = flags & 0x01;
+          if (rate16Bits && value.byteLength < 3) return;
           let heartRate: number;
 
           if (rate16Bits) {
@@ -1374,9 +1688,23 @@ export function useWorkoutRecorder() {
           currentHrRef.current = heartRate;
         }
       );
+      notificationsStarted = true;
+      if (!isCurrent()) {
+        await cleanupBleConnection(deviceId!, HEART_RATE_SERVICE, HEART_RATE_MEASUREMENT_CHARACTERISTIC, true);
+        return;
+      }
 
       setHrStatus("connected");
     } catch (err: any) {
+      if (deviceId) {
+        await cleanupBleConnection(
+          deviceId,
+          HEART_RATE_SERVICE,
+          HEART_RATE_MEASUREMENT_CHARACTERISTIC,
+          notificationsStarted
+        );
+      }
+      if (!isCurrent()) return;
       setHrStatus("disconnected");
       setHrBpm(null);
       setHrDeviceName(null);
@@ -1396,6 +1724,7 @@ export function useWorkoutRecorder() {
   }, []);
 
   const disconnectHr = useCallback(async () => {
+    hrLifecycleRef.current.invalidate();
     const deviceId = hrDeviceIdRef.current;
     if (deviceId) {
       try {
@@ -1424,17 +1753,24 @@ export function useWorkoutRecorder() {
   const connectCsc = useCallback(async () => {
     if (typeof window === "undefined") return;
 
+    const token = cscLifecycleRef.current.begin();
+    const isCurrent = () => mountedLifecycleRef.current.isMounted() && cscLifecycleRef.current.isCurrent(token);
+    let deviceId: string | null = null;
+    let notificationsStarted = false;
     setCscStatus("connecting");
     setError(null);
 
     try {
       await BleClient.initialize();
+      if (!isCurrent()) return;
 
       if (Capacitor.isNativePlatform()) {
         const enabled = await BleClient.isEnabled();
+        if (!isCurrent()) return;
         if (!enabled) {
           try {
             await BleClient.requestEnable();
+            if (!isCurrent()) return;
           } catch (e) {
             throw new Error("Por favor, ative o Bluetooth do aparelho.");
           }
@@ -1444,30 +1780,35 @@ export function useWorkoutRecorder() {
       const device = await BleClient.requestDevice({
         services: [CSC_SERVICE],
       });
+      if (!isCurrent()) return;
 
-      const deviceId = device.deviceId;
+      deviceId = device.deviceId;
       cscDeviceIdRef.current = deviceId;
       setCscDeviceName(device.name || "Sensor de Cadência");
 
       const onDisconnected = (disconnectedId: string) => {
-        if (cscDeviceIdRef.current === disconnectedId) {
-          setCscStatus("disconnected");
-          setCscCadenceRpm(null);
-          setCscDeviceName(null);
-          currentCadenceRef.current = null;
-          cscDeviceIdRef.current = null;
-          cscParserRef.current.reset();
-        }
+        if (!isCurrent() || cscDeviceIdRef.current !== disconnectedId) return;
+        cscLifecycleRef.current.invalidate();
+        setCscStatus("disconnected");
+        setCscCadenceRpm(null);
+        setCscDeviceName(null);
+        currentCadenceRef.current = null;
+        cscDeviceIdRef.current = null;
+        cscParserRef.current.reset();
       };
 
-      await BleClient.connect(deviceId, onDisconnected);
+      await BleClient.connect(deviceId!, onDisconnected);
+      if (!isCurrent()) {
+        await cleanupBleConnection(deviceId!, CSC_SERVICE, CSC_MEASUREMENT_CHAR, false);
+        return;
+      }
 
       await BleClient.startNotifications(
-        deviceId,
+        deviceId!,
         CSC_SERVICE,
         CSC_MEASUREMENT_CHAR,
         (value: DataView) => {
-          if (!value) return;
+          if (!isCurrent() || !value || !hasValidCscMeasurementPayload(value)) return;
           const data = cscParserRef.current.parse(value);
           if (data.cadenceRpm !== null) {
             setCscCadenceRpm(data.cadenceRpm);
@@ -1475,9 +1816,23 @@ export function useWorkoutRecorder() {
           }
         }
       );
+      notificationsStarted = true;
+      if (!isCurrent()) {
+        await cleanupBleConnection(deviceId!, CSC_SERVICE, CSC_MEASUREMENT_CHAR, true);
+        return;
+      }
 
       setCscStatus("connected");
     } catch (err: any) {
+      if (deviceId) {
+        await cleanupBleConnection(
+          deviceId,
+          CSC_SERVICE,
+          CSC_MEASUREMENT_CHAR,
+          notificationsStarted
+        );
+      }
+      if (!isCurrent()) return;
       setCscStatus("disconnected");
       setCscCadenceRpm(null);
       setCscDeviceName(null);
@@ -1497,6 +1852,7 @@ export function useWorkoutRecorder() {
   }, []);
 
   const disconnectCsc = useCallback(async () => {
+    cscLifecycleRef.current.invalidate();
     const deviceId = cscDeviceIdRef.current;
     if (deviceId) {
       try {
@@ -1522,17 +1878,24 @@ export function useWorkoutRecorder() {
   const connectPower = useCallback(async () => {
     if (typeof window === "undefined") return;
 
+    const token = powerLifecycleRef.current.begin();
+    const isCurrent = () => mountedLifecycleRef.current.isMounted() && powerLifecycleRef.current.isCurrent(token);
+    let deviceId: string | null = null;
+    let notificationsStarted = false;
     setPowerStatus("connecting");
     setError(null);
 
     try {
       await BleClient.initialize();
+      if (!isCurrent()) return;
 
       if (Capacitor.isNativePlatform()) {
         const enabled = await BleClient.isEnabled();
+        if (!isCurrent()) return;
         if (!enabled) {
           try {
             await BleClient.requestEnable();
+            if (!isCurrent()) return;
           } catch (e) {
             throw new Error("Por favor, ative o Bluetooth do aparelho.");
           }
@@ -1542,32 +1905,37 @@ export function useWorkoutRecorder() {
       const device = await BleClient.requestDevice({
         services: [POWER_SERVICE],
       });
+      if (!isCurrent()) return;
 
-      const deviceId = device.deviceId;
+      deviceId = device.deviceId;
       powerDeviceIdRef.current = deviceId;
       setPowerDeviceName(device.name || "Medidor de Potência");
 
       const onDisconnected = (disconnectedId: string) => {
-        if (powerDeviceIdRef.current === disconnectedId) {
-          setPowerStatus("disconnected");
-          setPowerWatts(null);
-          setPowerDeviceName(null);
-          setPowerCadenceRpm(null);
-          currentPowerRef.current = null;
-          powerCadenceRef.current = null;
-          powerDeviceIdRef.current = null;
-          powerParserRef.current.reset();
-        }
+        if (!isCurrent() || powerDeviceIdRef.current !== disconnectedId) return;
+        powerLifecycleRef.current.invalidate();
+        setPowerStatus("disconnected");
+        setPowerWatts(null);
+        setPowerDeviceName(null);
+        setPowerCadenceRpm(null);
+        currentPowerRef.current = null;
+        powerCadenceRef.current = null;
+        powerDeviceIdRef.current = null;
+        powerParserRef.current.reset();
       };
 
-      await BleClient.connect(deviceId, onDisconnected);
+      await BleClient.connect(deviceId!, onDisconnected);
+      if (!isCurrent()) {
+        await cleanupBleConnection(deviceId!, POWER_SERVICE, POWER_MEASUREMENT_CHAR, false);
+        return;
+      }
 
       await BleClient.startNotifications(
-        deviceId,
+        deviceId!,
         POWER_SERVICE,
         POWER_MEASUREMENT_CHAR,
         (value: DataView) => {
-          if (!value) return;
+          if (!isCurrent() || !value || !hasValidCyclingPowerMeasurementPayload(value)) return;
           const data = powerParserRef.current.parse(value);
 
           setPowerWatts(data.instantaneousPowerWatts);
@@ -1580,9 +1948,23 @@ export function useWorkoutRecorder() {
           }
         }
       );
+      notificationsStarted = true;
+      if (!isCurrent()) {
+        await cleanupBleConnection(deviceId!, POWER_SERVICE, POWER_MEASUREMENT_CHAR, true);
+        return;
+      }
 
       setPowerStatus("connected");
     } catch (err: any) {
+      if (deviceId) {
+        await cleanupBleConnection(
+          deviceId,
+          POWER_SERVICE,
+          POWER_MEASUREMENT_CHAR,
+          notificationsStarted
+        );
+      }
+      if (!isCurrent()) return;
       setPowerStatus("disconnected");
       setPowerWatts(null);
       setPowerDeviceName(null);
@@ -1604,6 +1986,7 @@ export function useWorkoutRecorder() {
   }, []);
 
   const disconnectPower = useCallback(async () => {
+    powerLifecycleRef.current.invalidate();
     const deviceId = powerDeviceIdRef.current;
     if (deviceId) {
       try {
@@ -1629,7 +2012,20 @@ export function useWorkoutRecorder() {
 
   // ─── Cleanup on Unmount ──────────────────────────────────────────────────
   useEffect(() => {
+    const mountedLifecycle = mountedLifecycleRef.current;
+    mountedLifecycle.mount();
+    const startLifecycle = startOperationLifecycleRef.current;
+    const routeLifecycle = routeLoadLifecycleRef.current;
+    const hrLifecycle = hrLifecycleRef.current;
+    const cscLifecycle = cscLifecycleRef.current;
+    const powerLifecycle = powerLifecycleRef.current;
     return () => {
+      mountedLifecycle.unmount();
+      startLifecycle.invalidate();
+      routeLifecycle.invalidate();
+      hrLifecycle.invalidate();
+      cscLifecycle.invalidate();
+      powerLifecycle.invalidate();
       stopGpsWatch();
       const hrId = hrDeviceIdRef.current;
       if (hrId) {
@@ -1652,15 +2048,58 @@ export function useWorkoutRecorder() {
     };
   }, [stopGpsWatch]);
 
+  // Audio must not keep running after the WebView loses focus or the recorder unmounts.
+  useEffect(() => {
+    const cancelAudio = () => {
+      cancelAutoPauseSound();
+      stopWorkoutAudio();
+    };
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", cancelAudio);
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("pagehide", cancelAudio);
+    }
+
+    return () => {
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", cancelAudio);
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("pagehide", cancelAudio);
+      }
+      cancelAudio();
+    };
+  }, []);
+
   // Off-route audio alert
   useEffect(() => {
-    if (offRouteState?.isOffRoute && routeConfig?.audioAlerts && "speechSynthesis" in window) {
-      const dist = Math.round(offRouteState.distanceFromRouteM);
-      const utterance = new SpeechSynthesisUtterance(
-        t("navigation.off_route_alert", { dist })
+    const isOffRoute = Boolean(offRouteState?.isOffRoute);
+    if (!isOffRoute || !routeConfig?.audioAlerts) {
+      wasOffRouteRef.current = false;
+      lastOffRouteAlertAtRef.current = null;
+      return;
+    }
+
+    const now = Date.now();
+    const lastAlertAt = lastOffRouteAlertAtRef.current;
+    const elapsed = lastAlertAt == null ? 0 : now - lastAlertAt;
+    const shouldAlert = shouldAnnounceOffRoute(
+      true,
+      wasOffRouteRef.current,
+      elapsed
+    );
+    wasOffRouteRef.current = true;
+
+    if (shouldAlert) {
+      const dist = Math.round(offRouteState?.distanceFromRouteM ?? 0);
+      lastOffRouteAlertAtRef.current = now;
+      speakWithConfig(
+        t("navigation.off_route_alert", { dist }),
+        voiceCoachConfigRef.current,
+        language
       );
-      utterance.lang = language === "pt" ? "pt-BR" : "en-US";
-      window.speechSynthesis.speak(utterance);
     }
   }, [offRouteState?.isOffRoute, offRouteState?.distanceFromRouteM, routeConfig?.audioAlerts, language, t]);
 

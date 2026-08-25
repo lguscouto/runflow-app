@@ -2,11 +2,14 @@ import {
   getStore,
   PROFILE_KEY,
   getAllStoredActivities,
-  putActivity,
+  toActivitySummary,
+  type StoredActivityTrack,
   type StoredActivity,
 } from "./storage";
 import type { UserProfile, Gear } from "./types";
+import { getUserProfile } from "./profile";
 import { shareOrDownloadFile } from "./share-file";
+import { assertValidSyncPayload } from "./sync/merger";
 
 export interface BackupPayload {
   metadata: {
@@ -23,7 +26,7 @@ export async function exportBackup(): Promise<void> {
   const db = await getStore();
   
   // Buscar perfil
-  const profile = (await db.get("profile", PROFILE_KEY)) || null;
+  const profile = await getUserProfile();
   
   // Buscar equipamentos
   const gear = await db.getAll("gear");
@@ -57,7 +60,7 @@ export interface ImportResult {
 }
 
 export async function importBackup(jsonString: string): Promise<ImportResult> {
-  let payload: BackupPayload;
+  let payload: unknown;
   
   try {
     payload = JSON.parse(jsonString);
@@ -66,45 +69,55 @@ export async function importBackup(jsonString: string): Promise<ImportResult> {
   }
 
   // Validar se o formato é do RunFlow
-  if (
-    !payload ||
-    !payload.metadata ||
-    payload.metadata.appName !== "RunFlow" ||
-    payload.metadata.version !== 1
-  ) {
+  if (!payload || typeof payload !== "object") {
     throw new Error("invalid_backup_format");
   }
+  const candidate = payload as Partial<BackupPayload>;
+  if (
+    !candidate.metadata ||
+    candidate.metadata.appName !== "RunFlow" ||
+    candidate.metadata.version !== 1 ||
+    typeof candidate.metadata.exportedAt !== "string" ||
+    !Number.isFinite(new Date(candidate.metadata.exportedAt).getTime()) ||
+    !Array.isArray(candidate.gear) ||
+    !Array.isArray(candidate.activities)
+  ) throw new Error("invalid_backup_format");
+
+  assertValidSyncPayload({
+    profile: candidate.profile ?? null,
+    gear: candidate.gear,
+    activities: candidate.activities,
+  });
+  const validPayload = candidate as BackupPayload;
 
   const db = await getStore();
   let profileUpdated = false;
 
-  // 1. Restaurar Perfil
-  if (payload.profile) {
-    await db.put("profile", payload.profile, PROFILE_KEY);
+  const tx = db.transaction(["profile", "gear", "activitySummaries", "activityTracks"], "readwrite");
+  if (validPayload.profile) {
+    tx.objectStore("profile").put(validPayload.profile, PROFILE_KEY);
     profileUpdated = true;
   }
-
-  // 2. Restaurar Gear (Equipamentos)
-  let gearCount = 0;
-  if (Array.isArray(payload.gear)) {
-    for (const g of payload.gear) {
-      await db.put("gear", g);
-      gearCount++;
-    }
+  for (const g of validPayload.gear) tx.objectStore("gear").put(g);
+  for (const activity of validPayload.activities) {
+    const track: StoredActivityTrack = {
+      id: activity.id,
+      points: activity.points,
+      trackSegments: activity.trackSegments,
+      maxPaceSecKm: activity.maxPaceSecKm,
+      maxHr: activity.maxHr,
+      notes: activity.notes,
+      workoutId: activity.workoutId,
+      structuredWorkoutReport: activity.structuredWorkoutReport,
+    };
+    tx.objectStore("activitySummaries").put(toActivitySummary(activity));
+    tx.objectStore("activityTracks").put(track);
   }
-
-  // 3. Restaurar Atividades
-  let activitiesCount = 0;
-  if (Array.isArray(payload.activities)) {
-    for (const act of payload.activities) {
-      await putActivity(act);
-      activitiesCount++;
-    }
-  }
+  await tx.done;
 
   return {
-    activitiesCount,
-    gearCount,
+    activitiesCount: validPayload.activities.length,
+    gearCount: validPayload.gear.length,
     profileUpdated,
   };
 }

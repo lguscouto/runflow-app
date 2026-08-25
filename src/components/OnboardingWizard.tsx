@@ -1,9 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { getUserProfile, saveUserProfile } from "@/lib/profile";
+import { registerAndroidBackHandler } from "@/lib/android-back";
 import { ChevronRight, ChevronLeft, Check, Languages, User, Scale, Target } from "lucide-react";
+
+export function consumeOnboardingBack({
+  show,
+  step,
+  onClose,
+  onPrevious,
+}: {
+  show: boolean;
+  step: number;
+  onClose: () => void;
+  onPrevious: () => void;
+}): boolean {
+  if (!show) return false;
+  if (step > 1) {
+    onPrevious();
+  } else {
+    onClose();
+  }
+  return true;
+}
 
 export function OnboardingWizard() {
   const { t, language, changeLanguage } = useI18n();
@@ -52,6 +73,20 @@ export function OnboardingWizard() {
     }
     checkOnboarded();
   }, []);
+
+  const backHandlerRef = useRef<() => boolean>(() => false);
+  backHandlerRef.current = () =>
+      consumeOnboardingBack({
+        show,
+        step,
+        onClose: () => setShow(false),
+        onPrevious: () => {
+          setErrorMsg("");
+          setStep((currentStep) => Math.max(1, currentStep - 1));
+        },
+      });
+
+  useEffect(() => registerAndroidBackHandler(() => backHandlerRef.current()), []);
 
   if (loading || !show) return null;
 

@@ -10,10 +10,10 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 
 - Dashboard com estatísticas (distância total, tempo, semana atual e metas)
 - Lista de atividades com distância, duração e ritmo médio
-- Detalhe do treino com **mapa** (OpenStreetMap), gráficos analíticos e tabela de voltas (splits)
+- Detalhe do treino com rota local e **mapa online opcional** (OpenStreetMap), gráficos analíticos e tabela de voltas (splits)
 - **Gravar treino** com GPS ao vivo (distância, tempo, ritmo, mapa) — estilo Strava
 - **Importação** de arquivos `.gpx` e `.fit` (arrastar ou selecionar)
-- Dados armazenados **localmente** no dispositivo (IndexedDB) — privacidade total local-first
+- Dados de treino armazenados **localmente** no dispositivo (IndexedDB); o Android Auto Backup permanece desabilitado
 - **App Android (APK)** via Capacitor
 - Interface multilíngue (Português do Brasil 🇧🇷 e Inglês 🇺🇸)
 - **Assistente de configuração inicial (Wizard de Boas-vindas)** para novos usuários
@@ -25,9 +25,12 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - **Backup e Restauração**: exportar/importar backup JSON completo (atividades, perfil, equipamentos)
 - **Frequência Cardíaca em Tempo Real**: conexão BLE com relógios e cintas cardíacas
 - **Competidor Virtual (Ghost Runner)**: corra contra o ritmo de treinos anteriores ou meta fixa, com alertas de voz
-- **Correção de Altimetria**: API Open-Meteo para corrigir dados de elevação dos treinos
+- **Correção de Altimetria opcional**: após confirmação explícita, envia as coordenadas exatas do treino à API Open-Meteo para corrigir a elevação
 - **Associar FIT (FC)**: mesclagem de frequência cardíaca de arquivos FIT em treinos GPX já importados
-- **Navegação Offline**: siga rotas importadas ou desenhadas no mapa, com alertas sonoros de desvio de rota
+- **Navegação local de rotas**: rotas e alertas de desvio funcionam com dados locais; a camada visual do mapa usa tiles online somente após consentimento por sessão
+- **Voice Coach nativo no Android**: fallback TTS por Capacitor quando o WebView não expõe `speechSynthesis`, com cancelamento seguro no stop/background/unmount
+- **Lifecycle seguro de gravação**: cancelamento de timers/áudio, invalidação de watchers GPS e proteção contra resultados assíncronos após reset ou descarte
+- **Métricas e sensores protegidos**: elevação processada uma vez por segmento, pontos de Auto-Pause excluídos do artefato salvo, operações concorrentes de gravação invalidadas/idempotentes, GPS finito, callbacks de rota sem estado obsoleto, alertas de desvio com transição/throttling e conexões BLE canceláveis no unmount com payloads truncados descartados
 - **Desenho de Rotas**: crie rotas GPX clicando no mapa, com distância em tempo real e salvamento local
 - **Mapa de Comparação**: overlay da rota planejada vs trajeto real no detalhe da atividade
 
@@ -35,17 +38,37 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 
 - Node.js 18+
 - Windows / macOS / Linux
-- Para APK: [Android Studio](https://developer.android.com/studio) + JDK 17
+- Para APK: [Android Studio](https://developer.android.com/studio) + JDK 21 (JBR incluído)
 
 ## Instalação (navegador / desenvolvimento)
 
+Execute os comandos a partir da raiz do checkout:
+
 ```bash
-cd "app treino"
 npm install
 npm run dev
 ```
 
 Abra [http://localhost:3000](http://localhost:3000).
+
+O RunFlow é **local-first**: gravações, histórico e configurações permanecem no dispositivo.
+As sincronizações P2P e WebDAV são opcionais e exigem rede somente quando acionadas pelo usuário.
+Outros serviços externos também são opcionais: os mapas só carregam tiles após consentimento
+explícito por sessão (OpenStreetMap, CARTO ou Esri, que recebem a área solicitada), e a correção
+de altimetria só envia coordenadas exatas à Open-Meteo após uma confirmação específica. Sem esse
+consentimento, rotas e trajetos continuam visíveis sobre o fundo local, sem tiles externos.
+
+### Sincronização opcional
+
+- **P2P:** disponível no navegador desktop e no Android/iOS; use um código de pareamento
+  temporário. O protocolo autentica o desafio antes de aceitar dados e valida limites/tipos do
+  payload antes de escrever no IndexedDB.
+- **WebDAV:** use uma URL `https://` e informe a senha no momento da sincronização. A senha não
+  é persistida em `localStorage`; falhas de leitura, JSON inválido, respostas HTTP inesperadas
+  e corpos de resposta pendurados (timeout de headers e de streaming) interrompem o fluxo antes
+  de qualquer sobrescrita remota.
+- A permissão **Local Network** é necessária apenas no app nativo; no navegador desktop esse
+  bridge não é necessário.
 
 ## Gerar APK para Android
 
@@ -103,7 +126,7 @@ npm run cap:run
 ### Variáveis de ambiente (se o build falhar)
 
 - `ANDROID_HOME` — pasta do Android SDK (ex.: `%LOCALAPPDATA%\Android\Sdk` no Windows)
-- `JAVA_HOME` — JDK 17 (vem com o Android Studio)
+- `JAVA_HOME` — JDK 21/JBR (vem com o Android Studio; no Windows: `C:\Program Files\Android\Android Studio\jbr`)
 
 ## Exportar treinos do Amazfit
 
@@ -140,11 +163,11 @@ Por isso o RunFlow usa **importação de arquivos GPX/FIT** — método estável
 ```
 src/
   app/           # Páginas (export estático)
-    rotas/       # Navegação offline (listar rotas, criar rota)
+    rotas/       # Navegação local de rotas (listar rotas, criar rota)
   components/    # UI (mapa, lista, importação, perfil, conquistas, navegação)
   lib/
     parsers/     # GPX e FIT
-    storage.ts   # IndexedDB v4 (activities, profile, gear, routes)
+    storage.ts   # IndexedDB v7 (activitySummaries, activityTracks, profile, gear, routes, workouts)
     activities.ts
     gear.ts      # Utilitários de equipamentos
     achievements.ts  # Cálculo dinâmico de conquistas
@@ -165,6 +188,37 @@ out/             # Build estático (gerado)
 | `npm run cap:android` | Abre Android Studio |
 | `npm run cap:run` | Instala no dispositivo conectado |
 | `npm start` | Servir pasta `out/` localmente |
+
+## Verificação local
+
+Gates web e E2E usados no checkout atual:
+
+```bash
+npx --no-install vitest run
+npx --no-install tsc --noEmit --pretty false
+npm run lint
+npm run test:e2e
+```
+
+Na primeira execução do Playwright, instale o navegador de teste se ele ainda não estiver presente:
+
+```bash
+npx playwright install chromium
+```
+
+Na execução local, a aplicação fica acessível em [http://localhost:3000](http://localhost:3000).
+O build mobile validado usa `npm run build:mobile`; os testes Android conectados rodam com
+`./gradlew.bat :app:testDebugUnitTest :app:assembleAndroidTest :app:connectedDebugAndroidTest`
+na pasta `android/`, com JDK 21/JBR e SDK Android configurados.
+
+### Estado verificado do checkout 0.9.8
+
+- `npm test`: **65 arquivos / 253 testes** aprovados.
+- E2E: **25/25** aprovados.
+- Bundle: **2.688.935 bytes total / 498.164 bytes inicial**, dentro do orçamento.
+- `npm run build:mobile`: aprovado; APK debug final em
+  `android/app/build/outputs/apk/debug/app-debug.apk`.
+- A matriz Android 33–36, hardware físico, medição acústica e CI hospedado permanecem fora do escopo desta entrega.
 
 ## Licença
 
@@ -192,5 +246,5 @@ Resumo do status das features:
 13. ~~Competidor Virtual / Ghost Runner Offline~~ ✅
 14. ~~Motor de Enriquecimento e Correção de Altimetria~~ ✅
 15. Sincronização Multidispositivo Sem Servidor
-16. ~~Navegação Offline e Alerta de Desvio de Rota~~ ✅
+16. ~~Navegação local de rotas e Alerta de Desvio de Rota~~ ✅
 17. Replay e Visualização da Atividade em 3D (Flyover)

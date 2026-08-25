@@ -1,6 +1,15 @@
 import FitParser from "fit-file-parser";
 import type { ParsedActivity, Sport, TrackPoint } from "../types";
 import { distanceFromPoints, elevationGainFromPoints } from "../geo";
+import {
+  normalizeCadence,
+  normalizeCalories,
+  normalizeElevation,
+  normalizeHeartRate,
+  normalizeNonNegative,
+  normalizePower,
+  normalizeSpeedKmh,
+} from "./telemetry";
 
 type FitRecord = Record<string, unknown>;
 
@@ -16,10 +25,15 @@ function mapSport(sport?: string): Sport {
   return "running";
 }
 
-function fitTimestampToDate(ts: number | undefined): Date | undefined {
+function fitTimestampToDate(value: unknown): Date | undefined {
+  if (value instanceof Date) {
+    return Number.isFinite(value.getTime()) ? value : undefined;
+  }
+  const ts = num(value);
   if (ts == null) return undefined;
   // FIT epoch: 31 Dec 1989 UTC
-  return new Date((ts + 631065600) * 1000);
+  const date = new Date((ts + 631065600) * 1000);
+  return Number.isFinite(date.getTime()) ? date : undefined;
 }
 
 function toNodeBuffer(data: ArrayBuffer | Buffer): Buffer {
@@ -62,17 +76,25 @@ export function parseFit(
 
         const latDeg = Math.abs(lat) > 90 ? (lat * 180) / Math.pow(2, 31) : lat;
         const lngDeg = Math.abs(lng) > 180 ? (lng * 180) / Math.pow(2, 31) : lng;
+        if (
+          !Number.isFinite(latDeg) ||
+          !Number.isFinite(lngDeg) ||
+          latDeg < -90 ||
+          latDeg > 90 ||
+          lngDeg < -180 ||
+          lngDeg > 180
+        ) continue;
 
         const speedVal = num(r.enhanced_speed ?? r.speed);
         points.push({
           lat: latDeg,
           lng: lngDeg,
-          elevation: num(r.altitude ?? r.enhanced_altitude) ?? undefined,
-          timestamp: fitTimestampToDate(num(r.timestamp)),
-          hr: num(r.heart_rate) ?? undefined,
-          watts: num(r.power) ?? undefined,
-          cadence: num(r.cadence) ?? undefined,
-          speedKmh: speedVal != null ? (speedVal < 40 ? speedVal * 3.6 : speedVal) : undefined,
+          elevation: normalizeElevation(num(r.altitude ?? r.enhanced_altitude)),
+          timestamp: fitTimestampToDate(r.timestamp),
+          hr: normalizeHeartRate(num(r.heart_rate)),
+          watts: normalizePower(num(r.power)),
+          cadence: normalizeCadence(num(r.cadence)),
+          speedKmh: normalizeSpeedKmh(speedVal),
         });
       }
 
@@ -81,12 +103,22 @@ export function parseFit(
         return;
       }
 
+      let previousTimestamp: Date | undefined;
+      for (const point of points) {
+        const current = point.timestamp;
+        if (current && previousTimestamp && current.getTime() < previousTimestamp.getTime()) {
+          reject(new Error("FIT com timestamps fora de ordem temporal."));
+          return;
+        }
+        if (current) previousTimestamp = current;
+      }
+
       const sessions = data.sessions as FitRecord[] | undefined;
       const session = sessions?.[0] ?? {};
       const activityMeta = (data.activity as FitRecord) ?? {};
 
       const startedAt =
-        fitTimestampToDate(num(session.start_time)) ??
+        fitTimestampToDate(session.start_time) ??
         points.find((p) => p.timestamp)?.timestamp ??
         new Date();
 
@@ -109,10 +141,10 @@ export function parseFit(
       }
 
       const elevationGainM =
-        num(session.total_ascent) ?? elevationGainFromPoints(points);
+        normalizeNonNegative(num(session.total_ascent), 100_000) ?? elevationGainFromPoints(points);
 
-      const avgHr = num(session.avg_heart_rate);
-      const maxHr = num(session.max_heart_rate);
+      const avgHr = normalizeHeartRate(num(session.avg_heart_rate));
+      const maxHr = normalizeHeartRate(num(session.max_heart_rate));
 
       let avgPaceSecKm: number | undefined;
       if (distanceM > 0 && durationSec > 0) {
@@ -120,22 +152,26 @@ export function parseFit(
       }
 
       const rawAvgSpeed = num(session.avg_speed ?? session.enhanced_avg_speed);
-      const avgSpeedKmh = rawAvgSpeed != null ? (rawAvgSpeed < 40 ? rawAvgSpeed * 3.6 : rawAvgSpeed) : (distanceM > 0 && durationSec > 0 ? (distanceM / durationSec) * 3.6 : undefined);
+      const avgSpeedKmh = rawAvgSpeed != null
+        ? normalizeSpeedKmh(rawAvgSpeed)
+        : (distanceM > 0 && durationSec > 0 ? (distanceM / durationSec) * 3.6 : undefined);
 
       const rawMaxSpeed = num(session.max_speed ?? session.enhanced_max_speed);
-      const maxSpeedKmh = rawMaxSpeed != null ? (rawMaxSpeed < 40 ? rawMaxSpeed * 3.6 : rawMaxSpeed) : undefined;
+      const maxSpeedKmh = rawMaxSpeed != null
+        ? normalizeSpeedKmh(rawMaxSpeed)
+        : undefined;
 
-      const avgWatts = num(session.avg_power);
-      const maxWatts = num(session.max_power);
-      const normalizedPowerWatts = num(session.normalized_power);
-      const avgCadenceRpm = num(session.avg_cadence);
-      const maxCadenceRpm = num(session.max_cadence);
+      const avgWatts = normalizePower(num(session.avg_power));
+      const maxWatts = normalizePower(num(session.max_power));
+      const normalizedPowerWatts = normalizePower(num(session.normalized_power));
+      const avgCadenceRpm = normalizeCadence(num(session.avg_cadence));
+      const maxCadenceRpm = normalizeCadence(num(session.max_cadence));
 
       const sport = mapSport(
         String(session.sport ?? session.sub_sport ?? "")
       );
 
-      const calories = num(session.total_calories);
+      const calories = normalizeCalories(num(session.total_calories));
 
       resolve({
         name: fileName.replace(/\.fit$/i, ""),
@@ -153,8 +189,8 @@ export function parseFit(
         maxCadenceRpm,
         calories,
         elevationGainM,
-        avgHr: avgHr ? Math.round(avgHr) : undefined,
-        maxHr: maxHr ? Math.round(maxHr) : undefined,
+        avgHr: avgHr != null ? Math.round(avgHr) : undefined,
+        maxHr: maxHr != null ? Math.round(maxHr) : undefined,
         points,
       });
     });

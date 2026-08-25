@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   ArrowLeft,
   Pause,
@@ -59,6 +59,7 @@ import {
   sportLabel,
 } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
+import { registerAndroidBackHandler } from "@/lib/android-back";
 import type { Sport, UserProfile, ActivitySummary, GhostConfig, SavedRoute, StructuredWorkout } from "@/lib/types";
 import { getAllStoredRoutes } from "@/lib/storage";
 
@@ -181,6 +182,37 @@ export function RecordWorkoutClient() {
     setRouteConfig,
   } = useWorkoutRecorder();
 
+  const backHandlerRef = useRef<() => boolean>(() => false);
+  backHandlerRef.current = () => {
+      if (confirmStop) {
+        setConfirmStop(false);
+        return true;
+      }
+      if (isVoiceCoachModalOpen) {
+        setIsVoiceCoachModalOpen(false);
+        return true;
+      }
+      if (isAutoPauseModalOpen) {
+        setIsAutoPauseModalOpen(false);
+        return true;
+      }
+      if (isWorkoutLibraryModalOpen) {
+        setIsWorkoutLibraryModalOpen(false);
+        return true;
+      }
+      if (trainingMode) {
+        setTrainingMode(false);
+        return true;
+      }
+      if (isActive) {
+        setConfirmStop(true);
+        return true;
+      }
+      return false;
+    };
+
+  useEffect(() => registerAndroidBackHandler(() => backHandlerRef.current()), []);
+
   const selectedBike = useMemo(() => {
     return bikes.find((b) => b.id === selectedBikeId) || null;
   }, [bikes, selectedBikeId]);
@@ -219,13 +251,13 @@ export function RecordWorkoutClient() {
       setRouteConfig({
         routeId: selectedRouteId,
         offRouteToleranceM: routeTolerance,
-        audioAlerts: true,
+        audioAlerts: routeVoiceAlerts,
         audioFreq: "1km",
       });
     } else {
       setRouteConfig(null);
     }
-  }, [selectedRouteId, routeTolerance, setRouteConfig]);
+  }, [selectedRouteId, routeTolerance, routeVoiceAlerts, setRouteConfig]);
 
   // Keep screen awake while recording
   useWakeLock(status === "recording");

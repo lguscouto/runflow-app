@@ -1,4 +1,18 @@
 import type { VoiceCoachConfig, Sport } from "@/lib/types";
+import { Capacitor, registerPlugin } from "@capacitor/core";
+
+interface NativeSpeechPlugin {
+  speak(options: {
+    text: string;
+    lang: string;
+    rate: number;
+    pitch: number;
+    volume: number;
+  }): Promise<void>;
+  stop(): Promise<void>;
+}
+
+const NativeSpeech = registerPlugin<NativeSpeechPlugin>("NativeSpeech");
 
 export const DEFAULT_VOICE_COACH_CONFIG: VoiceCoachConfig = {
   enabled: true,
@@ -38,6 +52,34 @@ export interface VoiceCoachStats {
   lastSplitKm?: number | null;
   lastSplitPaceSecKm?: number | null;
   lastSplitSpeedKmh?: number | null;
+}
+
+function isPositiveFinite(value: number | null | undefined): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+
+function getUsableSpeechSynthesis(): SpeechSynthesis | null {
+  if (typeof window === "undefined") return null;
+  const synthesis = window.speechSynthesis;
+  if (
+    !synthesis ||
+    typeof synthesis.cancel !== "function" ||
+    typeof synthesis.speak !== "function" ||
+    typeof SpeechSynthesisUtterance !== "function"
+  ) {
+    return null;
+  }
+  return synthesis;
+}
+
+function clampSpeechSetting(
+  value: number | null | undefined,
+  fallback: number,
+  min: number,
+  max: number
+): number {
+  const safeValue = typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return Math.max(min, Math.min(max, safeValue));
 }
 
 /**
@@ -111,7 +153,7 @@ export function formatElevationGainForSpeech(gainM: number, lang: "pt" | "en" = 
  * Converte distância em metros em fala fluida.
  */
 export function formatDistanceForSpeech(distanceM: number, lang: "pt" | "en" = "pt"): string {
-  if (distanceM <= 0) return "";
+  if (!Number.isFinite(distanceM) || distanceM <= 0) return "";
   const km = distanceM / 1000;
 
   if (lang === "pt") {
@@ -138,6 +180,7 @@ export function formatDistanceForSpeech(distanceM: number, lang: "pt" | "en" = "
  * Converte tempo decorrido em fala natural.
  */
 export function formatDurationForSpeech(totalSec: number, lang: "pt" | "en" = "pt"): string {
+  if (!Number.isFinite(totalSec) || totalSec < 0) return "";
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = Math.floor(totalSec % 60);
@@ -171,7 +214,7 @@ export function buildVoiceCoachAnnouncement(
   const isCycling = stats.sport === "cycling";
 
   // 1. Distância
-  if (config.speakDistance && stats.distanceM > 0) {
+  if (config.speakDistance && isPositiveFinite(stats.distanceM)) {
     const distText = formatDistanceForSpeech(stats.distanceM, lang);
     if (distText) {
       phrases.push(lang === "pt" ? `Distância: ${distText}.` : `Distance: ${distText}.`);
@@ -179,7 +222,7 @@ export function buildVoiceCoachAnnouncement(
   }
 
   // 2. Tempo total
-  if (config.speakTime && stats.elapsedSec > 0) {
+  if (config.speakTime && isPositiveFinite(stats.elapsedSec)) {
     const timeText = formatDurationForSpeech(stats.elapsedSec, lang);
     if (timeText) {
       phrases.push(lang === "pt" ? `Tempo: ${timeText}.` : `Time: ${timeText}.`);
@@ -188,14 +231,14 @@ export function buildVoiceCoachAnnouncement(
 
   // 3. Velocidade Média (Ciclismo) ou Ritmo Médio (Corrida/Caminhada)
   if (isCycling) {
-    if (config.speakAvgPace !== false && stats.avgSpeedKmh && stats.avgSpeedKmh > 0) {
+    if (config.speakAvgPace !== false && isPositiveFinite(stats.avgSpeedKmh)) {
       const speedText = formatSpeedForSpeech(stats.avgSpeedKmh, lang);
       if (speedText) {
         phrases.push(lang === "pt" ? `Velocidade média: ${speedText}.` : `Average speed: ${speedText}.`);
       }
     }
   } else {
-    if (config.speakAvgPace && stats.avgPaceSecKm && stats.avgPaceSecKm > 0) {
+    if (config.speakAvgPace && isPositiveFinite(stats.avgPaceSecKm)) {
       const paceText = formatPaceForSpeech(stats.avgPaceSecKm, lang);
       if (paceText) {
         phrases.push(lang === "pt" ? `Ritmo médio: ${paceText}.` : `Average pace: ${paceText}.`);
@@ -205,14 +248,14 @@ export function buildVoiceCoachAnnouncement(
 
   // 4. Velocidade Atual (Ciclismo) ou Ritmo Atual (Corrida/Caminhada)
   if (isCycling) {
-    if (config.speakCurrentSpeedKmh && stats.currentSpeedKmh && stats.currentSpeedKmh > 0) {
+    if (config.speakCurrentSpeedKmh && isPositiveFinite(stats.currentSpeedKmh)) {
       const currSpeedText = formatSpeedForSpeech(stats.currentSpeedKmh, lang);
       if (currSpeedText) {
         phrases.push(lang === "pt" ? `Velocidade atual: ${currSpeedText}.` : `Current speed: ${currSpeedText}.`);
       }
     }
   } else {
-    if (config.speakCurrentPace && stats.currentPaceSecKm && stats.currentPaceSecKm > 0) {
+    if (config.speakCurrentPace && isPositiveFinite(stats.currentPaceSecKm)) {
       const currPaceText = formatPaceForSpeech(stats.currentPaceSecKm, lang);
       if (currPaceText) {
         phrases.push(lang === "pt" ? `Ritmo atual: ${currPaceText}.` : `Current pace: ${currPaceText}.`);
@@ -221,8 +264,8 @@ export function buildVoiceCoachAnnouncement(
   }
 
   // 5. Split do Último KM
-  if (config.speakLastSplit && stats.lastSplitKm) {
-    if (isCycling && stats.lastSplitSpeedKmh && stats.lastSplitSpeedKmh > 0) {
+  if (config.speakLastSplit && isPositiveFinite(stats.lastSplitKm)) {
+    if (isCycling && isPositiveFinite(stats.lastSplitSpeedKmh)) {
       const splitSpeed = formatSpeedForSpeech(stats.lastSplitSpeedKmh, lang);
       if (splitSpeed) {
         phrases.push(
@@ -231,7 +274,7 @@ export function buildVoiceCoachAnnouncement(
             : `Kilometer ${stats.lastSplitKm} at ${splitSpeed}.`
         );
       }
-    } else if (stats.lastSplitPaceSecKm && stats.lastSplitPaceSecKm > 0) {
+    } else if (isPositiveFinite(stats.lastSplitPaceSecKm)) {
       const splitPace = formatPaceForSpeech(stats.lastSplitPaceSecKm, lang);
       if (splitPace) {
         phrases.push(
@@ -244,7 +287,7 @@ export function buildVoiceCoachAnnouncement(
   }
 
   // 6. Cadência (RPM)
-  if (config.speakCadence && stats.cadenceRpm && stats.cadenceRpm > 0) {
+  if (config.speakCadence && isPositiveFinite(stats.cadenceRpm)) {
     const cadText = formatCadenceForSpeech(stats.cadenceRpm, lang);
     if (cadText) {
       phrases.push(lang === "pt" ? `Cadência: ${cadText}.` : `Cadence: ${cadText}.`);
@@ -252,7 +295,7 @@ export function buildVoiceCoachAnnouncement(
   }
 
   // 7. Potência (Watts)
-  if (config.speakPowerWatts && stats.powerWatts && stats.powerWatts > 0) {
+  if (config.speakPowerWatts && isPositiveFinite(stats.powerWatts)) {
     const powerText = formatPowerForSpeech(stats.powerWatts, lang);
     if (powerText) {
       phrases.push(lang === "pt" ? `Potência: ${powerText}.` : `Power: ${powerText}.`);
@@ -260,7 +303,7 @@ export function buildVoiceCoachAnnouncement(
   }
 
   // 8. Ganho de Elevação
-  if (config.speakElevationGain && stats.elevationGainM && stats.elevationGainM > 0) {
+  if (config.speakElevationGain && isPositiveFinite(stats.elevationGainM)) {
     const elevText = formatElevationGainForSpeech(stats.elevationGainM, lang);
     if (elevText) {
       phrases.push(lang === "pt" ? `Ganho de elevação: ${elevText}.` : `Elevation gain: ${elevText}.`);
@@ -268,7 +311,7 @@ export function buildVoiceCoachAnnouncement(
   }
 
   // 9. Frequência Cardíaca & Zona
-  if (stats.heartRate && stats.heartRate > 0) {
+  if (isPositiveFinite(stats.heartRate)) {
     if (config.speakHeartRate) {
       phrases.push(
         lang === "pt"
@@ -288,6 +331,20 @@ export function buildVoiceCoachAnnouncement(
   return phrases.join(" ");
 }
 
+export function cancelVoiceCoachSpeech(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const speechSynthesis = getUsableSpeechSynthesis();
+    if (speechSynthesis) {
+      speechSynthesis.cancel();
+    } else if (Capacitor.isNativePlatform()) {
+      NativeSpeech.stop().catch(() => {});
+    }
+  } catch {
+    // Silently ignore when the platform speech engine is unavailable.
+  }
+}
+
 /**
  * Executa a síntese de voz usando SpeechSynthesisUtterance.
  */
@@ -296,23 +353,41 @@ export function speakWithConfig(
   config: VoiceCoachConfig,
   lang: "pt" | "en" = "pt"
 ): void {
-  if (typeof window === "undefined" || !window.speechSynthesis || !text.trim()) {
+  if (typeof window === "undefined" || !text.trim()) {
+    return;
+  }
+
+  const targetLang = lang === "pt" ? "pt-BR" : "en-US";
+  const rate = clampSpeechSetting(config.speechRate, 1.0, 0.6, 2.0);
+  const pitch = clampSpeechSetting(config.speechPitch, 1.0, 0.5, 1.5);
+  const volume = clampSpeechSetting(config.speechVolume, 1.0, 0.1, 1.0);
+
+  const speechSynthesis = getUsableSpeechSynthesis();
+  if (!speechSynthesis) {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        NativeSpeech.speak({ text, lang: targetLang, rate, pitch, volume }).catch((err) => {
+          console.warn("Erro ao executar TTS nativo (Voice Coach):", err);
+        });
+      } catch (err) {
+        console.warn("Erro ao iniciar TTS nativo (Voice Coach):", err);
+      }
+    }
     return;
   }
 
   try {
     // Interrompe falas anteriores para não encavalar
-    window.speechSynthesis.cancel();
+    speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    const targetLang = lang === "pt" ? "pt-BR" : "en-US";
     utterance.lang = targetLang;
-    utterance.rate = Math.max(0.6, Math.min(2.0, config.speechRate ?? 1.0));
-    utterance.pitch = Math.max(0.5, Math.min(1.5, config.speechPitch ?? 1.0));
-    utterance.volume = Math.max(0.1, Math.min(1.0, config.speechVolume ?? 1.0));
+    utterance.rate = rate;
+    utterance.pitch = pitch;
+    utterance.volume = volume;
 
     // Busca voz compatível no dispositivo se disponível
-    const voices = window.speechSynthesis.getVoices?.();
+    const voices = speechSynthesis.getVoices?.();
     if (voices && voices.length > 0) {
       const preferred = voices.find(
         (v) => v.lang === targetLang || v.lang.startsWith(lang === "pt" ? "pt" : "en")
@@ -322,7 +397,7 @@ export function speakWithConfig(
       }
     }
 
-    window.speechSynthesis.speak(utterance);
+    speechSynthesis.speak(utterance);
   } catch (err) {
     console.warn("Erro ao executar síntese de voz (Voice Coach):", err);
   }
@@ -389,6 +464,9 @@ export function buildClimbApproachAnnouncement(
   avgGradePct: number,
   lang: "pt" | "en" = "pt"
 ): string {
+  if (![climbNumber, totalClimbs, distanceToStartM, climbLengthM, avgGradePct].every(Number.isFinite)) {
+    return "";
+  }
   const distKm = (climbLengthM / 1000).toFixed(1).replace(".", ",");
   const gradeStr = avgGradePct.toFixed(1).replace(".", ",");
 
@@ -414,6 +492,9 @@ export function buildClimbStartAnnouncement(
   avgGradePct: number,
   lang: "pt" | "en" = "pt"
 ): string {
+  if (![climbNumber, totalClimbs, climbLengthM, avgGradePct].every(Number.isFinite)) {
+    return "";
+  }
   const distKm = (climbLengthM / 1000).toFixed(1).replace(".", ",");
   const gradeStr = avgGradePct.toFixed(1).replace(".", ",");
 
@@ -437,6 +518,9 @@ export function buildClimbCompletedAnnouncement(
   elevationGainM: number,
   lang: "pt" | "en" = "pt"
 ): string {
+  if (![climbNumber, totalClimbs, elevationGainM].every(Number.isFinite)) {
+    return "";
+  }
   if (lang === "pt") {
     return `Excelente! Subida ${climbNumber} de ${totalClimbs} concluída. Ganho de ${Math.round(elevationGainM)} metros de elevação alcançado.`;
   } else {

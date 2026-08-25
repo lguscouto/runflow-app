@@ -1,0 +1,43 @@
+buffers {
+  size_kb: 32768
+  fill_policy: RING_BUFFER
+}
+
+duration_ms: 10000
+write_into_file: true
+
+# Scheduler, CPU, Android UI and WebView slices are intentionally bounded.
+data_sources {
+  config {
+    name: "linux.ftrace"
+    ftrace_config {
+      ftrace_events: "sched/sched_switch"
+      ftrace_events: "sched/sched_wakeup"
+      ftrace_events: "power/cpu_frequency"
+      atrace_categories: "am"
+      atrace_categories: "gfx"
+      atrace_categories: "view"
+      atrace_categories: "webview"
+      atrace_categories: "input"
+      atrace_categories: "memreclaim"
+    }
+  }
+}
+
+data_sources {
+  config {
+    name: "android.surfaceflinger.frametimeline"
+  }
+}
+
+data_sources {
+  config {
+    name: "track_event"
+    track_event_config {
+      enabled_categories: "android"
+      enabled_categories: "gfx"
+      enabled_categories: "view"
+      enabled_categories: "webview"
+    }
+  }
+}

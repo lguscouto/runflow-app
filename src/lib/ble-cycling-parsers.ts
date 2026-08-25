@@ -14,6 +14,32 @@ export const CSC_MEASUREMENT_CHAR = "00002a5b-0000-1000-8000-00805f9b34fb";
 export const POWER_SERVICE = "00001818-0000-1000-8000-00805f9b34fb";
 export const POWER_MEASUREMENT_CHAR = "00002a63-0000-1000-8000-00805f9b34fb";
 
+export function hasValidCscMeasurementPayload(dataView: DataView): boolean {
+  if (dataView.byteLength < 1) return false;
+  const flags = dataView.getUint8(0);
+  let requiredBytes = 1;
+  if ((flags & 0x01) !== 0) requiredBytes += 6;
+  if ((flags & 0x02) !== 0) requiredBytes += 4;
+  return dataView.byteLength >= requiredBytes;
+}
+
+export function hasValidCyclingPowerMeasurementPayload(dataView: DataView): boolean {
+  if (dataView.byteLength < 4) return false;
+  const flags = dataView.getUint16(0, true);
+  let requiredBytes = 4;
+  if ((flags & 0x0001) !== 0) requiredBytes += 1;
+  if ((flags & 0x0004) !== 0) requiredBytes += 2;
+  if ((flags & 0x0010) !== 0) requiredBytes += 6;
+  if ((flags & 0x0020) !== 0) requiredBytes += 4;
+  if ((flags & 0x0040) !== 0) requiredBytes += 4;
+  if ((flags & 0x0080) !== 0) requiredBytes += 4;
+  if ((flags & 0x0100) !== 0) requiredBytes += 3;
+  if ((flags & 0x0200) !== 0) requiredBytes += 2;
+  if ((flags & 0x0400) !== 0) requiredBytes += 2;
+  if ((flags & 0x0800) !== 0) requiredBytes += 2;
+  return dataView.byteLength >= requiredBytes;
+}
+
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
 export interface CSCData {

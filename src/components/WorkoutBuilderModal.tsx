@@ -32,6 +32,7 @@ import { formatDistance, formatDuration } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { putWorkout } from "@/lib/storage";
 import { haptics } from "@/lib/haptics";
+import { useModalA11y } from "@/hooks/useModalA11y";
 
 interface WorkoutBuilderModalProps {
   isOpen: boolean;
@@ -47,6 +48,7 @@ export function WorkoutBuilderModal({
   initialWorkout,
 }: WorkoutBuilderModalProps) {
   const { t, language } = useI18n();
+  const { modalRef } = useModalA11y({ isOpen, onClose });
 
   const [name, setName] = useState(initialWorkout?.name || "");
   const [description, setDescription] = useState(initialWorkout?.description || "");
@@ -262,7 +264,13 @@ export function WorkoutBuilderModal({
 
   return (
     <div className="fixed inset-0 z-[1100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-[#0f141c] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={initialWorkout ? t("workout.edit_workout") : t("workout.builder_title")}
+        className="relative w-full max-w-2xl bg-[#0f141c] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col"
+      >
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between bg-[#161b22]/70 shrink-0">
           <div className="flex items-center gap-2.5">
@@ -279,6 +287,7 @@ export function WorkoutBuilderModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label={language === "en" ? "Close modal" : "Fechar modal"}
             className="p-1.5 rounded-lg text-[var(--muted)] hover:text-white hover:bg-white/10 transition-colors"
           >
             <X size={18} />

@@ -10,6 +10,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(LocalNetworkPermissionPlugin.class);
         registerPlugin(AppLocalePlugin.class);
+        registerPlugin(NativeSpeechPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Enable remote WebView debugging only for debuggable builds

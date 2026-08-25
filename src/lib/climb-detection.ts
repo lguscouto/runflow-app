@@ -1,5 +1,6 @@
 import { haversineM } from "./geo";
 import type { ClimbCategory, ClimbSegment, ClimbProgressState, RoutePoint } from "./types";
+import { requireElevationConsent } from "./external-privacy";
 
 /**
  * Aplica suavização com média móvel para eliminar ruídos de barômetro/GPS.
@@ -374,6 +375,8 @@ export async function enrichRouteWithElevation(points: RoutePoint[]): Promise<Ro
   if (pointsWithElev.length >= points.length * 0.8) {
     return points;
   }
+
+  requireElevationConsent();
 
   const BATCH_SIZE = 100;
   const enriched: RoutePoint[] = [...points];

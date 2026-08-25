@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Mountain, Loader2 } from "lucide-react";
 import { enrichActivityElevationWithRetry } from "@/lib/enrichment";
+import { grantElevationConsent } from "@/lib/external-privacy";
 import { useI18n } from "@/lib/i18n";
 
 export function CorrectElevationButton({ activityId }: { activityId: string }) {
@@ -12,6 +13,8 @@ export function CorrectElevationButton({ activityId }: { activityId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   async function handleCorrect() {
+    if (!window.confirm(t("detail.correct_elevation_consent"))) return;
+    grantElevationConsent();
     setLoading(true);
     setError(null);
     try {

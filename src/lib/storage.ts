@@ -37,6 +37,7 @@ export interface StoredActivityTrack {
     speedKmh?: number;
     grade?: number;
   }>;
+  trackSegments?: StoredActivityTrack["points"][];
   maxPaceSecKm?: number | null;
   maxHr?: number | null;
   notes?: string | null;
@@ -62,6 +63,7 @@ export interface StoredActivity extends ActivitySummary {
     speedKmh?: number;
     grade?: number;
   }>;
+  trackSegments?: StoredActivity["points"][];
 }
 
 interface RunFlowDB extends DBSchema {
@@ -98,12 +100,55 @@ interface RunFlowDB extends DBSchema {
 const DB_NAME = "runflow";
 const DB_VERSION = 7;
 
+function assertLegacyActivity(value: unknown): asserts value is StoredActivity {
+  if (!value || typeof value !== "object") {
+    throw new Error("Invalid legacy activity");
+  }
+
+  const activity = value as Partial<StoredActivity>;
+  if (
+    typeof activity.id !== "string" ||
+    activity.id.length === 0 ||
+    typeof activity.startedAt !== "string" ||
+    activity.startedAt.length === 0 ||
+    !Array.isArray(activity.points)
+  ) {
+    throw new Error(`Invalid legacy activity: ${activity.id ?? "unknown"}`);
+  }
+}
+
+function getLegacyStructuredWorkoutReport(
+  summary: ActivitySummary,
+): StructuredWorkoutReport | null {
+  const legacySummary = summary as ActivitySummary & {
+    structuredWorkoutReport?: StructuredWorkoutReport | null;
+  };
+  return legacySummary.structuredWorkoutReport ?? null;
+}
+
+function stripLegacyStructuredWorkoutReport(summary: ActivitySummary): ActivitySummary {
+  const legacySummary = summary as ActivitySummary & {
+    structuredWorkoutReport?: StructuredWorkoutReport | null;
+  };
+  if (!Object.prototype.hasOwnProperty.call(legacySummary, "structuredWorkoutReport")) {
+    return summary;
+  }
+  const { structuredWorkoutReport: _legacyReport, ...lightweightSummary } = legacySummary;
+  return lightweightSummary;
+}
+
 let dbPromise: Promise<IDBPDatabase<RunFlowDB>> | null = null;
 
 export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
   if (!dbPromise) {
+    let migrationError: Error | null = null;
     dbPromise = openDB<RunFlowDB>(DB_NAME, DB_VERSION, {
       async upgrade(database, oldVersion, _newVersion, transaction) {
+        // idb cria transaction.done ao envolver a transação. Em uma migração
+        // abortada, consuma a rejeição dessa Promise para não gerar unhandled
+        // rejection; a causa original continua sendo propagada por dbPromise.
+        void transaction.done.catch(() => undefined);
+
         if (!database.objectStoreNames.contains("profile")) {
           database.createObjectStore("profile");
         }
@@ -138,35 +183,43 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
 
         // Migração atômica de stores legados ('activities') para v7
         if (database.objectStoreNames.contains("activities" as any)) {
-          const actStore = transaction.objectStore("activities" as any);
-          const trackStore = transaction.objectStore("activityTracks");
-          let cursor = await actStore.openCursor();
-          while (cursor) {
-            const act = cursor.value as StoredActivity;
-            if (!act || !act.id || !act.startedAt) {
-              throw new Error(`Dados inválidos na atividade durante migração v7: ID ${act?.id}`);
+          try {
+            const actStore = transaction.objectStore("activities" as any);
+            const trackStore = transaction.objectStore("activityTracks");
+            let cursor = await actStore.openCursor();
+            while (cursor) {
+              assertLegacyActivity(cursor.value);
+              const act = cursor.value;
+
+              const summary = toActivitySummary(act);
+              const track: StoredActivityTrack = {
+                id: act.id,
+                points: act.points,
+                maxPaceSecKm: act.maxPaceSecKm ?? null,
+                maxHr: act.maxHr ?? null,
+                notes: act.notes ?? null,
+                workoutId: act.workoutId ?? null,
+                structuredWorkoutReport: act.structuredWorkoutReport ?? null,
+              };
+
+              await summaryStore.put(summary);
+              await trackStore.put(track);
+              cursor = await cursor.continue();
             }
 
-            const summary = toActivitySummary(act);
-            const track: StoredActivityTrack = {
-              id: act.id,
-              points: Array.isArray(act.points) ? act.points : [],
-              maxPaceSecKm: act.maxPaceSecKm ?? null,
-              maxHr: act.maxHr ?? null,
-              notes: act.notes ?? null,
-              workoutId: act.workoutId ?? null,
-              structuredWorkoutReport: act.structuredWorkoutReport ?? null,
-            };
-
-            await summaryStore.put(summary);
-            await trackStore.put(track);
-            cursor = await cursor.continue();
+            // Eliminação segura do store legado após migração atômica completa
+            database.deleteObjectStore("activities" as any);
+          } catch (error) {
+            migrationError =
+              error instanceof Error ? error : new Error(String(error));
+            transaction.abort();
           }
-
-          // Eliminação segura do store legado após migração atômica completa
-          database.deleteObjectStore("activities" as any);
         }
       },
+    }).catch((error) => {
+      const cause = migrationError ?? error;
+      dbPromise = null;
+      throw cause;
     });
   }
   return dbPromise;
@@ -176,17 +229,25 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
  * Helper para testes unitários fecharem e resetarem a conexão singleton do IndexedDB.
  */
 export async function resetStoreForTesting(deleteDb = false): Promise<void> {
-  if (dbPromise) {
-    const db = await dbPromise;
-    db.close();
-    dbPromise = null;
+  const pendingDbPromise = dbPromise;
+  dbPromise = null;
+
+  if (pendingDbPromise) {
+    try {
+      const db = await pendingDbPromise;
+      db.close();
+    } catch {
+      // A conexão pode ter falhado durante uma migration abortada. O singleton
+      // já foi limpo acima para permitir uma nova tentativa isolada.
+    }
   }
+
   if (deleteDb && typeof indexedDB !== "undefined") {
     await new Promise<void>((resolve, reject) => {
       const req = indexedDB.deleteDatabase(DB_NAME);
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
-      req.onblocked = () => resolve();
+      req.onblocked = () => reject(new Error("database deletion blocked"));
     });
   }
 }
@@ -197,6 +258,7 @@ export async function putActivity(activity: StoredActivity): Promise<void> {
   const track: StoredActivityTrack = {
     id: activity.id,
     points: activity.points || [],
+    trackSegments: activity.trackSegments,
     maxPaceSecKm: activity.maxPaceSecKm ?? null,
     maxHr: activity.maxHr ?? null,
     notes: activity.notes ?? null,
@@ -229,12 +291,13 @@ export async function getStoredActivity(
   return {
     ...summary,
     points: track?.points || [],
+    trackSegments: track?.trackSegments,
     maxPaceSecKm: track?.maxPaceSecKm ?? null,
     maxHr: track?.maxHr ?? null,
     notes: track?.notes ?? null,
     workoutId: track?.workoutId ?? summary.workoutId ?? null,
     structuredWorkoutReport:
-      track?.structuredWorkoutReport ?? summary.structuredWorkoutReport ?? null,
+      track?.structuredWorkoutReport ?? getLegacyStructuredWorkoutReport(summary),
   };
 }
 
@@ -253,16 +316,22 @@ export async function getAllStoredActivities(): Promise<StoredActivity[]> {
     results.push({
       ...summary,
       points: track?.points || [],
+      trackSegments: track?.trackSegments,
       maxPaceSecKm: track?.maxPaceSecKm ?? null,
       maxHr: track?.maxHr ?? null,
       notes: track?.notes ?? null,
       workoutId: track?.workoutId ?? summary.workoutId ?? null,
       structuredWorkoutReport:
-        track?.structuredWorkoutReport ?? summary.structuredWorkoutReport ?? null,
+        track?.structuredWorkoutReport ?? getLegacyStructuredWorkoutReport(summary),
     });
   }
 
   return results;
+}
+
+export async function countStoredActivities(): Promise<number> {
+  const db = await getStore();
+  return db.count("activitySummaries");
 }
 
 /**
@@ -274,7 +343,7 @@ export async function getAllStoredSummaries(): Promise<ActivitySummary[]> {
   const tx = db.transaction("activitySummaries", "readonly");
   const index = tx.store.index("by-started");
   const summaries = await index.getAll();
-  return summaries.reverse();
+  return summaries.reverse().map(stripLegacyStructuredWorkoutReport);
 }
 
 /**
@@ -284,25 +353,21 @@ export async function listStoredActivitiesPaged(
   limit = 50,
   cursor?: ActivityPageCursor | null
 ): Promise<ActivityPage> {
+  if (!Number.isInteger(limit) || limit < 1 || limit > 200) {
+    throw new RangeError("limit must be an integer between 1 and 200");
+  }
+
   const db = await getStore();
   const tx = db.transaction("activitySummaries", "readonly");
-  const index = tx.store.index("by-started");
+  const index = tx.store.index("by-started-id");
   const items: ActivitySummary[] = [];
+  const range = cursor
+    ? IDBKeyRange.upperBound([cursor.startedAt, cursor.id], true)
+    : null;
 
-  let dbCursor = await index.openCursor(null, "prev");
-  let skipping = !!cursor;
-
+  let dbCursor = await index.openCursor(range, "prev");
   while (dbCursor && items.length < limit + 1) {
-    const value = dbCursor.value;
-    if (skipping) {
-      if (value.startedAt === cursor!.startedAt && value.id === cursor!.id) {
-        skipping = false; // Encontrou o cursor anterior, começa na próxima iteração
-      }
-      dbCursor = await dbCursor.continue();
-      continue;
-    }
-
-    items.push(value);
+    items.push(stripLegacyStructuredWorkoutReport(dbCursor.value));
     dbCursor = await dbCursor.continue();
   }
 
@@ -369,7 +434,7 @@ export async function removeGear(id: string): Promise<boolean> {
 }
 
 export function toActivityDetail(stored: StoredActivity): ActivityDetail {
-  const points: TrackPoint[] = (stored.points || []).map((p) => ({
+  const toTrackPoint = (p: StoredActivity["points"][number]): TrackPoint => ({
     lat: p.lat,
     lng: p.lng,
     elevation: p.elevation,
@@ -379,10 +444,13 @@ export function toActivityDetail(stored: StoredActivity): ActivityDetail {
     cadence: p.cadence,
     speedKmh: p.speedKmh,
     grade: p.grade,
-  }));
+  });
+  const points: TrackPoint[] = (stored.points || []).map(toTrackPoint);
+  const trackSegments = stored.trackSegments?.map((segment) => segment.map(toTrackPoint));
   return {
     ...stored,
     points,
+    trackSegments,
     movingTimeSec: (stored as any).movingTimeSec ?? stored.durationSec,
     elapsedTimeSec: (stored as any).elapsedTimeSec ?? stored.durationSec,
     routeId: (stored as any).routeId || null,
@@ -417,7 +485,6 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     gearId,
     routeId,
     workoutId,
-    structuredWorkoutReport,
   } = stored;
   return {
     id,
@@ -450,7 +517,6 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     gearId: gearId || null,
     routeId: routeId || null,
     workoutId: workoutId || null,
-    structuredWorkoutReport: structuredWorkoutReport || null,
   };
 }
 

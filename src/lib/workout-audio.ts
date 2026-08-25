@@ -1,12 +1,17 @@
 import type { FlatWorkoutStep, VoiceCoachConfig } from "./types";
-import { formatPaceForSpeech, speakWithConfig } from "./voice-coach";
+import { cancelVoiceCoachSpeech, formatPaceForSpeech, speakWithConfig } from "./voice-coach";
 import { resolveStepPowerTargetWatts, formatStepCadenceRange } from "./structured-workout";
 import { DEFAULT_FTP_WATTS } from "./power-zones";
 
 let audioCtx: AudioContext | null = null;
+let pendingChimeTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingSpeechTimer: ReturnType<typeof setTimeout> | null = null;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
+  if (audioCtx?.state === "closed") {
+    audioCtx = null;
+  }
   if (!audioCtx) {
     const AudioContextClass =
       window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -19,6 +24,26 @@ function getAudioContext(): AudioContext | null {
   }
   return audioCtx;
 }
+
+export function stopWorkoutAudio(): void {
+  if (pendingChimeTimer !== null) {
+    clearTimeout(pendingChimeTimer);
+    pendingChimeTimer = null;
+  }
+  if (pendingSpeechTimer !== null) {
+    clearTimeout(pendingSpeechTimer);
+    pendingSpeechTimer = null;
+  }
+
+  cancelVoiceCoachSpeech();
+
+  const context = audioCtx;
+  audioCtx = null;
+  if (context && context.state !== "closed") {
+    context.close().catch(() => {});
+  }
+}
+
 
 /**
  * Toca um bip sonoro com frequência e duração configuráveis.
@@ -64,7 +89,11 @@ export function playStartBlockChime() {
 
     // Dois bips rápidos ascendentes
     playWorkoutBeep(880, 120, "triangle");
-    setTimeout(() => {
+    if (pendingChimeTimer !== null) {
+      clearTimeout(pendingChimeTimer);
+    }
+    pendingChimeTimer = setTimeout(() => {
+      pendingChimeTimer = null;
       playWorkoutBeep(1320, 200, "triangle");
     }, 120);
   } catch (err) {
@@ -176,7 +205,11 @@ export function speakWorkoutStep(
 ) {
   playStartBlockChime();
   const text = buildStepAnnouncement(flatStep, lang, userFtp);
-  setTimeout(() => {
+  if (pendingSpeechTimer !== null) {
+    clearTimeout(pendingSpeechTimer);
+  }
+  pendingSpeechTimer = setTimeout(() => {
+    pendingSpeechTimer = null;
     speakWithConfig(text, config, lang);
   }, 350);
 }

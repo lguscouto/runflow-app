@@ -123,6 +123,10 @@ a {
 }
 
 .nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
   color: var(--muted);
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
@@ -212,8 +216,8 @@ a {
 .bottom-nav-fab {
   background: var(--accent);
   color: #fff;
-  width: 46px;
-  height: 46px;
+  width: 48px;
+  height: 48px;
   border-radius: 9999px;
   display: flex;
   align-items: center;

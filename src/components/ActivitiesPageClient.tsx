@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Flame } from "lucide-react";
 import { ActivityList } from "@/components/ActivityList";
 import { AdvancedStatsPanel } from "@/components/AdvancedStatsPanel";
-import { useActivityList } from "@/hooks/useActivities";
+import { useActivityList, useActivityAnalytics } from "@/hooks/useActivities";
 import { getUserProfile } from "@/lib/profile";
 import { getPersonalRecords, getPRMap, type PRCategory } from "@/lib/prs";
 import { useI18n } from "@/lib/i18n";
@@ -25,24 +25,50 @@ const PersonalHeatmap = dynamic(
 
 export function ActivitiesPageClient() {
   const { t } = useI18n();
-  const { activities, loading, loadingMore, hasMore, loadMore } =
-    useActivityList();
-  const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
   const [activeTab, setActiveTab] = useState<"list" | "stats" | "heatmap">("list");
+  const {
+    activities,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    retryLoadMore,
+    error,
+    totalCount,
+  } = useActivityList();
+  const {
+    activities: analyticsActivities,
+    loading: analyticsLoading,
+    error: analyticsError,
+    refresh: refreshAnalytics,
+  } = useActivityAnalytics(activeTab === "stats");
+  const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
 
   useEffect(() => {
-    if (activities.length === 0) return;
+    const prActivities =
+      analyticsActivities.length > 0 ? analyticsActivities : activities;
+    if (prActivities.length === 0) {
+      setPrMap({});
+      return;
+    }
+
+    let active = true;
     async function loadPRs() {
       try {
         const profile = await getUserProfile();
-        const prs = getPersonalRecords(activities, profile);
-        setPrMap(getPRMap(activities, prs));
+        const prs = getPersonalRecords(prActivities, profile);
+        if (active) {
+          setPrMap(getPRMap(prActivities, prs));
+        }
       } catch (err) {
         console.error("Erro ao calcular recordes no histórico:", err);
       }
     }
     loadPRs();
-  }, [activities]);
+    return () => {
+      active = false;
+    };
+  }, [activities, analyticsActivities]);
 
   return (
     <div className="space-y-6">
@@ -52,7 +78,7 @@ export function ActivitiesPageClient() {
           <p className="text-[var(--muted)] text-sm">
             {loading
               ? t("common.loading")
-              : t("activities.registered_count", { count: activities.length })}
+              : t("activities.registered_count", { count: totalCount })}
           </p>
         </div>
       </div>
@@ -101,11 +127,30 @@ export function ActivitiesPageClient() {
           activities={activities}
           prMap={prMap}
           onLoadMore={loadMore}
+          onRetry={retryLoadMore}
+          error={error}
           hasMore={hasMore}
           loadingMore={loadingMore}
         />
       ) : activeTab === "stats" ? (
-        <AdvancedStatsPanel activities={activities} />
+        analyticsLoading ? (
+          <div className="py-12 text-center text-[var(--muted)] text-sm">
+            {t("common.loading")}
+          </div>
+        ) : analyticsError ? (
+          <div role="alert" className="py-12 text-center text-[var(--muted)] text-sm">
+            <p>{t("activities.stats_load_error")}</p>
+            <button
+              type="button"
+              className="mt-3 underline"
+              onClick={refreshAnalytics}
+            >
+              {t("common.retry")}
+            </button>
+          </div>
+        ) : (
+          <AdvancedStatsPanel activities={analyticsActivities} />
+        )
       ) : (
         <PersonalHeatmap />
       )}
