@@ -2,10 +2,12 @@ import {
   getStore,
   PROFILE_KEY,
   getAllStoredActivities,
+  DASHBOARD_STATS_KEY,
   toActivitySummary,
   type StoredActivityTrack,
   type StoredActivity,
 } from "./storage";
+import { createDashboardStatsAggregate } from "./dashboard-stats";
 import type { UserProfile, Gear } from "./types";
 import { getUserProfile } from "./profile";
 import { shareOrDownloadFile } from "./share-file";
@@ -93,7 +95,14 @@ export async function importBackup(jsonString: string): Promise<ImportResult> {
   const db = await getStore();
   let profileUpdated = false;
 
-  const tx = db.transaction(["profile", "gear", "activitySummaries", "activityTracks"], "readwrite");
+  const tx = db.transaction([
+    "profile",
+    "gear",
+    "activitySummaries",
+    "activityTracks",
+    "dashboardStats",
+  ], "readwrite");
+  const summaryStore = tx.objectStore("activitySummaries");
   if (validPayload.profile) {
     tx.objectStore("profile").put(validPayload.profile, PROFILE_KEY);
     profileUpdated = true;
@@ -110,9 +119,14 @@ export async function importBackup(jsonString: string): Promise<ImportResult> {
       workoutId: activity.workoutId,
       structuredWorkoutReport: activity.structuredWorkoutReport,
     };
-    tx.objectStore("activitySummaries").put(toActivitySummary(activity));
+    summaryStore.put(toActivitySummary(activity));
     tx.objectStore("activityTracks").put(track);
   }
+  const summaries = await summaryStore.getAll();
+  tx.objectStore("dashboardStats").put(
+    createDashboardStatsAggregate(summaries),
+    DASHBOARD_STATS_KEY,
+  );
   await tx.done;
 
   return {

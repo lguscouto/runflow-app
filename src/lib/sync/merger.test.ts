@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   getStore,
   getStoredActivity,
+  getStoredDashboardStats,
   putActivity,
   resetStoreForTesting,
 } from "../storage";
@@ -94,6 +95,39 @@ describe("sync merger split-store contract", () => {
     ).rejects.toThrow(/payload|atividade|telemetria/i);
 
     expect(await getStoredActivity(activity.id)).toBeUndefined();
+  });
+
+  it("updates dashboard totals incrementally for direct sync writes", async () => {
+    const local = makeStoredActivity({
+      id: "sync-aggregate-local",
+      distanceM: 2_000,
+      durationSec: 600,
+    });
+    const remote = makeStoredActivity({
+      id: "sync-aggregate-remote",
+      distanceM: 5_000,
+      durationSec: 1_800,
+    });
+    await putActivity(local);
+
+    const getAllSpy = vi.spyOn(IDBObjectStore.prototype, "getAll");
+    try {
+      await applyIncomingPayload({ activities: [remote] });
+      await applyIncomingPayload({
+        activities: [{ ...remote, distanceM: 7_000, durationSec: 2_400 }],
+      });
+      expect(getAllSpy).not.toHaveBeenCalled();
+    } finally {
+      getAllSpy.mockRestore();
+    }
+
+    await expect(
+      getStoredDashboardStats(Date.parse("2026-08-26T12:00:00.000Z")),
+    ).resolves.toMatchObject({
+      totalActivities: 2,
+      totalDistanceM: 9_000,
+      totalDurationSec: 3_000,
+    });
   });
 
   it("preserves the remote profile updatedAt when applying a newer profile", async () => {

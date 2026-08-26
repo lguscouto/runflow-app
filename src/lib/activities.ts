@@ -6,13 +6,14 @@ import type {
   ParsedActivity,
   TrackPoint,
 } from "./types";
+import { computeDashboardStats as computeDashboardStatsFromSummaries } from "./dashboard-stats";
 import { simplifyPoints } from "./geo";
 import { estimateActivityCalories } from "./calories";
 import { getUserProfile } from "./profile";
 import { computeCyclingActivityStats } from "./cycling-physics";
 import {
   getAllStoredActivities,
-  getAllStoredSummaries,
+  getStoredDashboardStats,
   getStoredActivity,
   putActivity,
   removeActivity,
@@ -208,40 +209,17 @@ export async function deleteActivity(id: string): Promise<boolean> {
 }
 
 /**
- * Deriva as estatísticas do dashboard a partir de uma lista já carregada de resumos.
- * Pura — permite reuso quando o chamador já possui as summaries em memória,
- * evitando uma segunda leitura do IndexedDB.
+ * Compatibilidade para consumidores que derivam stats de summaries já carregadas.
+ * O dashboard usa o agregado incremental persistido no storage.
  */
 export function computeDashboardStats(
   all: ActivitySummary[]
 ): DashboardStats {
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-
-  let totalDistanceM = 0;
-  let totalDurationSec = 0;
-  let thisWeekDistanceM = 0;
-  let thisWeekActivities = 0;
-
-  for (const a of all) {
-    totalDistanceM += a.distanceM;
-    totalDurationSec += a.durationSec;
-    if (new Date(a.startedAt).getTime() >= weekAgo) {
-      thisWeekDistanceM += a.distanceM;
-      thisWeekActivities += 1;
-    }
-  }
-
-  return {
-    totalActivities: all.length,
-    totalDistanceM,
-    totalDurationSec,
-    thisWeekDistanceM,
-    thisWeekActivities,
-  };
+  return computeDashboardStatsFromSummaries(all);
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  return computeDashboardStats(await getAllStoredSummaries());
+  return getStoredDashboardStats();
 }
 
 export function createDemoActivity(): ParsedActivity {

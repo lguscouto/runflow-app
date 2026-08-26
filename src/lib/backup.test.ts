@@ -4,6 +4,7 @@ import { exportBackup, importBackup } from "./backup";
 import {
   getStore,
   getStoredActivity,
+  getStoredDashboardStats,
   PROFILE_KEY,
   putActivity,
   resetStoreForTesting,
@@ -65,6 +66,11 @@ describe("backup split-store contract", () => {
       profileUpdated: false,
     });
     expect(await getStoredActivity(activity.id)).toEqual(activity);
+    await expect(getStoredDashboardStats(Date.parse("2026-08-26T12:00:00.000Z"))).resolves.toMatchObject({
+      totalActivities: 1,
+      totalDistanceM: activity.distanceM,
+      totalDurationSec: activity.durationSec,
+    });
 
     const restoredDb = await openDB("runflow");
     const summary = await restoredDb.get("activitySummaries", activity.id);

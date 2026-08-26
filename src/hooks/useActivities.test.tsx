@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useActivityDetail, useActivityList, useDashboard } from "./useActivities";
 import type { ActivityPage } from "@/lib/storage";
 import { getAllStoredSummaries, listStoredActivitiesPaged } from "@/lib/storage";
-import { getActivity, listActivities } from "@/lib/activities";
+import { getActivity, getDashboardStats, listActivities } from "@/lib/activities";
 import type { ActivitySummary } from "@/lib/types";
 
 vi.mock("@/lib/storage", async () => {
@@ -21,6 +21,7 @@ vi.mock("@/lib/activities", async () => {
   return {
     ...actual,
     getActivity: vi.fn(),
+    getDashboardStats: vi.fn(),
     listActivities: vi.fn(),
   };
 });
@@ -67,12 +68,14 @@ describe("useActivityList", () => {
   const listMock = vi.mocked(listStoredActivitiesPaged);
   const summariesMock = vi.mocked(getAllStoredSummaries);
   const recentMock = vi.mocked(listActivities);
+  const dashboardStatsMock = vi.mocked(getDashboardStats);
   const activityMock = vi.mocked(getActivity);
 
   beforeEach(() => {
     listMock.mockReset();
     summariesMock.mockReset();
     recentMock.mockReset();
+    dashboardStatsMock.mockReset();
     activityMock.mockReset();
   });
 
@@ -162,12 +165,20 @@ describe("useActivityList", () => {
     ];
     summariesMock.mockResolvedValueOnce(all);
     recentMock.mockResolvedValueOnce([all[0]]);
+    dashboardStatsMock.mockResolvedValueOnce({
+      totalActivities: 2,
+      totalDistanceM: 7000,
+      totalDurationSec: 2400,
+      thisWeekDistanceM: 2000,
+      thisWeekActivities: 1,
+    });
     const { result } = renderHook(() => useDashboard());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     expect(summariesMock).toHaveBeenCalledTimes(1);
     expect(recentMock).toHaveBeenCalledTimes(1);
+    expect(dashboardStatsMock).toHaveBeenCalledTimes(1);
     expect(result.current.summaries).toEqual(all);
     expect(result.current.recent).toEqual([all[0]]);
     // Atividade "a" é da última hora; "b" tem mais de 30 dias.

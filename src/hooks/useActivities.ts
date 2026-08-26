@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  computeDashboardStats,
   getActivity,
+  getDashboardStats,
   listActivities,
 } from "@/lib/activities";
 import {
@@ -47,16 +47,16 @@ export function useDashboard() {
     setLoading(true);
     setError(null);
     try {
-      // Uma única leitura do IndexedDB: as summaries alimentam tanto os stats
-      // (derivados em memória) quanto os consumidores de analytics da Home,
-      // evitando leituras duplicadas por visita.
-      const [list, recentItems] = await Promise.all([
+      // Os totais históricos vêm do agregado incremental; a lista completa
+      // permanece disponível para PRs, VO2 Max e previsões da Home.
+      const [list, recentItems, dashboardStats] = await Promise.all([
         getAllStoredSummaries(),
         listActivities(5),
+        getDashboardStats(),
       ]);
       if (!mountedRef.current || generation !== generationRef.current) return;
       setSummaries(list);
-      setStats(computeDashboardStats(list));
+      setStats(dashboardStats);
       setRecent(recentItems);
     } catch (reason) {
       if (mountedRef.current && generation === generationRef.current) {

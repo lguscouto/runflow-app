@@ -3,12 +3,13 @@ import {
   putActivity,
   getStoredActivity,
   getAllStoredSummaries,
+  getStoredDashboardStats,
   removeActivity,
   toActivitySummary,
   type StoredActivity,
 } from "./storage";
 
-describe("IndexedDB v6 Storage Isolation & CRUD", () => {
+describe("IndexedDB v9 Storage, Activity CRUD & Incremental Stats", () => {
   const sampleActivity: StoredActivity = {
     id: "act-test-01",
     name: "Treino Teste 10k",
@@ -74,5 +75,92 @@ describe("IndexedDB v6 Storage Isolation & CRUD", () => {
 
     const summaries = await getAllStoredSummaries();
     expect(summaries.find((s) => s.id === "act-test-01")).toBeUndefined();
+  });
+
+  it("should maintain dashboard totals incrementally across insert, update and delete", async () => {
+    const now = Date.parse("2026-08-26T12:00:00.000Z");
+    const recent = {
+      ...sampleActivity,
+      id: "aggregate-recent",
+      startedAt: "2026-08-24T12:00:00.000Z",
+      distanceM: 1_000,
+      durationSec: 600,
+    };
+    const old = {
+      ...sampleActivity,
+      id: "aggregate-old",
+      startedAt: "2026-08-18T11:59:59.999Z",
+      distanceM: 9_000,
+      durationSec: 2_700,
+    };
+
+    await putActivity(recent);
+    await putActivity(old);
+    await expect(getStoredDashboardStats(now)).resolves.toEqual({
+      totalActivities: 2,
+      totalDistanceM: 10_000,
+      totalDurationSec: 3_300,
+      thisWeekDistanceM: 1_000,
+      thisWeekActivities: 1,
+    });
+
+    await putActivity({ ...recent, distanceM: 1_500, durationSec: 900 });
+    await expect(getStoredDashboardStats(now)).resolves.toMatchObject({
+      totalActivities: 2,
+      totalDistanceM: 10_500,
+      totalDurationSec: 3_600,
+      thisWeekDistanceM: 1_500,
+      thisWeekActivities: 1,
+    });
+
+    await expect(removeActivity(old.id)).resolves.toBe(true);
+    await expect(getStoredDashboardStats(now)).resolves.toEqual({
+      totalActivities: 1,
+      totalDistanceM: 1_500,
+      totalDurationSec: 900,
+      thisWeekDistanceM: 1_500,
+      thisWeekActivities: 1,
+    });
+    await removeActivity(recent.id);
+  });
+
+  it("uses the numeric timestamp index for timezone-offset dates", async () => {
+    const now = Date.parse("2026-08-26T12:00:00.000Z");
+    const activity = {
+      ...sampleActivity,
+      id: "aggregate-offset",
+      startedAt: "2026-08-19T10:00:00-03:00",
+      distanceM: 4_000,
+      durationSec: 1_200,
+    };
+
+    await putActivity(activity);
+    await expect(getStoredDashboardStats(now)).resolves.toMatchObject({
+      totalActivities: 1,
+      thisWeekDistanceM: 4_000,
+      thisWeekActivities: 1,
+    });
+    await removeActivity(activity.id);
+  });
+
+  it("excludes future timestamps from the weekly window", async () => {
+    const now = Date.parse("2026-08-26T12:00:00.000Z");
+    const future = {
+      ...sampleActivity,
+      id: "aggregate-future",
+      startedAt: "2026-08-26T13:00:00.000Z",
+      distanceM: 4_000,
+      durationSec: 1_200,
+    };
+
+    await putActivity(future);
+    await expect(getStoredDashboardStats(now)).resolves.toMatchObject({
+      totalActivities: 1,
+      totalDistanceM: 4_000,
+      totalDurationSec: 1_200,
+      thisWeekDistanceM: 0,
+      thisWeekActivities: 0,
+    });
+    await removeActivity(future.id);
   });
 });

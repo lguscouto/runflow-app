@@ -1,6 +1,7 @@
 import {
   getStore,
   PROFILE_KEY,
+  DASHBOARD_STATS_KEY,
   getAllStoredActivities,
   getAllStoredGear,
   getAllStoredRoutes,
@@ -11,6 +12,10 @@ import {
   type StoredActivity,
   type StoredActivityTrack,
 } from "../storage";
+import {
+  applyDashboardStatsDelta,
+  createDashboardStatsAggregate,
+} from "../dashboard-stats";
 import { getUserProfile, saveUserProfileSnapshot } from "../profile";
 import type {
   SyncManifest,
@@ -400,19 +405,52 @@ export async function applyIncomingPayload(
   }
 
   const db = await getStore();
-  const tx = db.transaction(["profile", "gear", "activitySummaries", "activityTracks", "routes"], "readwrite");
+  const tx = db.transaction([
+    "profile",
+    "gear",
+    "activitySummaries",
+    "activityTracks",
+    "routes",
+    "dashboardStats",
+  ], "readwrite");
+  const summaryStore = tx.objectStore("activitySummaries");
+  const incomingActivities = new Map<string, {
+    activity: StoredActivity;
+    summary: ReturnType<typeof toActivitySummary>;
+  }>();
   for (const act of payload.activities ?? []) {
+    incomingActivities.set(act.id, {
+      activity: act,
+      summary: toActivitySummary(act),
+    });
+  }
+
+  const entries = Array.from(incomingActivities.values());
+  const [previousSummaries, currentAggregate] = await Promise.all([
+    Promise.all(entries.map(({ summary }) => summaryStore.get(summary.id))),
+    tx.objectStore("dashboardStats").get(DASHBOARD_STATS_KEY),
+  ]);
+  const aggregate =
+    currentAggregate ?? createDashboardStatsAggregate(await summaryStore.getAll());
+  let nextAggregate = aggregate;
+
+  for (const [index, { activity, summary }] of entries.entries()) {
+    nextAggregate = applyDashboardStatsDelta(
+      nextAggregate,
+      previousSummaries[index],
+      summary,
+    );
     const track: StoredActivityTrack = {
-      id: act.id,
-      points: act.points,
-      trackSegments: act.trackSegments,
-      maxPaceSecKm: act.maxPaceSecKm,
-      maxHr: act.maxHr,
-      notes: act.notes,
-      workoutId: act.workoutId,
-      structuredWorkoutReport: act.structuredWorkoutReport,
+      id: activity.id,
+      points: activity.points,
+      trackSegments: activity.trackSegments,
+      maxPaceSecKm: activity.maxPaceSecKm,
+      maxHr: activity.maxHr,
+      notes: activity.notes,
+      workoutId: activity.workoutId,
+      structuredWorkoutReport: activity.structuredWorkoutReport,
     };
-    tx.objectStore("activitySummaries").put(toActivitySummary(act));
+    summaryStore.put(summary);
     tx.objectStore("activityTracks").put(track);
   }
   for (const gear of payload.gear ?? []) tx.objectStore("gear").put(gear);
@@ -421,6 +459,10 @@ export async function applyIncomingPayload(
     tx.objectStore("profile").put(payload.profile, PROFILE_KEY);
     profileUpdated = true;
   }
+  tx.objectStore("dashboardStats").put(
+    nextAggregate,
+    DASHBOARD_STATS_KEY,
+  );
   await tx.done;
 
   return {

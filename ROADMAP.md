@@ -28,6 +28,7 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 ## ✅ Otimizações incrementais de UX — 2026
 
 - [x] **V4 — Skeletons nos loadings**: placeholders estruturais reutilizáveis para dashboard, lista de atividades, análises, rotas, perfil, detalhe de treino e mapas lazy; dimensões reservadas reduzem a mudança de layout percebida (CLS).
+- [x] **P2 — Stats incrementais no dashboard**: agregado persistido no IndexedDB atualizado por delta em inserções/edições/exclusões; migração v9 com índice temporal numérico e rebuild transacional em backup/sync; indicadores semanais consultam apenas a janela móvel de 7 dias.
 
 ---
 
@@ -124,8 +125,8 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 - [x] `SyncPanel` carregado sob demanda somente ao abrir a aba de sincronização no Perfil, com fallback de carregamento; o `peerjs` permanece lazy dentro do fluxo P2P
 - [x] Catálogo de i18n (`i18n-dictionaries.ts`, ~104 KB) removido do bundle inicial e carregado/cacheado após a resolução do idioma, com fallback mínimo para o estado inicial
 - [x] Memoização com `useMemo`/`useCallback`/`React.memo` em cálculos intensivos (NP™ Coggan, Zonas de Potência, ClimbPro, VO2 Max)
-- [x] Bundle final medido em `2.689.684` bytes total e `406.135` bytes inicial, redução de `92.029` bytes (`18,5%`) no bundle inicial após o code splitting
-- [x] Leitura única de summaries no Dashboard: `useDashboard` carrega `getAllStoredSummaries` uma vez, deriva os stats em memória (`computeDashboardStats`) e expõe a lista para PRs/VO2 Max/previsões via `useMemo` + novo hook `useProfileData`, eliminando a segunda leitura do IndexedDB e o refetch em cascada na Home
+- [x] Bundle atual medido em `2.746.418` bytes total e `413.299` bytes inicial, dentro do orçamento após code splitting, skeletons e stats incrementais
+- [x] Stats incrementais no Dashboard: `dashboardStats` (schema v9) mantém totais históricos por delta em `putActivity`/`removeActivity`; `startedAtMs` + índice numérico preservam a janela semanal para datas com offset, e `getStoredDashboardStats` lê apenas essa janela. Backup e sync mantêm o agregado na mesma transação, com rebuild seguro apenas quando necessário.
 
 ---
 
@@ -199,4 +200,4 @@ flowchart TD
 
 ```
 
-*Última atualização: agosto 2026 — V4 de skeletons nos loadings implementada e validada; etapa 7 registrada como implementação concluída, com benchmark formal pendente; timeout de body WebDAV coberto por regressão.*
+*Última atualização: agosto 2026 — V4 de skeletons nos loadings e P2 de stats incrementais implementados e validados; etapa 7 registrada como implementação concluída, com benchmark formal pendente; timeout de body WebDAV coberto por regressão.*

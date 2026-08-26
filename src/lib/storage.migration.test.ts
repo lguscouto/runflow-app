@@ -5,6 +5,7 @@ import {
   getStoredActivity,
   getAllStoredSummaries,
   getAllStoredActivities,
+  getStoredDashboardStats,
   putActivity,
   resetStoreForTesting,
 } from "./storage";
@@ -94,7 +95,7 @@ async function readLegacyState() {
   return state;
 }
 
-describe("IndexedDB v7 Atomic Migration", () => {
+describe("IndexedDB v9 Atomic Migration", () => {
   beforeEach(async () => {
     await cleanupDatabase();
   });
@@ -168,11 +169,18 @@ describe("IndexedDB v7 Atomic Migration", () => {
     // Cria banco no schema v5
     await createLegacyDbV5("runflow", [legacyActivity]);
 
-    // Ao invocar as funções normais do app, o upgrade v7 é acionado
+    // Ao invocar as funções normais do app, o upgrade v9 é acionado
     const summaries = await getAllStoredSummaries();
     expect(summaries).toHaveLength(1);
     expect(summaries[0].id).toBe("v5-activity-01");
     expect(summaries[0].name).toBe("Treino do Banco V5");
+    await expect(
+      getStoredDashboardStats(Date.parse("2026-08-26T12:00:00.000Z")),
+    ).resolves.toMatchObject({
+      totalActivities: 1,
+      totalDistanceM: legacyActivity.distanceM,
+      totalDurationSec: legacyActivity.durationSec,
+    });
 
     const full = await getStoredActivity("v5-activity-01");
     expect(full).toBeDefined();

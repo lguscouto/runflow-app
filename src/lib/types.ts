@@ -247,6 +247,8 @@ export interface ActivitySummary {
   name: string;
   sport: Sport;
   startedAt: string;
+  /** Timestamp normalizado para consultas numéricas da janela do dashboard. */
+  startedAtMs?: number;
   durationSec: number;
   movingTimeSec?: number | null;
   elapsedTimeSec?: number | null;

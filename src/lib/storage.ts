@@ -2,6 +2,7 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type {
   ActivityDetail,
   ActivitySummary,
+  DashboardStats,
   Sport,
   TrackPoint,
   UserProfile,
@@ -10,6 +11,14 @@ import type {
   StructuredWorkout,
   StructuredWorkoutReport,
 } from "./types";
+import {
+  applyDashboardStatsDelta,
+  computeDashboardStats,
+  createDashboardStatsAggregate,
+  dashboardStatsFromAggregate,
+  getDashboardWeekStartMs,
+  type DashboardStatsAggregate,
+} from "./dashboard-stats";
 
 export const PROFILE_KEY = "user";
 
@@ -73,11 +82,16 @@ interface RunFlowDB extends DBSchema {
     indexes: {
       "by-started": string;
       "by-started-id": [string, string];
+      "by-started-ms": number;
     };
   };
   activityTracks: {
     key: string;
     value: StoredActivityTrack;
+  };
+  dashboardStats: {
+    key: string;
+    value: DashboardStatsAggregate;
   };
   profile: {
     key: string;
@@ -98,7 +112,8 @@ interface RunFlowDB extends DBSchema {
 }
 
 const DB_NAME = "runflow";
-const DB_VERSION = 7;
+const DB_VERSION = 9;
+export const DASHBOARD_STATS_KEY = "current";
 
 function assertLegacyActivity(value: unknown): asserts value is StoredActivity {
   if (!value || typeof value !== "object") {
@@ -130,11 +145,25 @@ function stripLegacyStructuredWorkoutReport(summary: ActivitySummary): ActivityS
   const legacySummary = summary as ActivitySummary & {
     structuredWorkoutReport?: StructuredWorkoutReport | null;
   };
-  if (!Object.prototype.hasOwnProperty.call(legacySummary, "structuredWorkoutReport")) {
+  const hasLegacyReport = Object.prototype.hasOwnProperty.call(
+    legacySummary,
+    "structuredWorkoutReport",
+  );
+  const hasStartedAtMs = Object.prototype.hasOwnProperty.call(summary, "startedAtMs");
+  if (!hasLegacyReport && !hasStartedAtMs) {
     return summary;
   }
-  const { structuredWorkoutReport: _legacyReport, ...lightweightSummary } = legacySummary;
+  const {
+    structuredWorkoutReport: _legacyReport,
+    startedAtMs: _startedAtMs,
+    ...lightweightSummary
+  } = legacySummary;
   return lightweightSummary;
+}
+
+function stripInternalSummaryFields(summary: ActivitySummary): ActivitySummary {
+  const { startedAtMs: _startedAtMs, ...publicSummary } = summary;
+  return publicSummary;
 }
 
 let dbPromise: Promise<IDBPDatabase<RunFlowDB>> | null = null;
@@ -170,10 +199,14 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
           });
           summaryStore.createIndex("by-started", "startedAt");
           summaryStore.createIndex("by-started-id", ["startedAt", "id"]);
+          summaryStore.createIndex("by-started-ms", "startedAtMs");
         } else {
           summaryStore = transaction.objectStore("activitySummaries");
           if (!summaryStore.indexNames.contains("by-started-id")) {
             summaryStore.createIndex("by-started-id", ["startedAt", "id"]);
+          }
+          if (!summaryStore.indexNames.contains("by-started-ms")) {
+            summaryStore.createIndex("by-started-ms", "startedAtMs");
           }
         }
 
@@ -181,7 +214,14 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
           database.createObjectStore("activityTracks", { keyPath: "id" });
         }
 
-        // Migração atômica de stores legados ('activities') para v7
+        let dashboardStatsStore: any;
+        if (!database.objectStoreNames.contains("dashboardStats")) {
+          dashboardStatsStore = database.createObjectStore("dashboardStats");
+        } else {
+          dashboardStatsStore = transaction.objectStore("dashboardStats");
+        }
+
+        // Migração atômica de stores legados ('activities') para v9
         if (database.objectStoreNames.contains("activities" as any)) {
           try {
             const actStore = transaction.objectStore("activities" as any);
@@ -214,6 +254,24 @@ export function getStore(): Promise<IDBPDatabase<RunFlowDB>> {
               error instanceof Error ? error : new Error(String(error));
             transaction.abort();
           }
+        }
+
+        if (oldVersion < 9 && !migrationError) {
+          const summaries = await summaryStore.getAll();
+          for (const summary of summaries) {
+            const startedAtMs = Date.parse(summary.startedAt);
+            if (Number.isFinite(startedAtMs)) {
+              await summaryStore.put({ ...summary, startedAtMs });
+            }
+          }
+        }
+
+        if (oldVersion < 8 && !migrationError) {
+          const summaries = await summaryStore.getAll();
+          await dashboardStatsStore.put(
+            createDashboardStatsAggregate(summaries),
+            DASHBOARD_STATS_KEY,
+          );
         }
       },
     }).catch((error) => {
@@ -267,12 +325,23 @@ export async function putActivity(activity: StoredActivity): Promise<void> {
   };
 
   const tx = db.transaction(
-    ["activitySummaries", "activityTracks"],
+    ["activitySummaries", "activityTracks", "dashboardStats"],
     "readwrite"
   );
+  const summaryStore = tx.objectStore("activitySummaries");
+  const statsStore = tx.objectStore("dashboardStats");
+  const [previous, currentAggregate] = await Promise.all([
+    summaryStore.get(activity.id),
+    statsStore.get(DASHBOARD_STATS_KEY),
+  ]);
+  const aggregate =
+    currentAggregate ?? createDashboardStatsAggregate(await summaryStore.getAll());
+  const nextAggregate = applyDashboardStatsDelta(aggregate, previous, summary);
+
   await Promise.all([
-    tx.objectStore("activitySummaries").put(summary),
+    summaryStore.put(summary),
     tx.objectStore("activityTracks").put(track),
+    statsStore.put(nextAggregate, DASHBOARD_STATS_KEY),
     tx.done,
   ]);
 }
@@ -289,7 +358,7 @@ export async function getStoredActivity(
   if (!summary) return undefined;
 
   return {
-    ...summary,
+    ...stripInternalSummaryFields(summary),
     points: track?.points || [],
     trackSegments: track?.trackSegments,
     maxPaceSecKm: track?.maxPaceSecKm ?? null,
@@ -314,7 +383,7 @@ export async function getAllStoredActivities(): Promise<StoredActivity[]> {
   for (const summary of sortedSummaries) {
     const track = await tx.objectStore("activityTracks").get(summary.id);
     results.push({
-      ...summary,
+      ...stripInternalSummaryFields(summary),
       points: track?.points || [],
       trackSegments: track?.trackSegments,
       maxPaceSecKm: track?.maxPaceSecKm ?? null,
@@ -344,6 +413,24 @@ export async function getAllStoredSummaries(): Promise<ActivitySummary[]> {
   const index = tx.store.index("by-started");
   const summaries = await index.getAll();
   return summaries.reverse().map(stripLegacyStructuredWorkoutReport);
+}
+
+/**
+ * Retorna stats históricos a partir do agregado incremental e lê apenas a
+ * janela móvel de sete dias para os indicadores semanais.
+ */
+export async function getStoredDashboardStats(now = Date.now()): Promise<DashboardStats> {
+  const db = await getStore();
+  const tx = db.transaction(["dashboardStats", "activitySummaries"], "readonly");
+  const aggregate = await tx.objectStore("dashboardStats").get(DASHBOARD_STATS_KEY);
+  if (!aggregate) {
+    return computeDashboardStats(await tx.objectStore("activitySummaries").getAll(), now);
+  }
+
+  const recentSummaries = await tx.objectStore("activitySummaries")
+    .index("by-started-ms")
+    .getAll(IDBKeyRange.bound(getDashboardWeekStartMs(now), now));
+  return dashboardStatsFromAggregate(aggregate, recentSummaries, now);
 }
 
 /**
@@ -395,16 +482,29 @@ export async function listStoredActivitiesWithCursor(
 
 export async function removeActivity(id: string): Promise<boolean> {
   const db = await getStore();
-  const existing = await db.get("activitySummaries", id);
-  if (!existing) return false;
-
   const tx = db.transaction(
-    ["activitySummaries", "activityTracks"],
+    ["activitySummaries", "activityTracks", "dashboardStats"],
     "readwrite"
   );
+  const summaryStore = tx.objectStore("activitySummaries");
+  const statsStore = tx.objectStore("dashboardStats");
+  const [existing, currentAggregate] = await Promise.all([
+    summaryStore.get(id),
+    statsStore.get(DASHBOARD_STATS_KEY),
+  ]);
+  if (!existing) {
+    await tx.done;
+    return false;
+  }
+
+  const aggregate =
+    currentAggregate ?? createDashboardStatsAggregate(await summaryStore.getAll());
+  const nextAggregate = applyDashboardStatsDelta(aggregate, existing, undefined);
+
   await Promise.all([
-    tx.objectStore("activitySummaries").delete(id),
+    summaryStore.delete(id),
     tx.objectStore("activityTracks").delete(id),
+    statsStore.put(nextAggregate, DASHBOARD_STATS_KEY),
     tx.done,
   ]);
   return true;
@@ -486,11 +586,13 @@ export function toActivitySummary(stored: StoredActivity): ActivitySummary {
     routeId,
     workoutId,
   } = stored;
+  const startedAtMs = Date.parse(startedAt);
   return {
     id,
     name,
     sport,
     startedAt,
+    ...(Number.isFinite(startedAtMs) ? { startedAtMs } : {}),
     durationSec,
     movingTimeSec: (stored as any).movingTimeSec ?? durationSec,
     elapsedTimeSec: (stored as any).elapsedTimeSec ?? durationSec,

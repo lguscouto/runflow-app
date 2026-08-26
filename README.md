@@ -14,7 +14,8 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - **Gravar treino** com GPS ao vivo (distância, tempo, ritmo, mapa) — estilo Strava
 - **Importação** de arquivos `.gpx` e `.fit` (arrastar ou selecionar)
 - Dados de treino armazenados **localmente** no dispositivo (IndexedDB); o Android Auto Backup permanece desabilitado
-- **Performance**: catálogo de traduções e painel de sincronização carregados sob demanda; bundle inicial medido em `410.970 bytes`
+- **Performance**: catálogo de traduções e painel de sincronização carregados sob demanda; bundle medido em `2.746.418 bytes total / 413.299 bytes inicial`, dentro do orçamento
+- **Estatísticas incrementais**: totais históricos do dashboard mantidos em agregado local atualizado por delta; a semana consulta apenas a janela móvel de 7 dias, sem reduzir todo o histórico a cada visita
 - **UX de carregamento**: skeletons estruturais para dashboard, atividades, análises, rotas, perfil e mapas, preservando espaço durante a leitura local
 - **Acessibilidade**: respeito a `prefers-reduced-motion` (animações anuladas) e indicador de foco visível por `:focus-visible` (WCAG 2.2)
 - **App Android (APK)** via Capacitor
@@ -216,10 +217,10 @@ na pasta `android/`, com JDK 21/JBR e SDK Android configurados.
 
 ### Estado verificado do checkout 0.9.8
 
-- `npm test`: **67 arquivos / 265 testes** aprovados.
+- `npm test`: **68 arquivos / 271 testes** aprovados.
 - E2E: **25/25** aprovados.
-- Bundle: **2.743.613 bytes total / 410.970 bytes inicial**, dentro do orçamento; o catálogo de skeletons preserva o bundle inicial e reserva dimensões estáveis para os loadings.
-- Dashboard com leitura única de summaries (stats, PRs, VO2 Max e previsões derivados em memória, sem segunda leitura do IndexedDB).
+- Bundle: **2.746.418 bytes total / 413.299 bytes inicial**, dentro do orçamento; o agregado incremental de stats mantém os totais históricos sem reduzir todo o histórico a cada visita.
+- Dashboard com agregado incremental de stats: gravações, edições, exclusões e sync atualizam os totais históricos por delta transacional; backup e recuperação usam rebuild transacional quando necessário; a Home ainda carrega summaries para PRs, VO2 Max e previsões, sem reduzir o histórico para obter os totais.
 - Skeletons estruturais aplicados aos estados de leitura do dashboard, atividades, análises, rotas, perfil, detalhe e mapas lazy, com `role="status"`, `aria-busy` e suporte a `prefers-reduced-motion`.
 - `npm run build:mobile`: aprovado; APK debug final em
   `android/app/build/outputs/apk/debug/app-debug.apk`.
