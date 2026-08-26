@@ -117,8 +117,10 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 ### 10. Memoização Estratégica, Code Splitting Dinâmico & Redução de Bundle
 **Esforço:** S · **Prioridade:** Média · **Foco:** Tempo de Inicialização & CPU · **Status:** ✅ Concluído
 - [x] Code splitting dinâmico (`next/dynamic` com SSR desativado) para bibliotecas pesadas (`leaflet`, `three`, `canvas-confetti`, `peerjs`)
+- [x] `SyncPanel` carregado sob demanda somente ao abrir a aba de sincronização no Perfil, com fallback de carregamento; o `peerjs` permanece lazy dentro do fluxo P2P
+- [x] Catálogo de i18n (`i18n-dictionaries.ts`, ~104 KB) removido do bundle inicial e carregado/cacheado após a resolução do idioma, com fallback mínimo para o estado inicial
 - [x] Memoização com `useMemo`/`useCallback`/`React.memo` em cálculos intensivos (NP™ Coggan, Zonas de Potência, ClimbPro, VO2 Max)
-- [x] Bundle final medido em `2.688.935` bytes total e `498.164` bytes inicial, dentro do orçamento documentado
+- [x] Bundle final medido em `2.689.684` bytes total e `406.135` bytes inicial, redução de `92.029` bytes (`18,5%`) no bundle inicial após o code splitting
 - [x] Leitura única de summaries no Dashboard: `useDashboard` carrega `getAllStoredSummaries` uma vez, deriva os stats em memória (`computeDashboardStats`) e expõe a lista para PRs/VO2 Max/previsões via `useMemo` + novo hook `useProfileData`, eliminando a segunda leitura do IndexedDB e o refetch em cascada na Home
 
 ---

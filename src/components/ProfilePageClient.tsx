@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   CheckCircle,
@@ -51,9 +52,20 @@ import { putGear, removeGear, getAllStoredSummaries } from "@/lib/storage";
 import { calculateAchievements, type Achievement } from "@/lib/achievements";
 import { v4 as uuidv4 } from "uuid";
 import { exportBackup, importBackup } from "@/lib/backup";
-import { SyncPanel } from "@/components/SyncPanel";
 import { BikeGarageManager } from "@/components/BikeGarageManager";
 import { haptics } from "@/lib/haptics";
+
+const SyncPanel = dynamic(
+  () => import("@/components/SyncPanel").then((module) => module.SyncPanel),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="stat-card text-sm text-[var(--muted)]" role="status">
+        Carregando sincronização...
+      </div>
+    ),
+  },
+);
 
 export function ProfilePageClient() {
   const { t, language } = useI18n();
