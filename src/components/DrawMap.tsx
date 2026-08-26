@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { MapContainer, Polyline, CircleMarker, useMapEvents } from "react-leaflet";
 import { PrivacyAwareTileLayer } from "@/components/PrivacyAwareTileLayer";
 import type { RoutePoint } from "@/lib/types";
+import { colorTokens } from "@/lib/color-tokens";
 import "leaflet/dist/leaflet.css";
 
 function MapClickHandler({ onClick }: { onClick: (lat: number, lng: number) => void }) {
@@ -72,7 +73,7 @@ export function DrawMap({
           <>
             <Polyline
               positions={positions}
-              pathOptions={{ color: "#ff6b35", weight: 4, opacity: 0.9 }}
+              pathOptions={{ color: colorTokens.map.track, weight: 4, opacity: 0.9 }}
             />
             {points.map((p, i) => (
               <CircleMarker
@@ -80,8 +81,8 @@ export function DrawMap({
                 center={[p.lat, p.lng]}
                 radius={6}
                 pathOptions={{
-                  color: "#ffffff",
-                  fillColor: i === 0 ? "#10b981" : i === points.length - 1 ? "#ef4444" : "#ff6b35",
+                  color: colorTokens.map.marker,
+                  fillColor: i === 0 ? colorTokens.map.start : i === points.length - 1 ? colorTokens.map.finish : colorTokens.map.track,
                   fillOpacity: 1,
                   weight: 2,
                 }}

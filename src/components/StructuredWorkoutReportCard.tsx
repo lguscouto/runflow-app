@@ -98,7 +98,7 @@ export function StructuredWorkoutReportCard({
           return (
             <div
               key={idx}
-              className="grid grid-cols-12 items-center gap-1 p-2.5 sm:p-3 rounded-xl bg-[#161b22]/70 border border-[var(--border)] text-xs hover:border-white/20 transition-all"
+              className="grid grid-cols-12 items-center gap-1 p-2.5 sm:p-3 rounded-xl bg-[var(--color-surface-github)]/70 border border-[var(--border)] text-xs hover:border-white/20 transition-all"
             >
               {/* Step Type & Name */}
               <div className="col-span-4 sm:col-span-3 flex items-center gap-2">

@@ -5,6 +5,7 @@ import { Timer, Trophy, Flag, Sparkles, TrendingUp } from "lucide-react";
 import type { RacePrediction } from "@/lib/types";
 import { formatPace } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
+import { colorTokens } from "@/lib/color-tokens";
 
 interface RacePredictorCardProps {
   predictions: RacePrediction[];
@@ -40,29 +41,29 @@ export function RacePredictorCard({ predictions }: RacePredictorCardProps) {
     { badgeColor: string; bgSoft: string; iconBg: string }
   > = {
     "5k": {
-      badgeColor: "#10b981",
-      bgSoft: "rgba(16, 185, 129, 0.08)",
+      badgeColor: colorTokens.race.fiveK.color,
+      bgSoft: colorTokens.race.fiveK.background,
       iconBg: "bg-emerald-500/20 text-emerald-400",
     },
     "10k": {
-      badgeColor: "#0ea5e9",
-      bgSoft: "rgba(14, 165, 233, 0.08)",
+      badgeColor: colorTokens.race.tenK.color,
+      bgSoft: colorTokens.race.tenK.background,
       iconBg: "bg-sky-500/20 text-sky-400",
     },
     half_marathon: {
-      badgeColor: "#8b5cf6",
-      bgSoft: "rgba(139, 92, 246, 0.08)",
+      badgeColor: colorTokens.race.halfMarathon.color,
+      bgSoft: colorTokens.race.halfMarathon.background,
       iconBg: "bg-purple-500/20 text-purple-400",
     },
     marathon: {
-      badgeColor: "#f97316",
-      bgSoft: "rgba(249, 115, 22, 0.08)",
+      badgeColor: colorTokens.race.marathon.color,
+      bgSoft: colorTokens.race.marathon.background,
       iconBg: "bg-orange-500/20 text-orange-400",
     },
   };
 
   return (
-    <div className="stat-card bg-gradient-to-br from-[#13161f] via-[#10131b] to-[#0d0f15] border border-[var(--border)] rounded-2xl p-5 md:p-6 shadow-xl space-y-5">
+    <div className="stat-card bg-gradient-to-br from-[var(--color-surface-race-start)] via-[var(--color-surface-race-middle)] to-[var(--color-surface-race-end)] border border-[var(--border)] rounded-2xl p-5 md:p-6 shadow-xl space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
@@ -87,8 +88,8 @@ export function RacePredictorCard({ predictions }: RacePredictorCardProps) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
         {predictions.map((pred) => {
           const config = distanceConfigs[pred.id] || {
-            badgeColor: "#ff5722",
-            bgSoft: "rgba(255, 87, 34, 0.08)",
+            badgeColor: colorTokens.race.fallback.color,
+            bgSoft: colorTokens.race.fallback.background,
             iconBg: "bg-[var(--accent)]/20 text-[var(--accent)]",
           };
 

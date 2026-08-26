@@ -51,7 +51,7 @@ export function VO2MaxFitnessCard({ estimate }: VO2MaxFitnessCardProps) {
       : t("vo2max.confidence_low");
 
   return (
-    <div className="stat-card relative overflow-hidden bg-gradient-to-br from-[#121824] via-[#10141d] to-[#0b0e14] border border-[var(--border)] rounded-2xl p-5 md:p-6 shadow-xl">
+    <div className="stat-card relative overflow-hidden bg-gradient-to-br from-[var(--color-surface-fitness-start)] via-[var(--color-surface-fitness-middle)] to-[var(--color-surface-canvas)] border border-[var(--border)] rounded-2xl p-5 md:p-6 shadow-xl">
       {/* Background glowing ambient light */}
       <div
         className="absolute -top-12 -right-12 w-44 h-44 rounded-full blur-3xl opacity-20 pointer-events-none"

@@ -210,7 +210,7 @@ export function SocialShareCardModal({
             {/* Body: 2 Columns */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 p-4 sm:p-6 overflow-y-auto">
               {/* Left Column: Live Canvas Preview */}
-              <div className="md:col-span-6 flex flex-col items-center justify-center bg-[#090c10] border border-[var(--border)] rounded-xl p-3 sm:p-4 min-h-[340px]">
+              <div className="md:col-span-6 flex flex-col items-center justify-center bg-[var(--color-surface-social-preview)] border border-[var(--border)] rounded-xl p-3 sm:p-4 min-h-[340px]">
                 <div
                   className={`relative flex items-center justify-center max-h-[55vh] overflow-hidden rounded-xl shadow-2xl border border-[var(--border)] transition-all ${
                     format === "stories" ? "aspect-[9/16]" : "aspect-square"

@@ -5,6 +5,7 @@ import { CircleMarker, MapContainer, Polyline, useMap } from "react-leaflet";
 import { PrivacyAwareTileLayer } from "@/components/PrivacyAwareTileLayer";
 import type { TrackPoint } from "@/lib/types";
 import { boundsFromPoints } from "@/lib/geo";
+import { colorTokens } from "@/lib/color-tokens";
 import "leaflet/dist/leaflet.css";
 
 function FollowLastPoint({
@@ -79,7 +80,7 @@ export function LiveMapTrack({
         {positions.length > 1 && (
           <Polyline
             positions={positions}
-            pathOptions={{ color: "#ff6b35", weight: 5, opacity: 0.95 }}
+            pathOptions={{ color: colorTokens.map.track, weight: 5, opacity: 0.95 }}
           />
         )}
         {last && (
@@ -87,9 +88,9 @@ export function LiveMapTrack({
             center={[last.lat, last.lng]}
             radius={10}
             pathOptions={{
-              color: "#fff",
+              color: colorTokens.map.marker,
               weight: 3,
-              fillColor: "#ff6b35",
+              fillColor: colorTokens.map.track,
               fillOpacity: 1,
             }}
           />

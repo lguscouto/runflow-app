@@ -167,7 +167,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
         </h2>
 
         {/* Tab switch */}
-        <div className="flex items-center gap-1 bg-[#161b22] p-1 rounded-xl border border-[var(--border)] text-xs">
+        <div className="flex items-center gap-1 bg-[var(--color-surface-github)] p-1 rounded-xl border border-[var(--border)] text-xs">
           <button
             type="button"
             onClick={() => {

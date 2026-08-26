@@ -269,10 +269,10 @@ export function WorkoutBuilderModal({
         role="dialog"
         aria-modal="true"
         aria-label={initialWorkout ? t("workout.edit_workout") : t("workout.builder_title")}
-        className="relative w-full max-w-2xl bg-[#0f141c] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col"
+        className="relative w-full max-w-2xl bg-[var(--color-surface-chart)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col"
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between bg-[#161b22]/70 shrink-0">
+        <div className="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between bg-[var(--color-surface-github)]/70 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
               <Zap size={20} />
@@ -313,7 +313,7 @@ export function WorkoutBuilderModal({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: 6 x 400m Tiros @ 4:15"
-                className="w-full bg-[#161b22] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
+                className="w-full bg-[var(--color-surface-github)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
               />
             </div>
 
@@ -326,7 +326,7 @@ export function WorkoutBuilderModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Ex: Treino forte de velocidade para VO2 Max"
-                className="w-full bg-[#161b22] border border-[var(--border)] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
+                className="w-full bg-[var(--color-surface-github)] border border-[var(--border)] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
               />
             </div>
           </div>
@@ -391,7 +391,7 @@ export function WorkoutBuilderModal({
                                   repeats: parseInt(e.target.value, 10),
                                 })
                               }
-                              className="bg-[#161b22] border border-[var(--border)] rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+                              className="bg-[var(--color-surface-github)] border border-[var(--border)] rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
                             >
                               {[2, 3, 4, 5, 6, 8, 10, 12, 15, 20].map((num) => (
                                 <option key={num} value={num}>
@@ -437,7 +437,7 @@ export function WorkoutBuilderModal({
                           return (
                             <div
                               key={subStep.id}
-                              className="p-2.5 rounded-lg bg-[#161b22]/90 border border-[var(--border)] flex flex-wrap items-center justify-between gap-2"
+                              className="p-2.5 rounded-lg bg-[var(--color-surface-github)]/90 border border-[var(--border)] flex flex-wrap items-center justify-between gap-2"
                             >
                               <div className="flex flex-wrap items-center gap-2">
                                 <select
@@ -464,7 +464,7 @@ export function WorkoutBuilderModal({
                                       targetValue: e.target.value === "distance" ? 400 : 90,
                                     })
                                   }
-                                  className="text-xs bg-[#0f141c] border border-[var(--border)] text-white px-2 py-1 rounded-md"
+                                  className="text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-md"
                                 >
                                   <option value="distance">Distância (m)</option>
                                   <option value="time">Tempo (s)</option>
@@ -480,7 +480,7 @@ export function WorkoutBuilderModal({
                                         targetValue: Math.max(1, parseInt(e.target.value, 10) || 0),
                                       })
                                     }
-                                    className="w-20 text-xs bg-[#0f141c] border border-[var(--border)] text-white px-2 py-1 rounded-md"
+                                    className="w-20 text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-md"
                                     placeholder="Valor"
                                   />
                                 )}
@@ -517,7 +517,7 @@ export function WorkoutBuilderModal({
                 return (
                   <div
                     key={step.id}
-                    className="p-3 sm:p-3.5 rounded-xl bg-[#161b22]/70 border border-[var(--border)] space-y-2.5"
+                    className="p-3 sm:p-3.5 rounded-xl bg-[var(--color-surface-github)]/70 border border-[var(--border)] space-y-2.5"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
@@ -545,7 +545,7 @@ export function WorkoutBuilderModal({
                             handleUpdateSingleStep(index, { name: e.target.value })
                           }
                           placeholder="Nome da etapa"
-                          className="text-xs bg-[#0f141c] border border-[var(--border)] text-white px-2 py-1 rounded-lg w-32 sm:w-40"
+                          className="text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-lg w-32 sm:w-40"
                         />
                       </div>
 
@@ -588,7 +588,7 @@ export function WorkoutBuilderModal({
                             targetValue: e.target.value === "distance" ? 1000 : 300,
                           })
                         }
-                        className="bg-[#0f141c] border border-[var(--border)] text-white px-2 py-1 rounded-lg"
+                        className="bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-lg"
                       >
                         <option value="distance">Distância (metros)</option>
                         <option value="time">Tempo (segundos)</option>
@@ -605,7 +605,7 @@ export function WorkoutBuilderModal({
                                 targetValue: Math.max(1, parseInt(e.target.value, 10) || 0),
                               })
                             }
-                            className="w-24 bg-[#0f141c] border border-[var(--border)] text-white px-2 py-1 rounded-lg"
+                            className="w-24 bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-lg"
                           />
                           <span className="text-[var(--muted)]">
                             {step.targetType === "distance" ? "m" : "seg"}
@@ -641,7 +641,7 @@ export function WorkoutBuilderModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[#161b22]/70 flex items-center justify-end gap-3 shrink-0">
+        <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[var(--color-surface-github)]/70 flex items-center justify-end gap-3 shrink-0">
           <button type="button" onClick={onClose} className="btn-ghost text-xs">
             {t("common.cancel")}
           </button>

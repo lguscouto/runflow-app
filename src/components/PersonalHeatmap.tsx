@@ -29,6 +29,7 @@ import type { SavedRoute, Sport } from "@/lib/types";
 import { formatPace, formatSpeed, formatWatts, formatDistance, formatDuration } from "@/lib/format";
 import { simplifyPoints } from "@/lib/geo";
 import { useI18n } from "@/lib/i18n";
+import { colorTokens } from "@/lib/color-tokens";
 
 export type HeatmapTheme = "flame" | "cyan" | "sunset" | "lime" | "strava" | "velo";
 export type HeatmapBasemap = "dark" | "light" | "osm" | "satellite";
@@ -46,44 +47,44 @@ export const HEATMAP_THEMES: Record<
 > = {
   flame: {
     nameKey: "heatmap.theme_flame",
-    coreColor: "#ff4500",
-    glowColor: "#ff8c00",
-    accentColor: "#ffd700",
+    coreColor: colorTokens.heatmap.flame.core,
+    glowColor: colorTokens.heatmap.flame.glow,
+    accentColor: colorTokens.heatmap.flame.accent,
     previewBg: "bg-gradient-to-r from-red-600 via-orange-500 to-amber-400",
   },
   velo: {
     nameKey: "heatmap.theme_velo",
-    coreColor: "#f59e0b",
-    glowColor: "#06b6d4",
-    accentColor: "#ffffff",
+    coreColor: colorTokens.heatmap.velo.core,
+    glowColor: colorTokens.heatmap.velo.glow,
+    accentColor: colorTokens.heatmap.velo.accent,
     previewBg: "bg-gradient-to-r from-amber-500 via-yellow-400 to-cyan-400",
   },
   cyan: {
     nameKey: "heatmap.theme_cyan",
-    coreColor: "#00f0ff",
-    glowColor: "#0088ff",
-    accentColor: "#ffffff",
+    coreColor: colorTokens.heatmap.cyan.core,
+    glowColor: colorTokens.heatmap.cyan.glow,
+    accentColor: colorTokens.heatmap.cyan.accent,
     previewBg: "bg-gradient-to-r from-blue-600 via-cyan-400 to-teal-300",
   },
   sunset: {
     nameKey: "heatmap.theme_sunset",
-    coreColor: "#ff007f",
-    glowColor: "#9d00ff",
-    accentColor: "#ffcc00",
+    coreColor: colorTokens.heatmap.sunset.core,
+    glowColor: colorTokens.heatmap.sunset.glow,
+    accentColor: colorTokens.heatmap.sunset.accent,
     previewBg: "bg-gradient-to-r from-purple-600 via-pink-500 to-amber-300",
   },
   lime: {
     nameKey: "heatmap.theme_lime",
-    coreColor: "#00ff66",
-    glowColor: "#aaff00",
-    accentColor: "#ffffff",
+    coreColor: colorTokens.heatmap.lime.core,
+    glowColor: colorTokens.heatmap.lime.glow,
+    accentColor: colorTokens.heatmap.lime.accent,
     previewBg: "bg-gradient-to-r from-emerald-600 via-green-400 to-lime-300",
   },
   strava: {
     nameKey: "heatmap.theme_strava",
-    coreColor: "#fc4c02",
-    glowColor: "#ff7033",
-    accentColor: "#ffb700",
+    coreColor: colorTokens.heatmap.strava.core,
+    glowColor: colorTokens.heatmap.strava.glow,
+    accentColor: colorTokens.heatmap.strava.accent,
     previewBg: "bg-gradient-to-r from-orange-700 via-orange-500 to-amber-400",
   },
 };
@@ -298,7 +299,7 @@ export function PersonalHeatmap({
 
   return (
     <div
-      className={`relative flex flex-col rounded-2xl overflow-hidden border border-[var(--border)] bg-[#0d1117] transition-all duration-300 ${
+      className={`relative flex flex-col rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--color-surface-map)] transition-all duration-300 ${
         isFullscreen
           ? "fixed inset-0 z-[9999] rounded-none border-none h-screen w-screen"
           : fullHeight
@@ -309,7 +310,7 @@ export function PersonalHeatmap({
       {/* Top Floating Control Bar */}
       <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         {/* Left: Quick Sport Filter Tabs */}
-        <div className="flex items-center gap-1 bg-[#161b22]/90 backdrop-blur-md p-1 rounded-xl border border-[var(--border)] text-xs pointer-events-auto shadow-lg">
+        <div className="flex items-center gap-1 bg-[var(--color-surface-github)]/90 backdrop-blur-md p-1 rounded-xl border border-[var(--border)] text-xs pointer-events-auto shadow-lg">
           {[
             { id: "all", label: t("heatmap.sport_all"), icon: "🌐" },
             { id: "running", label: t("sport.running"), icon: "🏃" },
@@ -342,7 +343,7 @@ export function PersonalHeatmap({
         {/* Right Badges / Actions */}
         <div className="flex items-center gap-1.5 pointer-events-auto">
           {/* Total Distance & Activity Count Badge */}
-          <div className="hidden md:flex items-center gap-2 bg-[#161b22]/90 backdrop-blur-md border border-[var(--border)] px-3 py-1.5 rounded-xl shadow-lg text-xs">
+          <div className="hidden md:flex items-center gap-2 bg-[var(--color-surface-github)]/90 backdrop-blur-md border border-[var(--border)] px-3 py-1.5 rounded-xl shadow-lg text-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
             <span className="text-white font-semibold">
               {totalStats.distanceKm} km
@@ -359,7 +360,7 @@ export function PersonalHeatmap({
             className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border shadow-lg transition-all cursor-pointer ${
               showControls
                 ? "bg-[var(--accent)] text-white border-[var(--accent)]"
-                : "bg-[#161b22]/90 backdrop-blur-md text-[var(--text)] border-[var(--border)] hover:bg-[#21262d]"
+                : "bg-[var(--color-surface-github)]/90 backdrop-blur-md text-[var(--text)] border-[var(--border)] hover:bg-[var(--color-surface-github-hover)]"
             }`}
             title="Ajustes do Mapa de Calor"
           >
@@ -371,7 +372,7 @@ export function PersonalHeatmap({
           <button
             type="button"
             onClick={() => setRecenterCount((c) => c + 1)}
-            className="p-2 rounded-xl bg-[#161b22]/90 backdrop-blur-md text-[var(--text)] border border-[var(--border)] hover:bg-[#21262d] shadow-lg transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-[var(--color-surface-github)]/90 backdrop-blur-md text-[var(--text)] border border-[var(--border)] hover:bg-[var(--color-surface-github-hover)] shadow-lg transition-all cursor-pointer"
             title={t("heatmap.fit_bounds")}
           >
             <RefreshCw size={16} />
@@ -381,7 +382,7 @@ export function PersonalHeatmap({
           <button
             type="button"
             onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2 rounded-xl bg-[#161b22]/90 backdrop-blur-md text-[var(--text)] border border-[var(--border)] hover:bg-[#21262d] shadow-lg transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-[var(--color-surface-github)]/90 backdrop-blur-md text-[var(--text)] border border-[var(--border)] hover:bg-[var(--color-surface-github-hover)] shadow-lg transition-all cursor-pointer"
             title={isFullscreen ? t("heatmap.exit_fullscreen") : t("heatmap.fullscreen")}
           >
             {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
@@ -391,7 +392,7 @@ export function PersonalHeatmap({
 
       {/* Expandable Controls Panel */}
       {showControls && (
-        <div className="absolute top-16 left-3 right-3 sm:right-auto sm:w-96 z-[1000] bg-[#161b22]/95 backdrop-blur-xl border border-[var(--border)] p-4 rounded-2xl shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto pointer-events-auto">
+        <div className="absolute top-16 left-3 right-3 sm:right-auto sm:w-96 z-[1000] bg-[var(--color-surface-github)]/95 backdrop-blur-xl border border-[var(--border)] p-4 rounded-2xl shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto pointer-events-auto">
           <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
               <Sliders size={16} className="text-[var(--accent)]" />
@@ -423,8 +424,8 @@ export function PersonalHeatmap({
                     onClick={() => setTheme(thm)}
                     className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
                       active
-                        ? "border-white bg-[#21262d] text-white ring-2 ring-[var(--accent)]"
-                        : "border-[var(--border)] bg-[#0d1117] text-[var(--muted)] hover:text-white"
+                        ? "border-white bg-[var(--color-surface-github-hover)] text-white ring-2 ring-[var(--accent)]"
+                        : "border-[var(--border)] bg-[var(--color-surface-map)] text-[var(--muted)] hover:text-white"
                     }`}
                   >
                     <span className={`w-3.5 h-3.5 rounded-full ${item.previewBg} shrink-0`} />
@@ -457,7 +458,7 @@ export function PersonalHeatmap({
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border text-left transition-all cursor-pointer ${
                     basemap === bm.id
                       ? "border-[var(--accent)] bg-[var(--accent)]/15 text-white"
-                      : "border-[var(--border)] bg-[#0d1117] text-[var(--muted)] hover:text-white"
+                      : "border-[var(--border)] bg-[var(--color-surface-map)] text-[var(--muted)] hover:text-white"
                   }`}
                 >
                   {t(bm.labelKey)}
@@ -475,7 +476,7 @@ export function PersonalHeatmap({
             <select
               value={selectedSport}
               onChange={(e) => setSelectedSport(e.target.value)}
-              className="w-full text-xs p-2 rounded-lg bg-[#0d1117] border border-[var(--border)] text-white focus:outline-none focus:border-[var(--accent)]"
+              className="w-full text-xs p-2 rounded-lg bg-[var(--color-surface-map)] border border-[var(--border)] text-white focus:outline-none focus:border-[var(--accent)]"
             >
               <option value="all">{t("heatmap.sport_all")}</option>
               <option value="running">🏃 {t("heatmap.sport_running")}</option>
@@ -495,7 +496,7 @@ export function PersonalHeatmap({
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="w-full text-xs p-2 rounded-lg bg-[#0d1117] border border-[var(--border)] text-white focus:outline-none focus:border-[var(--accent)]"
+                className="w-full text-xs p-2 rounded-lg bg-[var(--color-surface-map)] border border-[var(--border)] text-white focus:outline-none focus:border-[var(--accent)]"
               >
                 <option value="all">{t("heatmap.year_all")}</option>
                 {availableYears.map((yr) => (
@@ -513,7 +514,7 @@ export function PersonalHeatmap({
               <label className="text-xs font-semibold text-[var(--muted)]">
                 {t("heatmap.stroke")}
               </label>
-              <div className="flex bg-[#0d1117] border border-[var(--border)] rounded-lg p-0.5">
+              <div className="flex bg-[var(--color-surface-map)] border border-[var(--border)] rounded-lg p-0.5">
                 {(["thin", "medium", "thick"] as HeatmapStroke[]).map((st) => (
                   <button
                     key={st}
@@ -579,7 +580,7 @@ export function PersonalHeatmap({
           <MapContainer
             center={defaultCenter}
             zoom={13}
-            style={{ height: "100%", width: "100%", background: "#0a0d12" }}
+            style={{ height: "100%", width: "100%", background: "var(--color-surface-hud)" }}
             scrollWheelZoom
           >
             {/* Tile Base Layer */}
@@ -600,7 +601,7 @@ export function PersonalHeatmap({
                 <Polyline
                   positions={track.points}
                   pathOptions={{
-                    color: track.isRoute ? "#38bdf8" : currentTheme.glowColor,
+                    color: track.isRoute ? colorTokens.map.elevation : currentTheme.glowColor,
                     weight: strokeWeights.glow,
                     opacity: opacity * 0.4,
                     lineCap: "round",
@@ -613,7 +614,7 @@ export function PersonalHeatmap({
                 <Polyline
                   positions={track.points}
                   pathOptions={{
-                    color: track.isRoute ? "#0284c7" : currentTheme.coreColor,
+                    color: track.isRoute ? colorTokens.map.routeActive : currentTheme.coreColor,
                     weight: strokeWeights.core,
                     opacity: opacity * 0.95,
                     lineCap: "round",

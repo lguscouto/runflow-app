@@ -7,6 +7,7 @@ import type {
   UserProfile,
   ZoneDurationSummary,
 } from "./types";
+import { colorTokens } from "./color-tokens";
 
 /**
  * Fórmula de Tanaka et al. (2001) para cálculo de FC Máxima:
@@ -59,8 +60,8 @@ const ZONE_DEFINITIONS: Array<{
     descKey: "hr_zones.z1_desc",
     minPct: 0.5,
     maxPct: 0.6,
-    color: "#94a3b8", // Slate / Cinza Claro
-    bgRgba: "rgba(148, 163, 184, 0.18)",
+    color: colorTokens.zones.hr1, // Slate / Cinza Claro
+    bgRgba: colorTokens.zoneBackgrounds.hr1,
   },
   {
     zone: 2,
@@ -68,8 +69,8 @@ const ZONE_DEFINITIONS: Array<{
     descKey: "hr_zones.z2_desc",
     minPct: 0.6,
     maxPct: 0.7,
-    color: "#38bdf8", // Sky Blue / Ciano
-    bgRgba: "rgba(56, 189, 248, 0.18)",
+    color: colorTokens.zones.hr2, // Sky Blue / Ciano
+    bgRgba: colorTokens.zoneBackgrounds.hr2,
   },
   {
     zone: 3,
@@ -77,8 +78,8 @@ const ZONE_DEFINITIONS: Array<{
     descKey: "hr_zones.z3_desc",
     minPct: 0.7,
     maxPct: 0.8,
-    color: "#4ade80", // Emerald / Verde
-    bgRgba: "rgba(74, 222, 128, 0.18)",
+    color: colorTokens.zones.hr3, // Emerald / Verde
+    bgRgba: colorTokens.zoneBackgrounds.hr3,
   },
   {
     zone: 4,
@@ -86,8 +87,8 @@ const ZONE_DEFINITIONS: Array<{
     descKey: "hr_zones.z4_desc",
     minPct: 0.8,
     maxPct: 0.9,
-    color: "#fbbf24", // Amber / Âmbar / Laranja
-    bgRgba: "rgba(251, 191, 36, 0.18)",
+    color: colorTokens.zones.hr4, // Amber / Âmbar / Laranja
+    bgRgba: colorTokens.zoneBackgrounds.hr4,
   },
   {
     zone: 5,
@@ -95,8 +96,8 @@ const ZONE_DEFINITIONS: Array<{
     descKey: "hr_zones.z5_desc",
     minPct: 0.9,
     maxPct: 1.0,
-    color: "#f43f5e", // Rose / Vermelho Intenso
-    bgRgba: "rgba(244, 63, 94, 0.18)",
+    color: colorTokens.zones.hr5, // Rose / Vermelho Intenso
+    bgRgba: colorTokens.zoneBackgrounds.hr5,
   },
 ];
 

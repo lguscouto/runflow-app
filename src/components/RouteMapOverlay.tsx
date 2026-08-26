@@ -12,6 +12,7 @@ import type { TrackPoint, RoutePoint } from "@/lib/types";
 import { boundsFromPoints, simplifyPoints } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
 import { useI18n } from "@/lib/i18n";
+import { colorTokens } from "@/lib/color-tokens";
 
 function FitBounds({ points }: { points: [number, number][] }) {
   const map = useMap();
@@ -91,7 +92,7 @@ export function RouteMapOverlay({
           <Polyline
             positions={routePositions}
             pathOptions={{
-              color: "#3b82f6",
+              color: colorTokens.map.route,
               weight: 3,
               opacity: 0.6,
               dashArray: "8 6",
@@ -102,7 +103,7 @@ export function RouteMapOverlay({
         {activityPositions.length >= 2 && (
           <Polyline
             positions={activityPositions}
-            pathOptions={{ color: "#ff6b35", weight: 4, opacity: 0.9 }}
+            pathOptions={{ color: colorTokens.map.track, weight: 4, opacity: 0.9 }}
           />
         )}
         {/* Route waypoints */}
@@ -112,8 +113,8 @@ export function RouteMapOverlay({
             center={[p.lat, p.lng]}
             radius={4}
             pathOptions={{
-              color: "#3b82f6",
-              fillColor: "#3b82f6",
+              color: colorTokens.map.route,
+              fillColor: colorTokens.map.route,
               fillOpacity: 0.7,
             }}
           />

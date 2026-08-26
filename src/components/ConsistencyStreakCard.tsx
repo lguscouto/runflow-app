@@ -69,7 +69,7 @@ export function ConsistencyStreakCard({ activities }: ConsistencyStreakCardProps
               size={20}
               className={`${
                 streakInfo.currentStreakWeeks > 0
-                  ? "animate-pulse drop-shadow-[0_0_8px_rgba(255,107,0,0.6)]"
+                  ? "animate-pulse drop-shadow-[0_0_8px_var(--color-effect-streak-glow)]"
                   : ""
               }`}
             />

@@ -5,6 +5,7 @@ import type { ClimbProgressState } from "@/lib/types";
 import { getCategoryBadgeStyle, getGradeColor } from "@/lib/climb-detection";
 import { formatDistance, formatElevation, formatGrade, formatDuration } from "@/lib/format";
 import { Mountain, Flag, TrendingUp, Zap, Clock, AlertTriangle } from "lucide-react";
+import { colorTokens } from "@/lib/color-tokens";
 import { useI18n } from "@/lib/i18n";
 
 interface ClimbProHudCardProps {
@@ -100,7 +101,7 @@ export function ClimbProHudCard({
 
     return (
       <div
-        className={`rounded-2xl border border-rose-500/30 bg-[#0f172a]/95 backdrop-blur-md p-4 shadow-2xl relative overflow-hidden ${className}`}
+        className={`rounded-2xl border border-rose-500/30 bg-[var(--color-surface-climb)]/95 backdrop-blur-md p-4 shadow-2xl relative overflow-hidden ${className}`}
       >
         {/* Glow Superior */}
         <div
@@ -153,7 +154,7 @@ export function ClimbProHudCard({
               className="absolute left-0 top-0 bottom-0 transition-all duration-300 ease-out"
               style={{
                 width: `${climbProgressPct}%`,
-                background: `linear-gradient(to right, ${badgeStyle.badgeBg}, #ef4444)`,
+                background: `linear-gradient(to right, ${badgeStyle.badgeBg}, ${colorTokens.status.danger})`,
               }}
             />
           </div>
@@ -220,7 +221,7 @@ export function ClimbProHudCard({
 
     return (
       <div
-        className={`rounded-2xl border border-white/10 bg-[#0c121e] p-3 shadow-lg flex items-center justify-between ${className}`}
+        className={`rounded-2xl border border-white/10 bg-[var(--color-surface-panel-deep)] p-3 shadow-lg flex items-center justify-between ${className}`}
       >
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white/70">

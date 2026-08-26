@@ -49,9 +49,9 @@ export function PrivacyAwareTileLayer({
       button.setAttribute("aria-label", t("map.load_online_tiles"));
       button.title = `${t("map.online_tiles_privacy")} ${provider}`;
       button.style.padding = "8px 10px";
-      button.style.background = "var(--surface, #151922)";
-      button.style.color = "var(--text, #fff)";
-      button.style.border = "1px solid var(--border, #374151)";
+      button.style.background = "var(--surface, var(--color-surface-panel))";
+      button.style.color = "var(--text, var(--color-content-inverse))";
+      button.style.border = "1px solid var(--border)";
       button.style.borderRadius = "6px";
       button.style.cursor = "pointer";
       button.style.fontSize = "12px";

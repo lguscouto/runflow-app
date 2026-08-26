@@ -7,6 +7,7 @@ import type {
   TrackPoint,
   UserProfile,
 } from "./types";
+import { colorTokens } from "./color-tokens";
 
 /**
  * FTP padrão sugerido caso o usuário ainda não tenha configurado no perfil.
@@ -45,8 +46,8 @@ export const COGGAN_POWER_ZONE_DEFINITIONS: Array<{
     descKey: "power_zones.z1_desc",
     minPct: 0,
     maxPct: 0.55,
-    color: "#94a3b8", // Slate / Cinza
-    bgRgba: "rgba(148, 163, 184, 0.18)",
+    color: colorTokens.zones.power1, // Slate / Cinza
+    bgRgba: colorTokens.zoneBackgrounds.power1,
   },
   {
     zone: 2,
@@ -54,8 +55,8 @@ export const COGGAN_POWER_ZONE_DEFINITIONS: Array<{
     descKey: "power_zones.z2_desc",
     minPct: 0.56,
     maxPct: 0.75,
-    color: "#38bdf8", // Sky / Azul Claro
-    bgRgba: "rgba(56, 189, 248, 0.18)",
+    color: colorTokens.zones.power2, // Sky / Azul Claro
+    bgRgba: colorTokens.zoneBackgrounds.power2,
   },
   {
     zone: 3,
@@ -63,8 +64,8 @@ export const COGGAN_POWER_ZONE_DEFINITIONS: Array<{
     descKey: "power_zones.z3_desc",
     minPct: 0.76,
     maxPct: 0.90,
-    color: "#4ade80", // Emerald / Verde
-    bgRgba: "rgba(74, 222, 128, 0.18)",
+    color: colorTokens.zones.power3, // Emerald / Verde
+    bgRgba: colorTokens.zoneBackgrounds.power3,
   },
   {
     zone: 4,
@@ -72,8 +73,8 @@ export const COGGAN_POWER_ZONE_DEFINITIONS: Array<{
     descKey: "power_zones.z4_desc",
     minPct: 0.91,
     maxPct: 1.05,
-    color: "#fbbf24", // Amber / Amarelo
-    bgRgba: "rgba(251, 191, 36, 0.18)",
+    color: colorTokens.zones.power4, // Amber / Amarelo
+    bgRgba: colorTokens.zoneBackgrounds.power4,
   },
   {
     zone: 5,
@@ -81,8 +82,8 @@ export const COGGAN_POWER_ZONE_DEFINITIONS: Array<{
     descKey: "power_zones.z5_desc",
     minPct: 1.06,
     maxPct: 1.20,
-    color: "#fb923c", // Orange / Laranja
-    bgRgba: "rgba(251, 146, 60, 0.18)",
+    color: colorTokens.zones.power5, // Orange / Laranja
+    bgRgba: colorTokens.zoneBackgrounds.power5,
   },
   {
     zone: 6,
@@ -90,8 +91,8 @@ export const COGGAN_POWER_ZONE_DEFINITIONS: Array<{
     descKey: "power_zones.z6_desc",
     minPct: 1.21,
     maxPct: 1.50,
-    color: "#f43f5e", // Rose / Vermelho
-    bgRgba: "rgba(244, 63, 94, 0.18)",
+    color: colorTokens.zones.power6, // Rose / Vermelho
+    bgRgba: colorTokens.zoneBackgrounds.power6,
   },
   {
     zone: 7,
@@ -99,8 +100,8 @@ export const COGGAN_POWER_ZONE_DEFINITIONS: Array<{
     descKey: "power_zones.z7_desc",
     minPct: 1.51,
     maxPct: 9.99,
-    color: "#c084fc", // Purple / Roxo
-    bgRgba: "rgba(192, 132, 252, 0.18)",
+    color: colorTokens.zones.power7, // Purple / Roxo
+    bgRgba: colorTokens.zoneBackgrounds.power7,
   },
 ];
 

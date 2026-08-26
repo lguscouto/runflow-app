@@ -820,7 +820,7 @@ export function ProfilePageClient() {
 
                   {/* Coggan 7 Zones Live Preview Card */}
                   {cyclingFtpWatts && parseInt(cyclingFtpWatts, 10) >= 40 && (
-                    <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[#0d121c] space-y-2.5">
+                    <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--color-surface-form)] space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-white flex items-center gap-1.5">
                           <Activity size={13} className="text-amber-400" />

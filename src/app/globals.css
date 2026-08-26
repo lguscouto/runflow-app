@@ -1,22 +1,190 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0c0f14;
-  --surface: #151a22;
-  --surface-hover: #1c2330;
-  --border: #2a3344;
-  --text: #f0f4f8;
-  --muted: #8b9bb4;
-  --accent: #ff6b35;
-  --accent-soft: #ff6b3520;
-  --success: #3dd68c;
+  /* Semantic color tokens. Keep in sync with src/lib/color-tokens.ts for
+     canvas, Leaflet and native integrations that cannot read CSS variables. */
+  --color-brand-accent: #ff6b35;
+  --color-brand-accent-hover: #ff7b49;
+  --color-brand-success: #3dd68c;
+  --color-content-primary: #f0f4f8;
+  --color-content-inverse: #ffffff;
+  --color-content-muted: #8b9bb4;
+  --color-surface-app: #0c0f14;
+  --color-surface-panel: #151a22;
+  --color-surface-panel-hover: #1c2330;
+  --color-surface-raised: #1c2330;
+  --color-surface-map: #0d1117;
+  --color-surface-canvas: #0b0e14;
+  --color-surface-hud: #0a0e17;
+  --color-surface-panel-deep: #0c121e;
+  --color-surface-climb: #0f172a;
+  --color-surface-form: #0d121c;
+  --color-surface-chart: #0f141c;
+  --color-surface-social-preview: #090c10;
+  --color-surface-record-hud: #050810;
+  --color-surface-modal-header: #121720;
+  --color-surface-modal-hover: #1a202c;
+  --color-surface-race-start: #13161f;
+  --color-surface-race-middle: #10131b;
+  --color-surface-race-end: #0d0f15;
+  --color-surface-fitness-start: #121824;
+  --color-surface-fitness-middle: #10141d;
+  --color-surface-bike-neo: #040814;
+  --color-surface-bike-card: #091224;
+  --color-surface-bike-header: #060b18;
+  --color-surface-bike-dark: #0e131d;
+  --color-surface-bike-secondary: #18202f;
+  --color-surface-bike-secondary-hover: #222c3f;
+  --color-surface-overlay: #161b22;
+  --color-surface-control: #0d1b33;
+  --color-surface-control-hover: #14284b;
+  --color-surface-leaflet: #1a2030;
+  --color-surface-bottom-nav: rgba(21, 26, 34, 0.92);
+  --color-border-default: #2a3344;
+  --color-brand-accent-soft: #ff6b3520;
+  --color-brand-accent-shadow: rgba(255, 107, 53, 0.4);
+  --color-brand-accent-shadow-active: rgba(255, 107, 53, 0.25);
+  --color-effect-cyan-soft: rgba(6, 182, 212, 0.15);
+  --color-effect-inverse-soft-glow: rgba(255, 255, 255, 0.4);
+  --color-effect-power-glow: rgba(251, 191, 36, 0.4);
+  --color-effect-grade-glow: rgba(52, 211, 153, 0.4);
+  --color-effect-hr-glow: rgba(251, 113, 133, 0.4);
+  --color-effect-cyan-glow: rgba(6, 182, 212, 0.4);
+  --color-effect-streak-glow: rgba(255, 107, 0, 0.6);
+  --color-chart-pace: #ff6b35;
+  --color-chart-speed: #10b981;
+  --color-chart-power: #f59e0b;
+  --color-chart-cadence: #06b6d4;
+  --color-chart-elevation: #60a5fa;
+  --color-chart-heart-rate: #f87171;
+  --color-status-danger: #ef4444;
+  --color-status-warning: #f59e0b;
+  --color-status-info: #38bdf8;
+  --color-status-positive: #10b981;
+
+  --color-surface-github: #161b22;
+  --color-surface-github-hover: #21262d;
+  --color-surface-blackout: #000000;
+
+  /* Tailwind palette bridge: existing utility classes resolve through the
+     same centralized palette instead of embedding color decisions per view. */
+  --color-palette-orange-300: #fdba74;
+  --color-palette-orange-400: #fb923c;
+  --color-palette-orange-500: #f97316;
+  --color-palette-orange-600: #ea580c;
+  --color-palette-orange-700: #c2410c;
+  --color-palette-amber-300: #fcd34d;
+  --color-palette-amber-400: #fbbf24;
+  --color-palette-amber-500: #f59e0b;
+  --color-palette-amber-600: #d97706;
+  --color-palette-emerald-300: #6ee7b7;
+  --color-palette-emerald-400: #34d399;
+  --color-palette-emerald-500: #10b981;
+  --color-palette-emerald-600: #059669;
+  --color-palette-red-200: #fecaca;
+  --color-palette-red-300: #fca5a5;
+  --color-palette-red-400: #f87171;
+  --color-palette-red-500: #ef4444;
+  --color-palette-red-700: #b91c1c;
+  --color-palette-cyan-300: #67e8f9;
+  --color-palette-cyan-400: #22d3ee;
+  --color-palette-cyan-500: #06b6d4;
+  --color-palette-cyan-600: #0891b2;
+  --color-palette-blue-300: #93c5fd;
+  --color-palette-blue-400: #60a5fa;
+  --color-palette-blue-500: #3b82f6;
+  --color-palette-blue-600: #2563eb;
+  --color-palette-rose-300: #fda4af;
+  --color-palette-rose-400: #fb7185;
+  --color-palette-rose-500: #f43f5e;
+  --color-palette-sky-300: #7dd3fc;
+  --color-palette-sky-400: #38bdf8;
+  --color-palette-purple-400: #c084fc;
+  --color-palette-purple-500: #a855f7;
+  --color-palette-purple-600: #9333ea;
+  --color-palette-pink-500: #ec4899;
+  --color-palette-yellow-400: #facc15;
+  --color-palette-lime-300: #bef264;
+  --color-palette-lime-400: #a3e635;
+  --color-palette-teal-300: #5eead4;
+  --color-palette-teal-400: #2dd4bf;
+  --color-palette-indigo-400: #818cf8;
+  --color-palette-neutral-100: #f5f5f5;
+  --color-palette-neutral-200: #e5e5e5;
+  --color-palette-neutral-400: #a3a3a3;
+  --color-palette-neutral-700: #404040;
+  --color-palette-neutral-800: #262626;
+  --color-palette-neutral-900: #171717;
+
+  /* Backwards-compatible aliases for existing shared styles. */
+  --bg: var(--color-surface-app);
+  --background: var(--bg);
+  --surface: var(--color-surface-panel);
+  --surface-hover: var(--color-surface-panel-hover);
+  --surface-raised: var(--color-surface-raised);
+  --border: var(--color-border-default);
+  --border-strong: var(--surface-hover);
+  --text: var(--color-content-primary);
+  --muted: var(--color-content-muted);
+  --accent: var(--color-brand-accent);
+  --accent-soft: var(--color-brand-accent-soft);
+  --success: var(--color-brand-success);
   --map-height: 320px;
 }
 
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text);
+  --color-white: var(--color-content-inverse);
+  --color-black: var(--color-surface-blackout);
   --font-sans: var(--font-geist-sans);
+  --color-orange-300: var(--color-palette-orange-300);
+  --color-orange-400: var(--color-palette-orange-400);
+  --color-orange-500: var(--color-palette-orange-500);
+  --color-orange-600: var(--color-palette-orange-600);
+  --color-orange-700: var(--color-palette-orange-700);
+  --color-amber-300: var(--color-palette-amber-300);
+  --color-amber-400: var(--color-palette-amber-400);
+  --color-amber-500: var(--color-palette-amber-500);
+  --color-amber-600: var(--color-palette-amber-600);
+  --color-emerald-300: var(--color-palette-emerald-300);
+  --color-emerald-400: var(--color-palette-emerald-400);
+  --color-emerald-500: var(--color-palette-emerald-500);
+  --color-emerald-600: var(--color-palette-emerald-600);
+  --color-red-200: var(--color-palette-red-200);
+  --color-red-300: var(--color-palette-red-300);
+  --color-red-400: var(--color-palette-red-400);
+  --color-red-500: var(--color-palette-red-500);
+  --color-red-700: var(--color-palette-red-700);
+  --color-cyan-300: var(--color-palette-cyan-300);
+  --color-cyan-400: var(--color-palette-cyan-400);
+  --color-cyan-500: var(--color-palette-cyan-500);
+  --color-cyan-600: var(--color-palette-cyan-600);
+  --color-blue-300: var(--color-palette-blue-300);
+  --color-blue-400: var(--color-palette-blue-400);
+  --color-blue-500: var(--color-palette-blue-500);
+  --color-blue-600: var(--color-palette-blue-600);
+  --color-rose-300: var(--color-palette-rose-300);
+  --color-rose-400: var(--color-palette-rose-400);
+  --color-rose-500: var(--color-palette-rose-500);
+  --color-sky-300: var(--color-palette-sky-300);
+  --color-sky-400: var(--color-palette-sky-400);
+  --color-purple-400: var(--color-palette-purple-400);
+  --color-purple-500: var(--color-palette-purple-500);
+  --color-purple-600: var(--color-palette-purple-600);
+  --color-pink-500: var(--color-palette-pink-500);
+  --color-yellow-400: var(--color-palette-yellow-400);
+  --color-lime-300: var(--color-palette-lime-300);
+  --color-lime-400: var(--color-palette-lime-400);
+  --color-teal-300: var(--color-palette-teal-300);
+  --color-teal-400: var(--color-palette-teal-400);
+  --color-indigo-400: var(--color-palette-indigo-400);
+  --color-neutral-100: var(--color-palette-neutral-100);
+  --color-neutral-200: var(--color-palette-neutral-200);
+  --color-neutral-400: var(--color-palette-neutral-400);
+  --color-neutral-700: var(--color-palette-neutral-700);
+  --color-neutral-800: var(--color-palette-neutral-800);
+  --color-neutral-900: var(--color-palette-neutral-900);
 }
 
 * {
@@ -41,7 +209,7 @@ a {
 }
 
 .leaflet-container {
-  background: #1a2030;
+  background: var(--color-surface-leaflet);
   font-family: inherit;
 }
 
@@ -70,7 +238,7 @@ a {
   align-items: center;
   gap: 0.5rem;
   background: var(--accent);
-  color: #fff;
+  color: var(--color-content-inverse);
   font-weight: 600;
   padding: 0.625rem 1.25rem;
   border-radius: 8px;
@@ -183,7 +351,7 @@ a {
 
 /* Bottom Navigation Bar Mobile */
 .bottom-nav-bar {
-  background: rgba(21, 26, 34, 0.92);
+  background: var(--color-surface-bottom-nav);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border);
@@ -215,21 +383,21 @@ a {
 
 .bottom-nav-fab {
   background: var(--accent);
-  color: #fff;
+  color: var(--color-content-inverse);
   width: 48px;
   height: 48px;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
+  box-shadow: 0 4px 14px var(--color-brand-accent-shadow);
   transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
   margin-top: -14px;
 }
 
 .bottom-nav-fab:active {
   transform: scale(0.90);
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.25);
+  box-shadow: 0 2px 8px var(--color-brand-accent-shadow-active);
 }
 
 .profile-input {

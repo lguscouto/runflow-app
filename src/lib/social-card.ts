@@ -1,4 +1,5 @@
 import type { ActivityDetail, TrackPoint } from "./types";
+import { colorTokens } from "./color-tokens";
 import {
   formatDistance,
   formatDuration,
@@ -128,21 +129,21 @@ export function drawTrackPolyline(
   ctx.stroke();
 
   const startPt = project(points[0]);
-  ctx.fillStyle = "#3dd68c";
-  ctx.shadowColor = "#3dd68c";
+  ctx.fillStyle = colorTokens.brand.success;
+  ctx.shadowColor = colorTokens.brand.success;
   ctx.shadowBlur = 10;
   ctx.beginPath();
   ctx.arc(startPt.px, startPt.py, lineWidth * 1.4, 0, Math.PI * 2);
   ctx.fill();
 
   const endPt = project(points[points.length - 1]);
-  ctx.fillStyle = "#ff6b35";
-  ctx.shadowColor = "#ff6b35";
+  ctx.fillStyle = colorTokens.brand.accent;
+  ctx.shadowColor = colorTokens.brand.accent;
   ctx.shadowBlur = 12;
   ctx.beginPath();
   ctx.arc(endPt.px, endPt.py, lineWidth * 1.5, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = colorTokens.content.inverse;
   ctx.beginPath();
   ctx.arc(endPt.px, endPt.py, lineWidth * 0.7, 0, Math.PI * 2);
   ctx.fill();
@@ -231,10 +232,10 @@ function drawBackground(
 
     // Dark gradient overlay for legibility
     const grad = ctx.createLinearGradient(0, 0, 0, height);
-    grad.addColorStop(0, "rgba(8, 12, 18, 0.72)");
-    grad.addColorStop(0.35, "rgba(8, 12, 18, 0.55)");
-    grad.addColorStop(0.7, "rgba(8, 12, 18, 0.75)");
-    grad.addColorStop(1, "rgba(8, 12, 18, 0.95)");
+    grad.addColorStop(0, colorTokens.socialCard.customOverlay[0]);
+    grad.addColorStop(0.35, colorTokens.socialCard.customOverlay[1]);
+    grad.addColorStop(0.7, colorTokens.socialCard.customOverlay[2]);
+    grad.addColorStop(1, colorTokens.socialCard.customOverlay[3]);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, width, height);
     return;
@@ -243,14 +244,14 @@ function drawBackground(
   if (options.theme === "peloton") {
     // Carbon Dark Cycling Tech Background
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, "#080c12");
-    bgGrad.addColorStop(0.5, "#0f1622");
-    bgGrad.addColorStop(1, "#182230");
+    bgGrad.addColorStop(0, colorTokens.socialCard.peloton.background[0]);
+    bgGrad.addColorStop(0.5, colorTokens.socialCard.peloton.background[1]);
+    bgGrad.addColorStop(1, colorTokens.socialCard.peloton.background[2]);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
     // Subtle carbon grid
-    ctx.strokeStyle = "rgba(245, 158, 11, 0.04)";
+    ctx.strokeStyle = colorTokens.socialCard.peloton.grid;
     ctx.lineWidth = 1.5;
     const step = 60;
     for (let x = 0; x < width; x += step) {
@@ -268,13 +269,13 @@ function drawBackground(
 
     // Amber and Cyan radial glows
     const rad1 = ctx.createRadialGradient(width * 0.85, height * 0.25, 40, width * 0.85, height * 0.25, 550);
-    rad1.addColorStop(0, "rgba(245, 158, 11, 0.16)");
+    rad1.addColorStop(0, colorTokens.socialCard.peloton.amberGlow);
     rad1.addColorStop(1, "transparent");
     ctx.fillStyle = rad1;
     ctx.fillRect(0, 0, width, height);
 
     const rad2 = ctx.createRadialGradient(width * 0.15, height * 0.8, 40, width * 0.15, height * 0.8, 550);
-    rad2.addColorStop(0, "rgba(6, 182, 212, 0.14)");
+    rad2.addColorStop(0, colorTokens.socialCard.peloton.cyanGlow);
     rad2.addColorStop(1, "transparent");
     ctx.fillStyle = rad2;
     ctx.fillRect(0, 0, width, height);
@@ -283,20 +284,20 @@ function drawBackground(
 
   if (options.theme === "cyberpunk") {
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, "#0a0a14");
-    bgGrad.addColorStop(0.5, "#120d22");
-    bgGrad.addColorStop(1, "#0d1b2a");
+    bgGrad.addColorStop(0, colorTokens.socialCard.cyberpunk.background[0]);
+    bgGrad.addColorStop(0.5, colorTokens.socialCard.cyberpunk.background[1]);
+    bgGrad.addColorStop(1, colorTokens.socialCard.cyberpunk.background[2]);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
     const radial1 = ctx.createRadialGradient(width * 0.8, height * 0.3, 50, width * 0.8, height * 0.3, 600);
-    radial1.addColorStop(0, "rgba(0, 240, 255, 0.15)");
+    radial1.addColorStop(0, colorTokens.socialCard.cyberpunk.cyanGlow);
     radial1.addColorStop(1, "transparent");
     ctx.fillStyle = radial1;
     ctx.fillRect(0, 0, width, height);
 
     const radial2 = ctx.createRadialGradient(width * 0.2, height * 0.7, 50, width * 0.2, height * 0.7, 600);
-    radial2.addColorStop(0, "rgba(255, 0, 127, 0.12)");
+    radial2.addColorStop(0, colorTokens.socialCard.cyberpunk.pinkGlow);
     radial2.addColorStop(1, "transparent");
     ctx.fillStyle = radial2;
     ctx.fillRect(0, 0, width, height);
@@ -305,23 +306,23 @@ function drawBackground(
 
   if (options.theme === "sunset") {
     const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, "#1f102c");
-    bgGrad.addColorStop(0.4, "#3b1638");
-    bgGrad.addColorStop(0.75, "#b33939");
-    bgGrad.addColorStop(1, "#ff6b35");
+    bgGrad.addColorStop(0, colorTokens.socialCard.sunset.background[0]);
+    bgGrad.addColorStop(0.4, colorTokens.socialCard.sunset.background[1]);
+    bgGrad.addColorStop(0.75, colorTokens.socialCard.sunset.background[2]);
+    bgGrad.addColorStop(1, colorTokens.socialCard.sunset.background[3]);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+    ctx.fillStyle = colorTokens.socialCard.sunset.overlay;
     ctx.fillRect(0, 0, width, height);
     return;
   }
 
   if (options.theme === "topo") {
-    ctx.fillStyle = "#0c1017";
+    ctx.fillStyle = colorTokens.socialCard.topo.background;
     ctx.fillRect(0, 0, width, height);
 
-    ctx.strokeStyle = "rgba(61, 214, 140, 0.05)";
+    ctx.strokeStyle = colorTokens.socialCard.topo.grid;
     ctx.lineWidth = 2;
     const step = 80;
     for (let x = 0; x < width; x += step) {
@@ -341,32 +342,32 @@ function drawBackground(
 
   // Default: Minimalist Dark
   const minGrad = ctx.createLinearGradient(0, 0, 0, height);
-  minGrad.addColorStop(0, "#0e131a");
-  minGrad.addColorStop(1, "#161c26");
+  minGrad.addColorStop(0, colorTokens.socialCard.minimal.background[0]);
+  minGrad.addColorStop(1, colorTokens.socialCard.minimal.background[1]);
   ctx.fillStyle = minGrad;
   ctx.fillRect(0, 0, width, height);
 }
 
 function drawBranding(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.save();
-  ctx.fillStyle = "rgba(255, 107, 53, 0.15)";
-  ctx.strokeStyle = "rgba(255, 107, 53, 0.4)";
+  ctx.fillStyle = colorTokens.socialCard.branding.background;
+  ctx.strokeStyle = colorTokens.socialCard.branding.border;
   ctx.lineWidth = 2;
   roundRect(ctx, x, y - 40, 210, 60, 16);
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = "#ff6b35";
+  ctx.fillStyle = colorTokens.brand.accent;
   roundRect(ctx, x + 10, y - 30, 40, 40, 10);
   ctx.fill();
 
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = colorTokens.content.inverse;
   ctx.font = "bold 20px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("RF", x + 30, y - 10);
 
-  ctx.fillStyle = "#f0f4f8";
+  ctx.fillStyle = colorTokens.content.primary;
   ctx.font = "bold 24px system-ui, sans-serif";
   ctx.textAlign = "left";
   ctx.fillText("RunFlow", x + 62, y - 10);
@@ -383,7 +384,7 @@ function drawHeaderInfo(
 ) {
   ctx.save();
 
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = colorTokens.content.inverse;
   ctx.font = "bold 54px system-ui, sans-serif";
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
@@ -411,7 +412,7 @@ function drawHeaderInfo(
   const dateStr = formatDate(activity.startedAt, options.language);
   const subText = `${sportIcon} ${sport}  ·  ${dateStr}`;
 
-  ctx.fillStyle = isCycling ? "rgba(245, 158, 11, 0.9)" : "rgba(240, 244, 248, 0.75)";
+  ctx.fillStyle = isCycling ? colorTokens.socialCard.header.cycling : colorTokens.socialCard.header.running;
   ctx.font = "500 28px system-ui, sans-serif";
   ctx.fillText(subText, x, y + 74);
 
@@ -429,39 +430,39 @@ function drawMapContainer(
 ) {
   ctx.save();
 
-  ctx.fillStyle = "rgba(18, 24, 36, 0.45)";
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+  ctx.fillStyle = colorTokens.socialCard.map.background;
+  ctx.strokeStyle = colorTokens.socialCard.map.border;
   ctx.lineWidth = 2;
   roundRect(ctx, x, y, width, height, 32);
   ctx.fill();
   ctx.stroke();
 
-  let strokeColor: string | CanvasGradient = "#ff6b35";
-  let glowColor: string | undefined = "rgba(255, 107, 53, 0.4)";
+  let strokeColor: string | CanvasGradient = colorTokens.brand.accent;
+  let glowColor: string | undefined = colorTokens.socialCard.branding.border;
 
   if (options.theme === "peloton") {
     const grad = ctx.createLinearGradient(x, y, x + width, y + height);
-    grad.addColorStop(0, "#f59e0b");
-    grad.addColorStop(0.65, "#06b6d4");
-    grad.addColorStop(1, "#3b82f6");
+    grad.addColorStop(0, colorTokens.chart.power);
+    grad.addColorStop(0.65, colorTokens.chart.cadence);
+    grad.addColorStop(1, colorTokens.map.route);
     strokeColor = grad;
-    glowColor = "rgba(245, 158, 11, 0.55)";
+    glowColor = colorTokens.socialCard.peloton.trackGlow;
   } else if (options.theme === "cyberpunk") {
     const grad = ctx.createLinearGradient(x, y, x + width, y + height);
-    grad.addColorStop(0, "#00f0ff");
-    grad.addColorStop(0.5, "#ff007f");
-    grad.addColorStop(1, "#ff6b35");
+    grad.addColorStop(0, colorTokens.heatmap.cyan.core);
+    grad.addColorStop(0.5, colorTokens.heatmap.sunset.core);
+    grad.addColorStop(1, colorTokens.brand.accent);
     strokeColor = grad;
-    glowColor = "rgba(0, 240, 255, 0.6)";
+    glowColor = colorTokens.socialCard.cyberpunk.trackGlow;
   } else if (options.theme === "sunset") {
-    strokeColor = "#ffffff";
-    glowColor = "rgba(255, 255, 255, 0.5)";
+    strokeColor = colorTokens.content.inverse;
+    glowColor = colorTokens.socialCard.sunset.trackGlow;
   } else if (options.theme === "topo") {
-    strokeColor = "#3dd68c";
-    glowColor = "rgba(61, 214, 140, 0.5)";
+    strokeColor = colorTokens.brand.success;
+    glowColor = colorTokens.socialCard.topo.trackGlow;
   } else if (options.theme === "minimal") {
-    strokeColor = "#ff6b35";
-    glowColor = "rgba(255, 107, 53, 0.35)";
+    strokeColor = colorTokens.brand.accent;
+    glowColor = colorTokens.socialCard.minimal.trackGlow;
   }
 
   const innerPad = 48;
@@ -503,11 +504,11 @@ function drawPrimaryStats(
     pace: formatSportSpeedOrPace(activity.sport, activity.avgPaceSecKm, activity.avgSpeedKmh),
   };
 
-  const distColor = isCycling ? "#f59e0b" : "#ff6b35";
-  const paceColor = isCycling ? "#06b6d4" : "#3dd68c";
+  const distColor = isCycling ? colorTokens.chart.power : colorTokens.brand.accent;
+  const paceColor = isCycling ? colorTokens.chart.cadence : colorTokens.brand.success;
 
   drawSingleStat(ctx, x, y, colWidth, values.dist, labels.dist, distColor);
-  drawSingleStat(ctx, x + colWidth, y, colWidth, values.dur, labels.dur, "#ffffff");
+  drawSingleStat(ctx, x + colWidth, y, colWidth, values.dur, labels.dur, colorTokens.content.inverse);
   drawSingleStat(ctx, x + colWidth * 2, y, colWidth, values.pace, labels.pace, paceColor);
 
   ctx.restore();
@@ -525,7 +526,7 @@ function drawSingleStat(
   ctx.save();
   const centerX = x + width / 2;
 
-  ctx.fillStyle = "rgba(240, 244, 248, 0.6)";
+  ctx.fillStyle = colorTokens.socialCard.stats.label;
   ctx.font = "bold 20px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(label, centerX, y);
@@ -614,14 +615,14 @@ function drawSecondaryStats(
   displayedChips.forEach((chip, i) => {
     const cx = x + i * (chipWidth + gap);
 
-    ctx.fillStyle = "rgba(255, 255, 255, 0.07)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+    ctx.fillStyle = colorTokens.socialCard.stats.chipBackground;
+    ctx.strokeStyle = colorTokens.socialCard.stats.chipBorder;
     ctx.lineWidth = 1.5;
     roundRect(ctx, cx, y, chipWidth, 80, 20);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = colorTokens.content.inverse;
     ctx.font = "bold 24px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -641,8 +642,8 @@ function drawFooter(
   ctx.save();
 
   if (options.showPrBadge && options.prBadgeText) {
-    ctx.fillStyle = "rgba(245, 158, 11, 0.2)";
-    ctx.strokeStyle = "rgba(245, 158, 11, 0.5)";
+    ctx.fillStyle = colorTokens.socialCard.stats.badgeBackground;
+    ctx.strokeStyle = colorTokens.socialCard.stats.badgeBorder;
     ctx.lineWidth = 2;
     const badgeW = Math.min(width, 540);
     const badgeX = x + (width - badgeW) / 2;
@@ -650,13 +651,13 @@ function drawFooter(
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = "#fbbf24";
+    ctx.fillStyle = colorTokens.zones.power4;
     ctx.font = "bold 24px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(`🏆  ${options.prBadgeText}`, x + width / 2, y - 20);
   } else {
-    ctx.fillStyle = "rgba(240, 244, 248, 0.4)";
+    ctx.fillStyle = colorTokens.socialCard.stats.footerMuted;
     ctx.font = "500 20px system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText(

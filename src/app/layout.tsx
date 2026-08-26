@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { CapacitorInit } from "@/components/CapacitorInit";
+import { colorTokens } from "@/lib/color-tokens";
 import "./globals.css";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0c0f14",
+  themeColor: colorTokens.surface.app,
 };
 
 const geistSans = Geist({

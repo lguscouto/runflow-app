@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import { formatDistance } from "@/lib/format";
 import { MapPin, Plus, Trash2, Route, ArrowLeft, Mountain, Sparkles } from "lucide-react";
 import { detectClimbs, getCategoryBadgeStyle } from "@/lib/climb-detection";
+import { colorTokens } from "@/lib/color-tokens";
 
 export function RoutesPageClient() {
   const { t } = useI18n();
@@ -124,7 +125,7 @@ export function RoutesPageClient() {
         points,
         createdAt: new Date().toISOString(),
         source: "drawn",
-        color: "#f59e0b",
+        color: colorTokens.status.warning,
       };
 
       await putRoute(sampleRoute);

@@ -6,6 +6,7 @@ import type {
   RacePrediction,
   RaceDistanceId,
 } from "./types";
+import { colorTokens } from "./color-tokens";
 
 export const STANDARD_RACE_DISTANCES: { id: RaceDistanceId; nameKey: string; distanceM: number }[] = [
   { id: "5k", nameKey: "race_predictor.distance_5k", distanceM: 5000 },
@@ -86,39 +87,39 @@ export function classifyVO2Max(
     return {
       category: "superior",
       labelKey: "vo2max.category_superior",
-      color: "#8b5cf6", // Purple / Violet
-      bgRgba: "rgba(139, 92, 246, 0.15)",
+      color: colorTokens.fitness.superior, // Purple / Violet
+      bgRgba: colorTokens.fitnessBackgrounds.superior,
     };
   }
   if (adjustedVo2 >= 48) {
     return {
       category: "excellent",
       labelKey: "vo2max.category_excellent",
-      color: "#10b981", // Emerald Green
-      bgRgba: "rgba(16, 185, 129, 0.15)",
+      color: colorTokens.fitness.excellent, // Emerald Green
+      bgRgba: colorTokens.fitnessBackgrounds.excellent,
     };
   }
   if (adjustedVo2 >= 41) {
     return {
       category: "good",
       labelKey: "vo2max.category_good",
-      color: "#0ea5e9", // Sky Blue / Cyan
-      bgRgba: "rgba(14, 165, 233, 0.15)",
+      color: colorTokens.fitness.good, // Sky Blue / Cyan
+      bgRgba: colorTokens.fitnessBackgrounds.good,
     };
   }
   if (adjustedVo2 >= 35) {
     return {
       category: "fair",
       labelKey: "vo2max.category_fair",
-      color: "#f59e0b", // Amber / Orange
-      bgRgba: "rgba(245, 158, 11, 0.15)",
+      color: colorTokens.fitness.fair, // Amber / Orange
+      bgRgba: colorTokens.fitnessBackgrounds.fair,
     };
   }
   return {
     category: "poor",
     labelKey: "vo2max.category_poor",
-    color: "#ef4444", // Red
-    bgRgba: "rgba(239, 68, 68, 0.15)",
+    color: colorTokens.fitness.poor, // Red
+    bgRgba: colorTokens.fitnessBackgrounds.poor,
   };
 }
 

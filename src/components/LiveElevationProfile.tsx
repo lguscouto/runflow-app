@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import type { ClimbSegment, RoutePoint } from "@/lib/types";
 import { getGradeColor, getCategoryBadgeStyle } from "@/lib/climb-detection";
 import { formatDistance, formatElevation } from "@/lib/format";
+import { colorTokens } from "@/lib/color-tokens";
 import { Mountain, ZoomIn, ZoomOut } from "lucide-react";
 
 interface LiveElevationProfileProps {
@@ -175,7 +176,7 @@ export function LiveElevationProfile({
 
   return (
     <div
-      className={`relative w-full rounded-2xl bg-[#0c121e] border border-white/10 p-3 shadow-xl overflow-hidden ${className}`}
+      className={`relative w-full rounded-2xl bg-[var(--color-surface-panel-deep)] border border-white/10 p-3 shadow-xl overflow-hidden ${className}`}
     >
       {/* Header do Perfil */}
       <div className="flex items-center justify-between mb-1.5 px-1">
@@ -222,9 +223,9 @@ export function LiveElevationProfile({
           <defs>
             {/* Gradiente de fundo sutil */}
             <linearGradient id="gridLineGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="rgba(255,255,255,0.02)" />
-              <stop offset="50%" stopColor="rgba(255,255,255,0.06)" />
-              <stop offset="100%" stopColor="rgba(255,255,255,0.02)" />
+              <stop offset="0%" stopColor={colorTokens.effects.gridSubtle} />
+              <stop offset="50%" stopColor={colorTokens.effects.gridSoft} />
+              <stop offset="100%" stopColor={colorTokens.effects.gridSubtle} />
             </linearGradient>
           </defs>
 
@@ -234,7 +235,7 @@ export function LiveElevationProfile({
             y1={paddingTop}
             x2={svgWidth - paddingX}
             y2={paddingTop}
-            stroke="rgba(255,255,255,0.08)"
+            stroke={colorTokens.effects.guideStrong}
             strokeDasharray="3 3"
           />
           <line
@@ -242,7 +243,7 @@ export function LiveElevationProfile({
             y1={paddingTop + plotHeight / 2}
             x2={svgWidth - paddingX}
             y2={paddingTop + plotHeight / 2}
-            stroke="rgba(255,255,255,0.05)"
+            stroke={colorTokens.effects.guideMid}
             strokeDasharray="3 3"
           />
           <line
@@ -250,7 +251,7 @@ export function LiveElevationProfile({
             y1={baseBottom}
             x2={svgWidth - paddingX}
             y2={baseBottom}
-            stroke="rgba(255,255,255,0.15)"
+            stroke={colorTokens.effects.guideBase}
           />
 
           {/* Polígonos coloridos com as cores de inclinação */}
@@ -268,7 +269,7 @@ export function LiveElevationProfile({
           <path
             d={profileLinePath}
             fill="none"
-            stroke="rgba(255,255,255,0.9)"
+            stroke={colorTokens.effects.lineStrong}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -315,7 +316,7 @@ export function LiveElevationProfile({
                   <text
                     x={Math.max(paddingX, startX - 14) + 14}
                     y={paddingTop - 3}
-                    fill="#ffffff"
+                    fill={colorTokens.content.inverse}
                     fontSize="7.5"
                     fontWeight="bold"
                     textAnchor="middle"
@@ -335,7 +336,7 @@ export function LiveElevationProfile({
                 y1={paddingTop}
                 x2={riderX}
                 y2={baseBottom}
-                stroke="#38bdf8"
+                stroke={colorTokens.map.elevation}
                 strokeWidth="1.5"
                 strokeDasharray="2 2"
               />
@@ -345,7 +346,7 @@ export function LiveElevationProfile({
                 cy={riderY}
                 r={8}
                 fill="none"
-                stroke="#38bdf8"
+                stroke={colorTokens.map.elevation}
                 strokeWidth="2"
                 opacity={0.6}
               />
@@ -354,8 +355,8 @@ export function LiveElevationProfile({
                 cx={riderX}
                 cy={riderY}
                 r={4.5}
-                fill="#38bdf8"
-                stroke="#ffffff"
+                fill={colorTokens.map.elevation}
+                stroke={colorTokens.content.inverse}
                 strokeWidth="1.5"
               />
             </g>
@@ -365,7 +366,7 @@ export function LiveElevationProfile({
           <text
             x={paddingX}
             y={svgHeight - 4}
-            fill="rgba(255,255,255,0.4)"
+            fill={colorTokens.content.inverseMuted}
             fontSize="8.5"
             fontFamily="monospace"
           >
@@ -374,7 +375,7 @@ export function LiveElevationProfile({
           <text
             x={svgWidth / 2}
             y={svgHeight - 4}
-            fill="rgba(255,255,255,0.4)"
+            fill={colorTokens.content.inverseMuted}
             fontSize="8.5"
             fontFamily="monospace"
             textAnchor="middle"
@@ -384,7 +385,7 @@ export function LiveElevationProfile({
           <text
             x={svgWidth - paddingX}
             y={svgHeight - 4}
-            fill="rgba(255,255,255,0.4)"
+            fill={colorTokens.content.inverseMuted}
             fontSize="8.5"
             fontFamily="monospace"
             textAnchor="end"
@@ -398,19 +399,19 @@ export function LiveElevationProfile({
       <div className="flex items-center justify-between text-[10px] text-[var(--muted)] mt-1 px-1">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#22c55e]" /> &lt;3%
+            <span className="w-2 h-2 rounded-full bg-[var(--color-palette-emerald-500)]" /> &lt;3%
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#eab308]" /> 3-6%
+            <span className="w-2 h-2 rounded-full bg-[var(--color-palette-yellow-400)]" /> 3-6%
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#f97316]" /> 6-9%
+            <span className="w-2 h-2 rounded-full bg-[var(--color-palette-orange-500)]" /> 6-9%
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#ef4444]" /> 9-12%
+            <span className="w-2 h-2 rounded-full bg-[var(--color-status-danger)]" /> 9-12%
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#a855f7]" /> &gt;12%
+            <span className="w-2 h-2 rounded-full bg-[var(--color-palette-purple-500)]" /> &gt;12%
           </span>
         </div>
         <div className="font-mono text-white/70">

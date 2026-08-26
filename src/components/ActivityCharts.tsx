@@ -16,6 +16,7 @@ import {
 import { SimpleLineChart } from "./SimpleLineChart";
 import { useI18n } from "@/lib/i18n";
 import { Gauge, Zap, RefreshCw, Mountain, Heart, Activity } from "lucide-react";
+import { colorTokens } from "@/lib/color-tokens";
 
 function paceMinLabel(secPerKm: number): string {
   const m = Math.floor(secPerKm / 60);
@@ -144,42 +145,42 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <span>{t("charts.title")}</span>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20 uppercase tracking-wider">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-chart-pace)]/10 text-[var(--color-chart-pace)] border border-[var(--color-chart-pace)]/20 uppercase tracking-wider">
             Sincronizado
           </span>
         </h2>
 
         {/* Live Hover Telemetry Strip */}
         {currentHoverValues && (
-          <div className="flex flex-wrap items-center gap-2 p-1.5 px-3 rounded-xl bg-black/60 border border-white/10 text-xs font-mono animate-fadeIn">
-            <span className="text-amber-400 font-bold">km {currentHoverValues.km}:</span>
+          <div className="flex flex-wrap items-center gap-2 p-1.5 px-3 rounded-xl bg-[var(--color-surface-app)]/60 border border-[var(--color-content-inverse)]/10 text-xs font-mono animate-fadeIn">
+            <span className="text-[var(--color-status-warning)] font-bold">km {currentHoverValues.km}:</span>
             {currentHoverValues.speed != null && (
-              <span className="text-emerald-400 font-bold">
+              <span className="text-[var(--color-chart-speed)] font-bold">
                 {currentHoverValues.speed.toFixed(1)} km/h
               </span>
             )}
             {currentHoverValues.pace != null && (
-              <span className="text-orange-400 font-bold">
+              <span className="text-[var(--color-chart-pace)] font-bold">
                 {paceMinLabel(currentHoverValues.pace)}/km
               </span>
             )}
             {currentHoverValues.watts != null && (
-              <span className="text-amber-300 font-bold">
+              <span className="text-[var(--color-chart-power)] font-bold">
                 {Math.round(currentHoverValues.watts)} W
               </span>
             )}
             {currentHoverValues.cadence != null && (
-              <span className="text-cyan-300 font-bold">
+              <span className="text-[var(--color-chart-cadence)] font-bold">
                 {Math.round(currentHoverValues.cadence)} RPM
               </span>
             )}
             {currentHoverValues.elevation != null && (
-              <span className="text-blue-300">
+              <span className="text-[var(--color-chart-elevation)]">
                 {Math.round(currentHoverValues.elevation)} m
               </span>
             )}
             {currentHoverValues.hr != null && (
-              <span className="text-rose-400">
+              <span className="text-[var(--color-chart-heart-rate)]">
                 {Math.round(currentHoverValues.hr)} bpm
               </span>
             )}
@@ -191,12 +192,12 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       {hasPace && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ff6b35] inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-chart-pace)] inline-block" />
             {paceByKm.length > 0 ? t("charts.pace_km") : t("charts.pace_time")}
           </h3>
           <SimpleLineChart
             data={paceSeries}
-            color="#ff6b35"
+            color={colorTokens.chart.pace}
             invertY
             formatY={paceMinLabel}
             xLabel={paceByKm.length > 0 ? t("charts.kilometer") : t("charts.distance_km")}
@@ -213,12 +214,12 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       {hasSpeed && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-chart-speed)] inline-block" />
             {speedByKm.length > 0 ? t("charts.speed_km") : t("charts.speed_time")}
           </h3>
           <SimpleLineChart
             data={speedSeries}
-            color="#10b981"
+            color={colorTokens.chart.speed}
             formatY={(v) => `${v.toFixed(1)} km/h`}
             xLabel={speedByKm.length > 0 ? t("charts.kilometer") : t("charts.distance_km")}
             hoverX={syncHoverX}
@@ -231,12 +232,12 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       {hasPower && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-chart-power)] inline-block" />
             {t("charts.power_title")}
           </h3>
           <SimpleLineChart
             data={powerSeries}
-            color="#f59e0b"
+            color={colorTokens.chart.power}
             formatY={(v) => `${Math.round(v)} W`}
             xLabel={t("charts.distance_km")}
             hoverX={syncHoverX}
@@ -252,12 +253,12 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       {hasCadence && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-chart-cadence)] inline-block" />
             {t("charts.cadence_title")}
           </h3>
           <SimpleLineChart
             data={cadenceSeries}
-            color="#06b6d4"
+            color={colorTokens.chart.cadence}
             formatY={(v) => `${Math.round(v)} RPM`}
             xLabel={t("charts.distance_km")}
             hoverX={syncHoverX}
@@ -270,12 +271,12 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       {hasElevation && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-chart-elevation)] inline-block" />
             {t("charts.elevation")}
           </h3>
           <SimpleLineChart
             data={elevation}
-            color="#60a5fa"
+            color={colorTokens.chart.elevation}
             formatY={(v) => `${Math.round(v)} m`}
             xLabel={t("charts.distance_km")}
             hoverX={syncHoverX}
@@ -288,12 +289,12 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
       {hasHr && (
         <div className="stat-card">
           <h3 className="text-sm font-medium text-[var(--muted)] mb-3 flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--color-chart-heart-rate)] inline-block" />
             {t("charts.hr")}
           </h3>
           <SimpleLineChart
             data={heartRate}
-            color="#f87171"
+            color={colorTokens.chart.heartRate}
             formatY={(v) => `${Math.round(v)}`}
             xLabel={t("charts.distance_km")}
             fillArea={false}

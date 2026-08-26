@@ -3,6 +3,7 @@
 import React, { useRef, useCallback, memo } from "react";
 import type { ChartPoint } from "@/lib/chart-data";
 import { useI18n } from "@/lib/i18n";
+import { colorTokens } from "@/lib/color-tokens";
 
 interface SimpleLineChartProps {
   data: ChartPoint[];
@@ -23,7 +24,7 @@ const PAD = { top: 14, right: 12, bottom: 28, left: 44 };
 export const SimpleLineChart = memo(function SimpleLineChart({
   data,
   height = 160,
-  color = "#ff6b35",
+  color = colorTokens.chart.pace,
   yLabel,
   xLabel,
   formatY = (v) => String(Math.round(v)),
@@ -226,7 +227,7 @@ export const SimpleLineChart = memo(function SimpleLineChart({
                 width={64}
                 height={16}
                 rx={4}
-                fill="#0f141c"
+                fill={colorTokens.surface.chart}
                 stroke="white"
                 strokeOpacity={0.3}
                 strokeWidth={1}

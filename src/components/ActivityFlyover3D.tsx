@@ -20,6 +20,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { flyover3dColorTokens } from "@/lib/flyover3d/color-tokens";
 import type { TrackPoint } from "@/lib/types";
 import { processTrackPoints3D, type Track3DData } from "@/lib/flyover3d/coordinates";
 import { selectFlyoverQuality } from "@/lib/flyover3d/quality";
@@ -129,8 +130,8 @@ export function ActivityFlyover3D({
     try {
       // Cena
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0b0e14);
-      scene.fog = new THREE.FogExp2(0x0b0e14, 0.005);
+      scene.background = new THREE.Color(flyover3dColorTokens.background);
+      scene.fog = new THREE.FogExp2(flyover3dColorTokens.background, 0.005);
       sceneRef.current = scene;
 
       // Câmera
@@ -173,27 +174,27 @@ export function ActivityFlyover3D({
 
     try {
       // Iluminação
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      const ambientLight = new THREE.AmbientLight(flyover3dColorTokens.light, 0.7);
       scene.add(ambientLight);
 
-      const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      const dirLight = new THREE.DirectionalLight(flyover3dColorTokens.light, 1.0);
       dirLight.position.set(50, 100, 50);
       scene.add(dirLight);
 
-      const blueBackLight = new THREE.DirectionalLight(0x0284c7, 0.6);
+      const blueBackLight = new THREE.DirectionalLight(flyover3dColorTokens.backLight, 0.6);
       blueBackLight.position.set(-50, 50, -50);
       scene.add(blueBackLight);
 
       // Grade de chão e base topográfica
       const groundSize = Math.max(data.bounds.sizeX, data.bounds.sizeZ, 120) * 1.8;
-      const gridHelper = new THREE.GridHelper(groundSize, 40, 0x0284c7, 0x1e293b);
+      const gridHelper = new THREE.GridHelper(groundSize, 40, flyover3dColorTokens.backLight, flyover3dColorTokens.grid);
       gridHelper.position.y = -1;
       scene.add(gridHelper);
 
       // Chão com reflexão sutil
       const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
       const groundMat = new THREE.MeshStandardMaterial({
-        color: 0x07090e,
+        color: flyover3dColorTokens.ground,
         roughness: 0.8,
         metalness: 0.2,
       });
@@ -219,7 +220,7 @@ export function ActivityFlyover3D({
           data.points.length - 1
         );
         const pt = data.points[pointIndex];
-        const col = pt ? pt.color : [0.06, 0.72, 0.5];
+        const col = pt ? pt.color : flyover3dColorTokens.runnerRgb;
         colors.push(col[0], col[1], col[2]);
       }
 
@@ -229,7 +230,7 @@ export function ActivityFlyover3D({
         vertexColors: true,
         roughness: 0.3,
         metalness: 0.4,
-        emissive: 0x051515,
+        emissive: flyover3dColorTokens.tubeEmissive,
       });
       const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
       scene.add(tubeMesh);
@@ -240,13 +241,16 @@ export function ActivityFlyover3D({
       startGroup.position.set(startPoint.x, startPoint.y, startPoint.z);
 
       const startPoleGeo = new THREE.CylinderGeometry(0.15, 0.15, 6, 8);
-      const startPoleMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x059669 });
+      const startPoleMat = new THREE.MeshStandardMaterial({
+        color: flyover3dColorTokens.start,
+        emissive: flyover3dColorTokens.startEmissive,
+      });
       const startPole = new THREE.Mesh(startPoleGeo, startPoleMat);
       startPole.position.y = 3;
       startGroup.add(startPole);
 
       const startSphereGeo = new THREE.SphereGeometry(1.2, 16, 16);
-      const startSphereMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+      const startSphereMat = new THREE.MeshBasicMaterial({ color: flyover3dColorTokens.start });
       const startSphere = new THREE.Mesh(startSphereGeo, startSphereMat);
       startSphere.position.y = 6;
       startGroup.add(startSphere);
@@ -258,13 +262,16 @@ export function ActivityFlyover3D({
       endGroup.position.set(endPoint.x, endPoint.y, endPoint.z);
 
       const endPoleGeo = new THREE.CylinderGeometry(0.15, 0.15, 6, 8);
-      const endPoleMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xd97706 });
+      const endPoleMat = new THREE.MeshStandardMaterial({
+        color: flyover3dColorTokens.end,
+        emissive: flyover3dColorTokens.endEmissive,
+      });
       const endPole = new THREE.Mesh(endPoleGeo, endPoleMat);
       endPole.position.y = 3;
       endGroup.add(endPole);
 
       const endSphereGeo = new THREE.SphereGeometry(1.2, 16, 16);
-      const endSphereMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+      const endSphereMat = new THREE.MeshBasicMaterial({ color: flyover3dColorTokens.end });
       const endSphere = new THREE.Mesh(endSphereGeo, endSphereMat);
       endSphere.position.y = 6;
       endGroup.add(endSphere);
@@ -276,8 +283,8 @@ export function ActivityFlyover3D({
       // Esfera central brilhante
       const runnerGeo = new THREE.SphereGeometry(1.1, 16, 16);
       const runnerMat = new THREE.MeshStandardMaterial({
-        color: 0x38bdf8,
-        emissive: 0x0284c7,
+        color: flyover3dColorTokens.runner,
+        emissive: flyover3dColorTokens.runnerEmissive,
         roughness: 0.1,
         metalness: 0.9,
       });
@@ -287,7 +294,7 @@ export function ActivityFlyover3D({
       // Anel de pulso
       const ringGeo = new THREE.RingGeometry(1.5, 1.8, 16);
       const ringMat = new THREE.MeshBasicMaterial({
-        color: 0x38bdf8,
+        color: flyover3dColorTokens.runner,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.7,
@@ -297,7 +304,7 @@ export function ActivityFlyover3D({
       runnerGroup.add(runnerRing);
 
       // Luz pontual seguidora
-      const runnerLight = new THREE.PointLight(0x38bdf8, 2.5, 25);
+      const runnerLight = new THREE.PointLight(flyover3dColorTokens.runner, 2.5, 25);
       runnerLight.position.set(0, 1, 0);
       runnerGroup.add(runnerLight);
       runnerLightRef.current = runnerLight;
@@ -564,7 +571,7 @@ export function ActivityFlyover3D({
   // Se houver erro WebGL, renderiza fallback limpo com botão para retornar ao 2D
   if (webglError) {
     return (
-      <div className="relative w-full rounded-2xl overflow-hidden border border-amber-500/30 bg-[#0b0e14] p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[320px]">
+      <div className="relative w-full rounded-2xl overflow-hidden border border-amber-500/30 bg-[var(--color-surface-canvas)] p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[320px]">
         <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
           <AlertTriangle size={24} />
         </div>
@@ -595,7 +602,7 @@ export function ActivityFlyover3D({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onWheel={handleWheel}
-      className={`relative w-full rounded-2xl overflow-hidden border border-[var(--border)] bg-[#0b0e14] select-none transition-all shadow-2xl ${
+      className={`relative w-full rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--color-surface-canvas)] select-none transition-all shadow-2xl ${
         isFullscreen ? "fixed inset-0 z-50 rounded-none border-none" : "h-[440px] sm:h-[500px]"
       }`}
     >

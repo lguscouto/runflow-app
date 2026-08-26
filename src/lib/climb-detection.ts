@@ -1,6 +1,7 @@
 import { haversineM } from "./geo";
 import type { ClimbCategory, ClimbSegment, ClimbProgressState, RoutePoint } from "./types";
 import { requireElevationConsent } from "./external-privacy";
+import { colorTokens } from "./color-tokens";
 
 /**
  * Aplica suavização com média móvel para eliminar ruídos de barômetro/GPS.
@@ -61,12 +62,12 @@ export function classifyClimb(
  * Retorna a cor característica de inclinação (estilo Garmin / Karoo).
  */
 export function getGradeColor(gradePct: number): string {
-  if (gradePct < 0) return "#38bdf8"; // Azul claro (Descida)
-  if (gradePct < 3) return "#22c55e"; // Verde (0 - 3% Plano / Falso plano)
-  if (gradePct < 6) return "#eab308"; // Amarelo (3 - 6% Moderado)
-  if (gradePct < 9) return "#f97316"; // Laranja (6 - 9% Inclinado)
-  if (gradePct < 12) return "#ef4444"; // Vermelho (9 - 12% Íngreme)
-  return "#a855f7"; // Roxo (12%+ Parede / Extremo)
+  if (gradePct < 0) return colorTokens.grade.downhill; // Azul claro (Descida)
+  if (gradePct < 3) return colorTokens.grade.flat; // Verde (0 - 3% Plano / Falso plano)
+  if (gradePct < 6) return colorTokens.grade.moderate; // Amarelo (3 - 6% Moderado)
+  if (gradePct < 9) return colorTokens.grade.steep; // Laranja (6 - 9% Inclinado)
+  if (gradePct < 12) return colorTokens.grade.verySteep; // Vermelho (9 - 12% Íngreme)
+  return colorTokens.grade.extreme; // Roxo (12%+ Parede / Extremo)
 }
 
 /**
@@ -86,7 +87,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         bg: "bg-purple-500/20",
         text: "text-purple-400",
         border: "border-purple-500/40",
-        badgeBg: "#9333ea",
+        badgeBg: colorTokens.climbCategories.hc,
       };
     case "Cat 1":
       return {
@@ -94,7 +95,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         bg: "bg-rose-500/20",
         text: "text-rose-400",
         border: "border-rose-500/40",
-        badgeBg: "#e11d48",
+        badgeBg: colorTokens.climbCategories.cat1,
       };
     case "Cat 2":
       return {
@@ -102,7 +103,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         bg: "bg-orange-500/20",
         text: "text-orange-400",
         border: "border-orange-500/40",
-        badgeBg: "#ea580c",
+        badgeBg: colorTokens.climbCategories.cat2,
       };
     case "Cat 3":
       return {
@@ -110,7 +111,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         bg: "bg-amber-500/20",
         text: "text-amber-400",
         border: "border-amber-500/40",
-        badgeBg: "#d97706",
+        badgeBg: colorTokens.climbCategories.cat3,
       };
     case "Cat 4":
       return {
@@ -118,7 +119,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         bg: "bg-emerald-500/20",
         text: "text-emerald-400",
         border: "border-emerald-500/40",
-        badgeBg: "#059669",
+        badgeBg: colorTokens.climbCategories.cat4,
       };
     default:
       return {
@@ -126,7 +127,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         bg: "bg-blue-500/20",
         text: "text-blue-400",
         border: "border-blue-500/40",
-        badgeBg: "#2563eb",
+        badgeBg: colorTokens.climbCategories.uncategorized,
       };
   }
 }

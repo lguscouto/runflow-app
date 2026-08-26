@@ -15,7 +15,7 @@ const PersonalHeatmap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[520px] w-full rounded-2xl bg-[#0d1117] border border-[var(--border)] animate-pulse flex flex-col items-center justify-center gap-3 text-[var(--muted)] text-sm">
+      <div className="h-[520px] w-full rounded-2xl bg-[var(--color-surface-map)] border border-[var(--border)] animate-pulse flex flex-col items-center justify-center gap-3 text-[var(--muted)] text-sm">
         <Flame size={32} className="text-orange-500 animate-bounce" />
         <span>Carregando mapa de calor...</span>
       </div>

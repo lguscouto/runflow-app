@@ -7,6 +7,7 @@ import type { TrackPoint } from "@/lib/types";
 import { boundsFromPoints, simplifyPoints } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
 import { useI18n } from "@/lib/i18n";
+import { colorTokens } from "@/lib/color-tokens";
 
 function FitBounds({ points }: { points: TrackPoint[] }) {
   const map = useMap();
@@ -68,7 +69,7 @@ export function MapTrack({
         />
         <Polyline
           positions={positions}
-          pathOptions={{ color: "#ff6b35", weight: 4, opacity: 0.9 }}
+          pathOptions={{ color: colorTokens.map.track, weight: 4, opacity: 0.9 }}
         />
         <FitBounds points={simplifiedPoints} />
       </MapContainer>

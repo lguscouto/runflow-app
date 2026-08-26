@@ -128,10 +128,10 @@ export function WorkoutLibraryModal({
           role="dialog"
           aria-modal="true"
           aria-label={t("workout.library_title")}
-          className="relative w-full max-w-2xl bg-[#0f141c] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col"
+          className="relative w-full max-w-2xl bg-[var(--color-surface-chart)] border border-[var(--border)] rounded-2xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col"
         >
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between gap-3 bg-[#121720]">
+          <div className="p-4 sm:p-5 border-b border-[var(--border)] flex items-center justify-between gap-3 bg-[var(--color-surface-modal-header)]">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400">
                 <Zap size={20} />
@@ -155,9 +155,9 @@ export function WorkoutLibraryModal({
           </div>
 
           {/* Sport Selector & Filter Tabs & New Button */}
-          <div className="p-3 sm:px-5 border-b border-[var(--border)] flex flex-wrap items-center justify-between gap-2 bg-[#121720]/60 shrink-0">
+          <div className="p-3 sm:px-5 border-b border-[var(--border)] flex flex-wrap items-center justify-between gap-2 bg-[var(--color-surface-modal-header)]/60 shrink-0">
             {/* Sport Filter */}
-            <div className="flex items-center gap-1 bg-[#161b22] p-1 rounded-xl border border-[var(--border)] text-xs">
+            <div className="flex items-center gap-1 bg-[var(--color-surface-github)] p-1 rounded-xl border border-[var(--border)] text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -205,7 +205,7 @@ export function WorkoutLibraryModal({
             </div>
 
             {/* Presets vs Custom Tabs */}
-            <div className="flex items-center gap-1 bg-[#161b22] p-1 rounded-xl border border-[var(--border)] text-xs">
+            <div className="flex items-center gap-1 bg-[var(--color-surface-github)] p-1 rounded-xl border border-[var(--border)] text-xs">
               <button
                 type="button"
                 onClick={() => {
@@ -276,7 +276,7 @@ export function WorkoutLibraryModal({
               className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                 !selectedWorkoutId
                   ? "bg-orange-500/10 border-orange-500/50 shadow-md"
-                  : "bg-[#161b22]/70 border-[var(--border)] hover:border-white/20"
+                  : "bg-[var(--color-surface-github)]/70 border-[var(--border)] hover:border-white/20"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -313,7 +313,7 @@ export function WorkoutLibraryModal({
                   className={`p-4 rounded-xl border transition-all cursor-pointer space-y-3 ${
                     isSelected
                       ? "bg-orange-500/10 border-orange-500/60 shadow-lg ring-1 ring-orange-500/40"
-                      : "bg-[#161b22]/80 border-[var(--border)] hover:border-white/20 hover:bg-[#1a202c]"
+                      : "bg-[var(--color-surface-github)]/80 border-[var(--border)] hover:border-white/20 hover:bg-[var(--color-surface-modal-hover)]"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">

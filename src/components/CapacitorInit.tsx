@@ -5,13 +5,14 @@ import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { dispatchAndroidBack } from "@/lib/android-back";
+import { colorTokens } from "@/lib/color-tokens";
 
 export function CapacitorInit() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
     StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-    StatusBar.setBackgroundColor({ color: "#0c0f14" }).catch(() => {});
+    StatusBar.setBackgroundColor({ color: colorTokens.surface.app }).catch(() => {});
 
     const backButtonListener = App.addListener("backButton", ({ canGoBack }) => {
       if (dispatchAndroidBack()) return;

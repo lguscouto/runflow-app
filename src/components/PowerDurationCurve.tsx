@@ -6,6 +6,7 @@ import type { ActivityDetail, UserProfile } from "@/lib/types";
 import { calculateActivityPowerCurve, PeakPowerEffort } from "@/lib/power-curve";
 import { formatWatts } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
+import { colorTokens } from "@/lib/color-tokens";
 
 interface PowerDurationCurveProps {
   activity: ActivityDetail;
@@ -151,7 +152,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
       </div>
 
       {/* SVG Power-Duration Curve Chart */}
-      <div className="p-3 rounded-2xl bg-[#0a0e17] border border-[var(--border)] space-y-2">
+      <div className="p-3 rounded-2xl bg-[var(--color-surface-hud)] border border-[var(--border)] space-y-2">
         <div className="flex items-center justify-between text-xs text-[var(--muted)] px-1">
           <span className="font-semibold text-white flex items-center gap-1.5">
             <Activity size={13} className="text-amber-400" />
@@ -168,8 +169,8 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto min-w-[320px]">
             <defs>
               <linearGradient id="powerCurveGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.02" />
+                <stop offset="0%" stopColor={colorTokens.chart.power} stopOpacity="0.35" />
+                <stop offset="100%" stopColor={colorTokens.chart.power} stopOpacity="0.02" />
               </linearGradient>
             </defs>
 
@@ -209,7 +210,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                   y1={scaleY(ftpWatts)}
                   x2={width - pad.right}
                   y2={scaleY(ftpWatts)}
-                  stroke="#38bdf8"
+                  stroke={colorTokens.map.elevation}
                   strokeWidth={1.2}
                   strokeDasharray="3 3"
                 />
@@ -217,7 +218,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                   x={width - pad.right - 4}
                   y={scaleY(ftpWatts) - 4}
                   textAnchor="end"
-                  fill="#38bdf8"
+                  fill={colorTokens.map.elevation}
                   fontSize={8.5}
                   fontWeight="bold"
                   fontFamily="monospace"
@@ -232,7 +233,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
             <polyline
               points={linePoints}
               fill="none"
-              stroke="#f59e0b"
+              stroke={colorTokens.chart.power}
               strokeWidth={2.5}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -257,8 +258,8 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                     cx={cx}
                     cy={cy}
                     r={isHovered ? 6 : 3.5}
-                    fill={isHovered ? "#fbbf24" : "#f59e0b"}
-                    stroke="#0a0e17"
+                    fill={isHovered ? colorTokens.zones.power4 : colorTokens.chart.power}
+                    stroke={colorTokens.surface.hud}
                     strokeWidth={2}
                     className="transition-all"
                   />
@@ -267,7 +268,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                       x={cx}
                       y={cy - 10}
                       textAnchor="middle"
-                      fill="#fef08a"
+                      fill={colorTokens.content.warning}
                       fontSize={10}
                       fontWeight="bold"
                       fontFamily="monospace"

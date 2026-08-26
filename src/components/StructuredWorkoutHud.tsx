@@ -123,7 +123,7 @@ export function StructuredWorkoutHud({
   const cadenceRangeStr = formatStepCadenceRange(step.cadenceTarget);
 
   return (
-    <div className="w-full rounded-2xl bg-[#0f141c]/95 border border-[var(--border)] p-3.5 sm:p-4 space-y-3 shadow-xl backdrop-blur-md">
+    <div className="w-full rounded-2xl bg-[var(--color-surface-chart)]/95 border border-[var(--border)] p-3.5 sm:p-4 space-y-3 shadow-xl backdrop-blur-md">
       {/* Top Header Badge */}
       <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] pb-2.5">
         <div className="flex items-center gap-2">

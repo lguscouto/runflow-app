@@ -14,7 +14,7 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - **Gravar treino** com GPS ao vivo (distância, tempo, ritmo, mapa) — estilo Strava
 - **Importação** de arquivos `.gpx` e `.fit` (arrastar ou selecionar)
 - Dados de treino armazenados **localmente** no dispositivo (IndexedDB); o Android Auto Backup permanece desabilitado
-- **Performance**: catálogo de traduções e painel de sincronização carregados sob demanda; bundle inicial medido em `406.135 bytes`
+- **Performance**: catálogo de traduções e painel de sincronização carregados sob demanda; bundle inicial medido em `410.970 bytes`
 - **Acessibilidade**: respeito a `prefers-reduced-motion` (animações anuladas) e indicador de foco visível por `:focus-visible` (WCAG 2.2)
 - **App Android (APK)** via Capacitor
 - Interface multilíngue (Português do Brasil 🇧🇷 e Inglês 🇺🇸)

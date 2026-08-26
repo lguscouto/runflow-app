@@ -68,7 +68,7 @@ const LiveMapTrack = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full bg-[#0a0e17] rounded-2xl flex items-center justify-center text-xs text-[var(--muted)] animate-pulse">
+      <div className="w-full h-full bg-[var(--color-surface-hud)] rounded-2xl flex items-center justify-center text-xs text-[var(--muted)] animate-pulse">
         Carregando mapa...
       </div>
     ),
@@ -259,38 +259,38 @@ export function BikeComputerHud({
 
     if (theme === "neo") {
       return {
-        bg: "bg-[#040814]",
+        bg: "bg-[var(--color-surface-bike-neo)]",
         textPrimary: "text-white",
         textSecondary: "text-cyan-300/70 font-semibold",
-        cardBg: "bg-[#091224]/80 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.15)]",
+        cardBg: "bg-[var(--color-surface-bike-card)]/80 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_var(--color-effect-cyan-soft)]",
         accent: "text-cyan-400",
-        speedText: "text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]",
-        powerText: "text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.4)]",
-        gradeText: "text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.4)]",
-        hrText: "text-rose-400 drop-shadow-[0_0_15px_rgba(251,113,133,0.4)]",
-        topBarBg: "bg-[#060b18]/90 border-b border-cyan-500/20 backdrop-blur-md",
-        bottomBarBg: "bg-[#060b18]/90 border-t border-cyan-500/20 backdrop-blur-md",
-        btnPrimary: "bg-cyan-500 text-black hover:bg-cyan-400 active:bg-cyan-600 font-black shadow-[0_0_25px_rgba(6,182,212,0.4)]",
-        btnSecondary: "bg-[#0d1b33] text-cyan-300 hover:bg-[#14284b] border border-cyan-500/40",
+        speedText: "text-white drop-shadow-[0_0_15px_var(--color-effect-inverse-soft-glow)]",
+        powerText: "text-amber-400 drop-shadow-[0_0_15px_var(--color-effect-power-glow)]",
+        gradeText: "text-emerald-400 drop-shadow-[0_0_15px_var(--color-effect-grade-glow)]",
+        hrText: "text-rose-400 drop-shadow-[0_0_15px_var(--color-effect-hr-glow)]",
+        topBarBg: "bg-[var(--color-surface-bike-header)]/90 border-b border-cyan-500/20 backdrop-blur-md",
+        bottomBarBg: "bg-[var(--color-surface-bike-header)]/90 border-t border-cyan-500/20 backdrop-blur-md",
+        btnPrimary: "bg-cyan-500 text-black hover:bg-cyan-400 active:bg-cyan-600 font-black shadow-[0_0_25px_var(--color-effect-cyan-glow)]",
+        btnSecondary: "bg-[var(--color-surface-control)] text-cyan-300 hover:bg-[var(--color-surface-control-hover)] border border-cyan-500/40",
         btnDanger: "bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/40",
       };
     }
 
     // Default: "dark" AMOLED
     return {
-      bg: "bg-[#000000]",
+      bg: "bg-[var(--color-surface-blackout)]",
       textPrimary: "text-white",
       textSecondary: "text-neutral-400 font-semibold",
-      cardBg: "bg-[#0e131d] border border-neutral-800 shadow-lg",
+      cardBg: "bg-[var(--color-surface-bike-dark)] border border-neutral-800 shadow-lg",
       accent: "text-[var(--accent)]",
-      speedText: "text-[#f8fafc]",
+      speedText: "text-[var(--color-palette-neutral-100)]",
       powerText: "text-amber-400",
       gradeText: "text-emerald-400",
       hrText: "text-rose-400",
-      topBarBg: "bg-[#0a0e17] border-b border-neutral-800",
-      bottomBarBg: "bg-[#0a0e17] border-t border-neutral-800",
+      topBarBg: "bg-[var(--color-surface-hud)] border-b border-neutral-800",
+      bottomBarBg: "bg-[var(--color-surface-hud)] border-t border-neutral-800",
       btnPrimary: "bg-[var(--accent)] text-black hover:opacity-90 active:scale-[0.98] font-bold shadow-lg shadow-[var(--accent)]/20",
-      btnSecondary: "bg-[#18202f] text-neutral-200 hover:bg-[#222c3f] border border-neutral-700",
+      btnSecondary: "bg-[var(--color-surface-bike-secondary)] text-neutral-200 hover:bg-[var(--color-surface-bike-secondary-hover)] border border-neutral-700",
       btnDanger: "bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/40",
     };
   }, [theme]);
@@ -443,7 +443,7 @@ export function BikeComputerHud({
 
       {/* 2.5 STRUCTURED WORKOUT ACTIVE STEP BANNER */}
       {currentWorkoutStep && (
-        <div className="mx-4 mt-2 p-3 rounded-2xl bg-[#0f141c]/95 border border-orange-500/40 shadow-2xl backdrop-blur-md space-y-2">
+        <div className="mx-4 mt-2 p-3 rounded-2xl bg-[var(--color-surface-chart)]/95 border border-orange-500/40 shadow-2xl backdrop-blur-md space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span

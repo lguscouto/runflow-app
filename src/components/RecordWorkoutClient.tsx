@@ -62,6 +62,7 @@ import { useI18n } from "@/lib/i18n";
 import { registerAndroidBackHandler } from "@/lib/android-back";
 import type { Sport, UserProfile, ActivitySummary, GhostConfig, SavedRoute, StructuredWorkout } from "@/lib/types";
 import { getAllStoredRoutes } from "@/lib/storage";
+import { colorTokens } from "@/lib/color-tokens";
 
 const LiveMapTrack = dynamic(
   () => import("@/components/LiveMapTrack").then((m) => m.LiveMapTrack),
@@ -357,13 +358,13 @@ export function RecordWorkoutClient() {
 
   const sunModeStyles = isSunMode
     ? ({
-        "--bg": "#ffffff",
-        "--surface": "#f4f4f5",
-        "--text": "#000000",
-        "--muted": "#27272a",
-        "--border": "#000000",
-        "--accent": "#ea580c",
-        "--accent-soft": "rgba(234, 88, 12, 0.15)",
+        "--bg": colorTokens.lightMode.background,
+        "--surface": colorTokens.lightMode.surface,
+        "--text": colorTokens.lightMode.text,
+        "--muted": colorTokens.lightMode.muted,
+        "--border": colorTokens.lightMode.border,
+        "--accent": colorTokens.lightMode.accent,
+        "--accent-soft": colorTokens.lightMode.accentSoft,
       } as React.CSSProperties)
     : undefined;
 
@@ -547,9 +548,9 @@ export function RecordWorkoutClient() {
     return (
       <div
         className={`fixed inset-0 z-50 flex flex-col transition-colors ${
-          isSunMode ? "bg-white text-black font-semibold" : "bg-[#050810] text-[var(--text)]"
+          isSunMode ? "bg-white text-black font-semibold" : "bg-[var(--color-surface-record-hud)] text-[var(--text)]"
         }`}
-        style={isSunMode ? sunModeStyles : { background: "#050810" }}
+        style={isSunMode ? sunModeStyles : { background: colorTokens.surface.recordHud }}
       >
         {/* Top status bar */}
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
@@ -644,8 +645,10 @@ export function RecordWorkoutClient() {
               className="font-bold tabular-nums leading-none"
               style={{
                 fontSize: "clamp(3.5rem, 18vw, 6.5rem)",
-                color: isPaused || stats.isAutoPaused ? "#f59e0b" : "#ffffff",
-                textShadow: isPaused || stats.isAutoPaused ? "0 0 40px #f59e0b40" : "0 0 60px #ffffff20",
+                color: isPaused || stats.isAutoPaused ? colorTokens.status.warning : colorTokens.content.inverse,
+                textShadow: isPaused || stats.isAutoPaused
+                  ? `0 0 40px ${colorTokens.effects.warningGlow}`
+                  : `0 0 60px ${colorTokens.effects.inverseGlow}`,
               }}
             >
               {formatDuration(stats.movingSec || stats.elapsedSec)}
@@ -682,7 +685,7 @@ export function RecordWorkoutClient() {
               </p>
               <p
                 className="font-bold tabular-nums"
-                style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: "#f0f4f8" }}
+                style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: colorTokens.content.primary }}
               >
                 {formatPace(stats.currentPaceSecKm)}
               </p>
@@ -697,7 +700,7 @@ export function RecordWorkoutClient() {
               </p>
               <p
                 className="font-bold tabular-nums"
-                style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: "#8b9bb4" }}
+                style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: colorTokens.content.muted }}
               >
                 {formatPace(stats.avgPaceSecKm)}
               </p>
@@ -1508,7 +1511,7 @@ export function RecordWorkoutClient() {
 
                   {/* ClimbPro Route Preview (Etapa 6) */}
                   {detectedClimbs.length > 0 && (
-                    <div className="p-3 rounded-xl bg-[#0c121e] border border-white/10 space-y-2">
+                    <div className="p-3 rounded-xl bg-[var(--color-surface-panel-deep)] border border-white/10 space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-white flex items-center gap-1.5">
                           <Mountain size={14} className="text-amber-400" />
@@ -1521,7 +1524,7 @@ export function RecordWorkoutClient() {
                           return (
                             <span
                               key={climb.id}
-                              style={{ backgroundColor: `${badge.badgeBg}20`, borderColor: badge.badgeBg, color: "#fff" }}
+                              style={{ backgroundColor: `${badge.badgeBg}20`, borderColor: badge.badgeBg, color: colorTokens.content.inverse }}
                               className="px-2 py-0.5 rounded-md border text-[10px] font-bold flex items-center gap-1"
                             >
                               <span style={{ backgroundColor: badge.badgeBg }} className="w-1.5 h-1.5 rounded-full" />

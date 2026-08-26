@@ -1,4 +1,5 @@
 import confetti from "canvas-confetti";
+import { colorTokens } from "./color-tokens";
 import { haptics } from "./haptics";
 
 /**
@@ -16,7 +17,7 @@ export function firePRConfetti() {
       origin: { y: 0.7 },
       zIndex: 9999,
       disableForReducedMotion: true,
-      colors: ["#ff4500", "#ffa500", "#00f2fe", "#10b981", "#ff007f"],
+      colors: [...colorTokens.celebration.achievements],
     });
   } catch (err) {
     console.warn("Erro ao disparar confetes PR:", err);
@@ -38,7 +39,7 @@ export function fireWorkoutCompletedConfetti() {
       origin: { y: 0.6 },
       zIndex: 9999,
       disableForReducedMotion: true,
-      colors: ["#ff5722", "#00e676", "#00b0ff", "#ffeb3b"],
+      colors: [...colorTokens.celebration.streak],
     });
   } catch (err) {
     console.warn("Erro ao disparar confetes de treino:", err);
@@ -60,7 +61,7 @@ export function fireStreakConfetti() {
       origin: { y: 0.6 },
       zIndex: 9999,
       disableForReducedMotion: true,
-      colors: ["#ff4500", "#ff8c00", "#ffd700", "#ff0055"],
+      colors: [...colorTokens.celebration.milestone],
       shapes: ["circle", "square"],
       scalar: 1.0,
     });

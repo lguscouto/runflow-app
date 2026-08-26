@@ -56,7 +56,7 @@ const ActivityFlyover3D = dynamic(
     ssr: false,
     loading: () => (
       <div
-        className="rounded-2xl bg-[#0b0e14] border border-[var(--border)] animate-pulse flex items-center justify-center text-sm text-[var(--muted)]"
+        className="rounded-2xl bg-[var(--color-surface-canvas)] border border-[var(--border)] animate-pulse flex items-center justify-center text-sm text-[var(--muted)]"
         style={{ height: "440px" }}
       >
         Carregando visualização 3D...
