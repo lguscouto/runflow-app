@@ -7,47 +7,20 @@ import { haptics } from "./haptics";
 export function firePRConfetti() {
   haptics.success();
 
-  const count = 200;
-  const defaults = {
-    origin: { y: 0.7 },
-    zIndex: 9999,
-  };
+  try {
+    if (typeof window === "undefined") return;
 
-  function fire(particleRatio: number, opts: confetti.Options) {
     confetti({
-      ...defaults,
-      ...opts,
-      particleCount: Math.floor(count * particleRatio),
+      particleCount: 45,
+      spread: 55,
+      origin: { y: 0.7 },
+      zIndex: 9999,
+      disableForReducedMotion: true,
+      colors: ["#ff4500", "#ffa500", "#00f2fe", "#10b981", "#ff007f"],
     });
+  } catch (err) {
+    console.warn("Erro ao disparar confetes PR:", err);
   }
-
-  fire(0.25, {
-    spread: 26,
-    startVelocity: 55,
-    colors: ["#ff4500", "#ffa500", "#ffd700"],
-  });
-  fire(0.2, {
-    spread: 60,
-    colors: ["#00f2fe", "#4facfe", "#00c6ff"],
-  });
-  fire(0.35, {
-    spread: 100,
-    decay: 0.91,
-    scalar: 0.8,
-    colors: ["#ff007f", "#7928ca", "#ff0080"],
-  });
-  fire(0.1, {
-    spread: 120,
-    startVelocity: 25,
-    decay: 0.92,
-    scalar: 1.2,
-    colors: ["#10b981", "#34d399", "#6ee7b7"],
-  });
-  fire(0.1, {
-    spread: 120,
-    startVelocity: 45,
-    colors: ["#ffd700", "#ffb703", "#fb8500"],
-  });
 }
 
 /**
@@ -56,31 +29,20 @@ export function firePRConfetti() {
 export function fireWorkoutCompletedConfetti() {
   haptics.success();
 
-  const end = Date.now() + 1000;
-  const colors = ["#ff5722", "#00e676", "#00b0ff", "#ffeb3b"];
+  try {
+    if (typeof window === "undefined") return;
 
-  (function frame() {
     confetti({
-      particleCount: 3,
-      angle: 60,
-      spread: 55,
-      origin: { x: 0 },
-      colors: colors,
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.6 },
       zIndex: 9999,
+      disableForReducedMotion: true,
+      colors: ["#ff5722", "#00e676", "#00b0ff", "#ffeb3b"],
     });
-    confetti({
-      particleCount: 3,
-      angle: 120,
-      spread: 55,
-      origin: { x: 1 },
-      colors: colors,
-      zIndex: 9999,
-    });
-
-    if (Date.now() < end) {
-      requestAnimationFrame(frame);
-    }
-  })();
+  } catch (err) {
+    console.warn("Erro ao disparar confetes de treino:", err);
+  }
 }
 
 /**
@@ -89,13 +51,20 @@ export function fireWorkoutCompletedConfetti() {
 export function fireStreakConfetti() {
   haptics.success();
 
-  confetti({
-    particleCount: 100,
-    spread: 70,
-    origin: { y: 0.6 },
-    colors: ["#ff4500", "#ff8c00", "#ffd700", "#ff0055"],
-    zIndex: 9999,
-    shapes: ["circle", "square"],
-    scalar: 1.1,
-  });
+  try {
+    if (typeof window === "undefined") return;
+
+    confetti({
+      particleCount: 40,
+      spread: 55,
+      origin: { y: 0.6 },
+      zIndex: 9999,
+      disableForReducedMotion: true,
+      colors: ["#ff4500", "#ff8c00", "#ffd700", "#ff0055"],
+      shapes: ["circle", "square"],
+      scalar: 1.0,
+    });
+  } catch (err) {
+    console.warn("Erro ao disparar confetes streak:", err);
+  }
 }

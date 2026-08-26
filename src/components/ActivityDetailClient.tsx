@@ -36,6 +36,7 @@ const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
   bestPower: "prs.cycling_best_power",
 };
 
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 const ActivityMap = dynamic(
   () => import("@/components/ActivityMap").then((m) => m.ActivityMap),
   {
@@ -301,15 +302,22 @@ export function ActivityDetailClient() {
         </div>
       )}
 
-      {view3D && activity.points.length >= 2 ? (
-        <ActivityFlyover3D
-          points={activity.points}
-          activityName={activity.name}
-          onClose={() => setView3D(false)}
-        />
-      ) : (
-        <ActivityMap points={activity.points} height="360px" />
-      )}
+      <ErrorBoundary
+        fallback={
+          <ActivityMap points={activity.points} height="360px" />
+        }
+        onReset={() => setView3D(false)}
+      >
+        {view3D && activity.points.length >= 2 ? (
+          <ActivityFlyover3D
+            points={activity.points}
+            activityName={activity.name}
+            onClose={() => setView3D(false)}
+          />
+        ) : (
+          <ActivityMap points={activity.points} height="360px" />
+        )}
+      </ErrorBoundary>
 
       <ActivityCharts activity={activity} />
 

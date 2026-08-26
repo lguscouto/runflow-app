@@ -16,6 +16,8 @@ import {
   Gauge,
   Timer,
   X,
+  Map as MapIcon,
+  AlertTriangle,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import type { TrackPoint } from "@/lib/types";
@@ -38,6 +40,9 @@ export function ActivityFlyover3D({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Fallback state on GPU/WebGL errors
+  const [webglError, setWebglError] = useState<string | null>(null);
 
   // Playback States
   const [isPlaying, setIsPlaying] = useState(true);
@@ -75,17 +80,25 @@ export function ActivityFlyover3D({
 
   // 1. Processa pontos 3D na montagem
   useEffect(() => {
-    const data = processTrackPoints3D(points);
-    if (!data || data.points.length < 2) return;
+    try {
+      const data = processTrackPoints3D(points);
+      if (!data || data.points.length < 2) {
+        setWebglError("Pontos GPS insuficientes para gerar a visualização 3D.");
+        return;
+      }
 
-    trackDataRef.current = data;
+      trackDataRef.current = data;
 
-    // Constrói curva Catmull-Rom
-    const vectors = data.points.map((p) => new THREE.Vector3(p.x, p.y, p.z));
-    const curve = new THREE.CatmullRomCurve3(vectors);
-    curve.curveType = "catmullrom";
-    curve.tension = 0.5;
-    curveRef.current = curve;
+      // Constrói curva Catmull-Rom
+      const vectors = data.points.map((p) => new THREE.Vector3(p.x, p.y, p.z));
+      const curve = new THREE.CatmullRomCurve3(vectors);
+      curve.curveType = "catmullrom";
+      curve.tension = 0.5;
+      curveRef.current = curve;
+    } catch (err) {
+      console.warn("Erro ao processar pontos 3D:", err);
+      setWebglError("Falha ao processar trajetória 3D.");
+    }
   }, [points]);
 
   // 2. Inicializa Cena Three.js
@@ -99,8 +112,8 @@ export function ActivityFlyover3D({
     const data = trackDataRef.current;
     const curve = curveRef.current;
 
-    const width = container.clientWidth || 800;
-    const height = container.clientHeight || 500;
+    const width = container.clientWidth || Math.min(window.innerWidth - 32, 800);
+    const height = container.clientHeight || 440;
     const quality = selectFlyoverQuality({
       width,
       height,
@@ -109,172 +122,202 @@ export function ActivityFlyover3D({
       segments: Math.min(data.points.length * 3, 1_500),
     });
 
-    // Cena
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0e14);
-    scene.fog = new THREE.FogExp2(0x0b0e14, 0.005);
-    sceneRef.current = scene;
+    let renderer: THREE.WebGLRenderer;
+    let scene: THREE.Scene;
+    let camera: THREE.PerspectiveCamera;
 
-    // Câmera
-    const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
-    camera.position.set(0, 50, 80);
-    cameraRef.current = camera;
+    try {
+      // Cena
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0b0e14);
+      scene.fog = new THREE.FogExp2(0x0b0e14, 0.005);
+      sceneRef.current = scene;
 
-    // Renderizador
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: quality.antialias,
-      powerPreference: "high-performance",
-    });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(quality.pixelRatio);
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    rendererRef.current = renderer;
-    rendererDisposedRef.current = false;
+      // Câmera
+      camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
+      camera.position.set(0, 50, 80);
+      cameraRef.current = camera;
 
-    // Iluminação
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    dirLight.position.set(50, 100, 50);
-    scene.add(dirLight);
-
-    const blueBackLight = new THREE.DirectionalLight(0x0284c7, 0.8);
-    blueBackLight.position.set(-50, 50, -50);
-    scene.add(blueBackLight);
-
-    // Grade de chão e base topográfica
-    const groundSize = Math.max(data.bounds.sizeX, data.bounds.sizeZ, 120) * 1.8;
-    const gridHelper = new THREE.GridHelper(groundSize, 40, 0x0284c7, 0x1e293b);
-    gridHelper.position.y = -1;
-    scene.add(gridHelper);
-
-    // Chão com reflexão sutil
-    const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
-    const groundMat = new THREE.MeshStandardMaterial({
-      color: 0x07090e,
-      roughness: 0.8,
-      metalness: 0.2,
-    });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -1.1;
-    scene.add(ground);
-
-    // ── Construção da Trilha 3D com Gradiente de Ritmo ───────────────────────
-    const tubularSegments = quality.segments;
-    const tubeGeo = new THREE.TubeGeometry(curve, tubularSegments, 0.65, 8, false);
-
-    // Atribui cores de vértices com base nos ritmos normalizados
-    const posAttr = tubeGeo.attributes.position;
-    const colors: number[] = [];
-    const tempVec = new THREE.Vector3();
-
-    for (let i = 0; i < posAttr.count; i++) {
-      tempVec.fromBufferAttribute(posAttr, i);
-      // Encontra ponto da curva mais próximo
-      const u = (i / posAttr.count);
-      const pointIndex = Math.min(
-        Math.floor(u * data.points.length),
-        data.points.length - 1
-      );
-      const pt = data.points[pointIndex];
-      const col = pt ? pt.color : [0.06, 0.72, 0.5];
-      colors.push(col[0], col[1], col[2]);
+      // Renderizador seguro com fallback
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: quality.antialias,
+        alpha: false,
+        powerPreference: "low-power",
+        failIfMajorPerformanceCaveat: false,
+        precision: "mediump",
+        depth: true,
+        stencil: false,
+      });
+      renderer.setSize(width, height, false);
+      renderer.setPixelRatio(quality.pixelRatio);
+      rendererRef.current = renderer;
+      rendererDisposedRef.current = false;
+    } catch (err) {
+      console.warn("WebGL initialization failed:", err);
+      setWebglError("WebGL não suportado ou contexto indisponível no dispositivo.");
+      return;
     }
 
-    tubeGeo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    const onContextLost = (e: Event) => {
+      e.preventDefault();
+      rendererDisposedRef.current = true;
+      if (animFrameIdRef.current !== null) {
+        cancelAnimationFrame(animFrameIdRef.current);
+        animFrameIdRef.current = null;
+      }
+      setWebglError("Contexto gráfico WebGL temporariamente perdido pelo dispositivo.");
+    };
 
-    const tubeMat = new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 0.3,
-      metalness: 0.4,
-      emissive: 0x051515,
-    });
-    const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
-    scene.add(tubeMesh);
+    canvas.addEventListener("webglcontextlost", onContextLost);
 
-    // ── Marcador de Início (Largada) ─────────────────────────────────────────
-    const startPoint = data.points[0];
-    const startGroup = new THREE.Group();
-    startGroup.position.set(startPoint.x, startPoint.y, startPoint.z);
+    try {
+      // Iluminação
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
 
-    const startPoleGeo = new THREE.CylinderGeometry(0.15, 0.15, 6, 8);
-    const startPoleMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x059669 });
-    const startPole = new THREE.Mesh(startPoleGeo, startPoleMat);
-    startPole.position.y = 3;
-    startGroup.add(startPole);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+      dirLight.position.set(50, 100, 50);
+      scene.add(dirLight);
 
-    const startSphereGeo = new THREE.SphereGeometry(1.2, 16, 16);
-    const startSphereMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
-    const startSphere = new THREE.Mesh(startSphereGeo, startSphereMat);
-    startSphere.position.y = 6;
-    startGroup.add(startSphere);
-    scene.add(startGroup);
+      const blueBackLight = new THREE.DirectionalLight(0x0284c7, 0.6);
+      blueBackLight.position.set(-50, 50, -50);
+      scene.add(blueBackLight);
 
-    // ── Marcador de Chegada (Fim) ────────────────────────────────────────────
-    const endPoint = data.points[data.points.length - 1];
-    const endGroup = new THREE.Group();
-    endGroup.position.set(endPoint.x, endPoint.y, endPoint.z);
+      // Grade de chão e base topográfica
+      const groundSize = Math.max(data.bounds.sizeX, data.bounds.sizeZ, 120) * 1.8;
+      const gridHelper = new THREE.GridHelper(groundSize, 40, 0x0284c7, 0x1e293b);
+      gridHelper.position.y = -1;
+      scene.add(gridHelper);
 
-    const endPoleGeo = new THREE.CylinderGeometry(0.15, 0.15, 6, 8);
-    const endPoleMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xd97706 });
-    const endPole = new THREE.Mesh(endPoleGeo, endPoleMat);
-    endPole.position.y = 3;
-    endGroup.add(endPole);
+      // Chão com reflexão sutil
+      const groundGeo = new THREE.PlaneGeometry(groundSize, groundSize);
+      const groundMat = new THREE.MeshStandardMaterial({
+        color: 0x07090e,
+        roughness: 0.8,
+        metalness: 0.2,
+      });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      ground.position.y = -1.1;
+      scene.add(ground);
 
-    const endSphereGeo = new THREE.SphereGeometry(1.2, 16, 16);
-    const endSphereMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
-    const endSphere = new THREE.Mesh(endSphereGeo, endSphereMat);
-    endSphere.position.y = 6;
-    endGroup.add(endSphere);
-    scene.add(endGroup);
+      // ── Construção da Trilha 3D com Gradiente de Ritmo ───────────────────────
+      const tubularSegments = quality.segments;
+      const tubeGeo = new THREE.TubeGeometry(curve, tubularSegments, 0.65, 6, false);
 
-    // ── Avatar / Corredor 3D Luminoso ────────────────────────────────────────
-    const runnerGroup = new THREE.Group();
+      // Atribui cores de vértices com base nos ritmos normalizados
+      const posAttr = tubeGeo.attributes.position;
+      const colors: number[] = [];
+      const tempVec = new THREE.Vector3();
 
-    // Esfera central brilhante
-    const runnerGeo = new THREE.SphereGeometry(1.1, 24, 24);
-    const runnerMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      emissive: 0x0284c7,
-      roughness: 0.1,
-      metalness: 0.9,
-    });
-    const runnerSphere = new THREE.Mesh(runnerGeo, runnerMat);
-    runnerGroup.add(runnerSphere);
+      for (let i = 0; i < posAttr.count; i++) {
+        tempVec.fromBufferAttribute(posAttr, i);
+        const u = i / posAttr.count;
+        const pointIndex = Math.min(
+          Math.floor(u * data.points.length),
+          data.points.length - 1
+        );
+        const pt = data.points[pointIndex];
+        const col = pt ? pt.color : [0.06, 0.72, 0.5];
+        colors.push(col[0], col[1], col[2]);
+      }
 
-    // Anel de pulso
-    const ringGeo = new THREE.RingGeometry(1.5, 1.8, 24);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.7,
-    });
-    const runnerRing = new THREE.Mesh(ringGeo, ringMat);
-    runnerRing.rotation.x = Math.PI / 2;
-    runnerGroup.add(runnerRing);
+      tubeGeo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
 
-    // Luz pontual seguidora
-    const runnerLight = new THREE.PointLight(0x38bdf8, 3, 25);
-    runnerLight.position.set(0, 1, 0);
-    runnerGroup.add(runnerLight);
-    runnerLightRef.current = runnerLight;
+      const tubeMat = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.3,
+        metalness: 0.4,
+        emissive: 0x051515,
+      });
+      const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+      scene.add(tubeMesh);
 
-    scene.add(runnerGroup);
-    runnerMeshRef.current = runnerGroup;
+      // ── Marcador de Início (Largada) ─────────────────────────────────────────
+      const startPoint = data.points[0];
+      const startGroup = new THREE.Group();
+      startGroup.position.set(startPoint.x, startPoint.y, startPoint.z);
+
+      const startPoleGeo = new THREE.CylinderGeometry(0.15, 0.15, 6, 8);
+      const startPoleMat = new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x059669 });
+      const startPole = new THREE.Mesh(startPoleGeo, startPoleMat);
+      startPole.position.y = 3;
+      startGroup.add(startPole);
+
+      const startSphereGeo = new THREE.SphereGeometry(1.2, 16, 16);
+      const startSphereMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+      const startSphere = new THREE.Mesh(startSphereGeo, startSphereMat);
+      startSphere.position.y = 6;
+      startGroup.add(startSphere);
+      scene.add(startGroup);
+
+      // ── Marcador de Chegada (Fim) ────────────────────────────────────────────
+      const endPoint = data.points[data.points.length - 1];
+      const endGroup = new THREE.Group();
+      endGroup.position.set(endPoint.x, endPoint.y, endPoint.z);
+
+      const endPoleGeo = new THREE.CylinderGeometry(0.15, 0.15, 6, 8);
+      const endPoleMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xd97706 });
+      const endPole = new THREE.Mesh(endPoleGeo, endPoleMat);
+      endPole.position.y = 3;
+      endGroup.add(endPole);
+
+      const endSphereGeo = new THREE.SphereGeometry(1.2, 16, 16);
+      const endSphereMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+      const endSphere = new THREE.Mesh(endSphereGeo, endSphereMat);
+      endSphere.position.y = 6;
+      endGroup.add(endSphere);
+      scene.add(endGroup);
+
+      // ── Avatar / Corredor 3D Luminoso ────────────────────────────────────────
+      const runnerGroup = new THREE.Group();
+
+      // Esfera central brilhante
+      const runnerGeo = new THREE.SphereGeometry(1.1, 16, 16);
+      const runnerMat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8,
+        emissive: 0x0284c7,
+        roughness: 0.1,
+        metalness: 0.9,
+      });
+      const runnerSphere = new THREE.Mesh(runnerGeo, runnerMat);
+      runnerGroup.add(runnerSphere);
+
+      // Anel de pulso
+      const ringGeo = new THREE.RingGeometry(1.5, 1.8, 16);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.7,
+      });
+      const runnerRing = new THREE.Mesh(ringGeo, ringMat);
+      runnerRing.rotation.x = Math.PI / 2;
+      runnerGroup.add(runnerRing);
+
+      // Luz pontual seguidora
+      const runnerLight = new THREE.PointLight(0x38bdf8, 2.5, 25);
+      runnerLight.position.set(0, 1, 0);
+      runnerGroup.add(runnerLight);
+      runnerLightRef.current = runnerLight;
+
+      scene.add(runnerGroup);
+      runnerMeshRef.current = runnerGroup;
+    } catch (err) {
+      console.warn("Error building Three.js scene:", err);
+      setWebglError("Erro ao construir geometria 3D.");
+      return;
+    }
 
     // Resize Handler
     const handleResize = () => {
       if (!containerRef.current || !rendererRef.current || !cameraRef.current) return;
-      const w = containerRef.current.clientWidth;
-      const h = containerRef.current.clientHeight;
+      const w = containerRef.current.clientWidth || 800;
+      const h = containerRef.current.clientHeight || 440;
       cameraRef.current.aspect = w / h;
       cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(w, h);
+      rendererRef.current.setSize(w, h, false);
     };
     window.addEventListener("resize", handleResize);
 
@@ -283,7 +326,7 @@ export function ActivityFlyover3D({
       rendererDisposedRef.current = true;
       window.removeEventListener("resize", handleResize);
 
-      // Desalocação profunda recursiva de objetos WebGL/Three.js (Prevenção de Leaks de RAM/VRAM)
+      // Desalocação profunda recursiva de objetos WebGL/Three.js
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points) {
           if (object.geometry) {
@@ -301,9 +344,15 @@ export function ActivityFlyover3D({
         }
       });
 
-      scene.clear();
-      renderer.dispose();
-      renderer.forceContextLoss?.();
+      canvas.removeEventListener("webglcontextlost", onContextLost);
+
+      try {
+        scene.clear();
+        renderer.dispose();
+        renderer.forceContextLoss?.();
+      } catch {
+        // ignore disposal errors
+      }
 
       sceneRef.current = null;
       cameraRef.current = null;
@@ -324,6 +373,8 @@ export function ActivityFlyover3D({
 
   // 3. Loop Estável de Animação e Renderização da Câmera (Single Loop desacoplado)
   useEffect(() => {
+    if (webglError) return;
+
     let lastTime = performance.now();
     let lastUiUpdateTime = performance.now();
     let mounted = true;
@@ -352,7 +403,7 @@ export function ActivityFlyover3D({
       const renderer = rendererRef.current;
       const scene = sceneRef.current;
 
-      if (curve && data && runner && camera && renderer && scene) {
+      if (curve && data && runner && camera && renderer && scene && !rendererDisposedRef.current) {
         // Atualiza progresso contínuo
         if (isPlayingRef.current && !isDraggingScrubber.current) {
           const increment = (deltaSec * speedMultiplierRef.current) / 45;
@@ -416,7 +467,14 @@ export function ActivityFlyover3D({
           camera.lookAt(pos);
         }
 
-        renderer.render(scene, camera);
+        try {
+          renderer.render(scene, camera);
+        } catch (err) {
+          console.warn("Render call failed:", err);
+          rendererDisposedRef.current = true;
+          setWebglError("Contexto gráfico interrompido.");
+          return;
+        }
       }
 
       scheduleNextFrame();
@@ -436,7 +494,6 @@ export function ActivityFlyover3D({
       scheduleNextFrame();
     };
 
-    rafScheduledRef.current = false;
     document.addEventListener("visibilitychange", handleVisibility);
     scheduleNextFrame();
 
@@ -449,7 +506,7 @@ export function ActivityFlyover3D({
       animFrameIdRef.current = null;
       rafScheduledRef.current = false;
     };
-  }, []);
+  }, [webglError]);
 
   // ── Controles de Toque / Mouse para Modo Órbita ──
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -504,6 +561,33 @@ export function ActivityFlyover3D({
     }
   };
 
+  // Se houver erro WebGL, renderiza fallback limpo com botão para retornar ao 2D
+  if (webglError) {
+    return (
+      <div className="relative w-full rounded-2xl overflow-hidden border border-amber-500/30 bg-[#0b0e14] p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[320px]">
+        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+          <AlertTriangle size={24} />
+        </div>
+        <div className="space-y-1 max-w-md">
+          <h3 className="font-bold text-white text-base">Visualização 3D Indisponível</h3>
+          <p className="text-xs text-[var(--muted)] leading-relaxed">
+            {webglError}
+          </p>
+        </div>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-primary text-xs flex items-center gap-2 mt-1"
+          >
+            <MapIcon size={14} />
+            Voltar ao Mapa 2D
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}
@@ -516,7 +600,11 @@ export function ActivityFlyover3D({
       }`}
     >
       {/* Canvas 3D */}
-      <canvas ref={canvasRef} className="w-full h-full block cursor-grab active:cursor-grabbing" />
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full block cursor-grab active:cursor-grabbing"
+        style={{ width: "100%", height: "100%", display: "block" }}
+      />
 
       {/* ── Top Bar HUD ── */}
       <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none gap-2">
