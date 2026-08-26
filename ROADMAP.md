@@ -46,6 +46,7 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 - [ ] Completar a matriz formal de proporções 16:9, 18:9, 19.5:9, 20:9 e 21:9 entre 360x640 e 1440x3120px; o E2E atual cobre apenas um subconjunto documentado em `docs/quality/current-state.md`
 - [x] Tipografia fluida com escala relativa (`clamp()`, `rem`, `dvh`/`dvw`) para evitar overflow horizontal ou corte de telemetria
 - [x] Suporte à escala de fonte de acessibilidade do Android (até 200%) em cards estatísticos, listas e modais
+- [x] Acessibilidade global no CSS: `prefers-reduced-motion` desativa/anula animações e transições decorativas (mantendo feedback essencial) e `:focus-visible` garante indicador de foco visível com as cores do tema (WCAG 2.2 — 2.3.3 e 2.4.7)
 
 ---
 
