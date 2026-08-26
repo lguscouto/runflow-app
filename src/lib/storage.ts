@@ -114,6 +114,7 @@ interface RunFlowDB extends DBSchema {
 const DB_NAME = "runflow";
 const DB_VERSION = 9;
 export const DASHBOARD_STATS_KEY = "current";
+const ACTIVITY_TRACK_READ_BATCH_SIZE = 32;
 
 function assertLegacyActivity(value: unknown): asserts value is StoredActivity {
   if (!value || typeof value !== "object") {
@@ -374,25 +375,43 @@ export async function getAllStoredActivities(): Promise<StoredActivity[]> {
   const db = await getStore();
   const tx = db.transaction(["activitySummaries", "activityTracks"], "readonly");
   const summaryIndex = tx.objectStore("activitySummaries").index("by-started");
+  const trackStore = tx.objectStore("activityTracks");
   const summaries = await summaryIndex.getAll();
 
   // Reconstrução em lote ordenada por data descrescente
   const sortedSummaries = summaries.reverse();
   const results: StoredActivity[] = [];
 
-  for (const summary of sortedSummaries) {
-    const track = await tx.objectStore("activityTracks").get(summary.id);
-    results.push({
-      ...stripInternalSummaryFields(summary),
-      points: track?.points || [],
-      trackSegments: track?.trackSegments,
-      maxPaceSecKm: track?.maxPaceSecKm ?? null,
-      maxHr: track?.maxHr ?? null,
-      notes: track?.notes ?? null,
-      workoutId: track?.workoutId ?? summary.workoutId ?? null,
-      structuredWorkoutReport:
-        track?.structuredWorkoutReport ?? getLegacyStructuredWorkoutReport(summary),
-    });
+  // Paraleliza cada lote sem enfileirar uma requisição por atividade do histórico.
+  for (
+    let offset = 0;
+    offset < sortedSummaries.length;
+    offset += ACTIVITY_TRACK_READ_BATCH_SIZE
+  ) {
+    const summaryBatch = sortedSummaries.slice(
+      offset,
+      offset + ACTIVITY_TRACK_READ_BATCH_SIZE,
+    );
+    const tracks = await Promise.all(
+      summaryBatch.map((summary) => trackStore.get(summary.id)),
+    );
+
+    results.push(
+      ...summaryBatch.map((summary, index) => {
+        const track = tracks[index];
+        return {
+          ...stripInternalSummaryFields(summary),
+          points: track?.points || [],
+          trackSegments: track?.trackSegments,
+          maxPaceSecKm: track?.maxPaceSecKm ?? null,
+          maxHr: track?.maxHr ?? null,
+          notes: track?.notes ?? null,
+          workoutId: track?.workoutId ?? summary.workoutId ?? null,
+          structuredWorkoutReport:
+            track?.structuredWorkoutReport ?? getLegacyStructuredWorkoutReport(summary),
+        };
+      }),
+    );
   }
 
   return results;

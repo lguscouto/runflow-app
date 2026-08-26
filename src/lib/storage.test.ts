@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   putActivity,
   getStoredActivity,
+  getAllStoredActivities,
   getAllStoredSummaries,
   getStoredDashboardStats,
   removeActivity,
@@ -63,6 +64,91 @@ describe("IndexedDB v9 Storage, Activity CRUD & Incremental Stats", () => {
     expect(summary?.name).toBe("Treino Teste 10k");
     // Resumo leve não deve conter a propriedade points
     expect((summary as any).points).toBeUndefined();
+  });
+
+  it("reconstructs all activities with parallel track reads and preserves summary order", async () => {
+    const older = {
+      ...sampleActivity,
+      id: "batch-older",
+      name: "Treino mais antigo",
+      startedAt: "2026-08-20T10:00:00.000Z",
+      points: [{ lat: -23.6, lng: -46.6, elevation: 700 }],
+    };
+    const newer = {
+      ...sampleActivity,
+      id: "batch-newer",
+      name: "Treino mais recente",
+      startedAt: "2026-08-25T10:00:00.000Z",
+      points: [{ lat: -23.5, lng: -46.5, elevation: 710 }],
+    };
+    await putActivity(older);
+    await putActivity(newer);
+
+    const originalTrackGet = IDBObjectStore.prototype.get;
+    let activeTrackReads = 0;
+    let trackReadsOverlapped = false;
+    const trackGetSpy = vi
+      .spyOn(IDBObjectStore.prototype, "get")
+      .mockImplementation(function (this: IDBObjectStore, query) {
+        const request = originalTrackGet.call(this, query);
+        if (this.name === "activityTracks") {
+          activeTrackReads += 1;
+          trackReadsOverlapped ||= activeTrackReads > 1;
+          const release = () => {
+            activeTrackReads -= 1;
+          };
+          request.addEventListener("success", release, { once: true });
+          request.addEventListener("error", release, { once: true });
+        }
+        return request;
+      });
+    try {
+      const activities = await getAllStoredActivities();
+
+      expect(activities.filter(({ id }) => id.startsWith("batch-")).map(({ id }) => id)).toEqual([
+        newer.id,
+        older.id,
+      ]);
+      expect(activities.find(({ id }) => id === newer.id)?.points).toEqual(newer.points);
+      expect(activities.find(({ id }) => id === older.id)?.points).toEqual(older.points);
+      const trackStoresRead = trackGetSpy.mock.instances.filter(
+        (store) => (store as IDBObjectStore).name === "activityTracks",
+      );
+      expect(trackStoresRead.length).toBeGreaterThanOrEqual(2);
+      expect(trackReadsOverlapped).toBe(true);
+    } finally {
+      trackGetSpy.mockRestore();
+      await removeActivity(older.id);
+      await removeActivity(newer.id);
+    }
+  });
+
+  it("keeps bounded track batches working for histories larger than one batch", async () => {
+    const activities = Array.from({ length: 33 }, (_, index) => ({
+      ...sampleActivity,
+      id: `batch-large-${String(index).padStart(2, "0")}`,
+      name: `Treino em lote ${index}`,
+      startedAt: new Date(
+        Date.parse("2026-08-26T10:00:00.000Z") - index * 24 * 60 * 60 * 1000,
+      ).toISOString(),
+      points: [{ lat: -23.5 - index / 100, lng: -46.5, elevation: 710 + index }],
+    }));
+
+    try {
+      for (const activity of activities) await putActivity(activity);
+
+      const restored = (await getAllStoredActivities()).filter(({ id }) =>
+        id.startsWith("batch-large-"),
+      );
+      expect(restored).toHaveLength(activities.length);
+      expect(restored[0]?.id).toBe("batch-large-00");
+      expect(restored.at(-1)?.id).toBe("batch-large-32");
+      expect(restored.find(({ id }) => id === "batch-large-17")?.points).toEqual(
+        activities[17]?.points,
+      );
+    } finally {
+      for (const activity of activities) await removeActivity(activity.id);
+    }
   });
 
   it("should remove activity cleanly from all stores", async () => {
