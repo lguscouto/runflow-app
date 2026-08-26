@@ -1,5 +1,6 @@
+import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { expect, test } from "@playwright/test";
 import { installRuntimeGuard } from "./helpers/runtimeGuard";
 
@@ -53,6 +54,39 @@ test("carrega a página inicial pelo artefato file://", async ({ browser }) => {
     viewport: { width: 390, height: 844 },
   });
   const page = await context.newPage();
+  const staticOutputRoot = fs.realpathSync(path.resolve(process.cwd(), "out"));
+  await page.route("**/*", async (route) => {
+    const requestUrl = new URL(route.request().url());
+    const isLocalFont =
+      requestUrl.protocol === "file:" && /\.(?:woff2?|ttf|otf)$/i.test(requestUrl.pathname);
+    if (!isLocalFont) {
+      await route.continue();
+      return;
+    }
+    const contentTypeByExtension: Record<string, string> = {
+      ".otf": "font/otf",
+      ".ttf": "font/ttf",
+      ".woff": "font/woff",
+      ".woff2": "font/woff2",
+    };
+    const localFontPath = path.resolve(fileURLToPath(requestUrl));
+    let resolvedFontPath: string;
+    try {
+      resolvedFontPath = fs.realpathSync(localFontPath);
+    } catch {
+      await route.continue();
+      return;
+    }
+    const relativeFontPath = path.relative(staticOutputRoot, resolvedFontPath);
+    if (relativeFontPath.startsWith("..") || path.isAbsolute(relativeFontPath)) {
+      await route.abort("accessdenied");
+      return;
+    }
+    await route.fulfill({
+      contentType: contentTypeByExtension[path.extname(requestUrl.pathname).toLowerCase()],
+      path: resolvedFontPath,
+    });
+  });
   const runtime = installRuntimeGuard(page);
   const fileUrl = pathToFileURL(path.resolve(process.cwd(), "out", "index.html")).href;
 
