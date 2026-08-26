@@ -171,7 +171,7 @@ src/
   components/    # UI (mapa, lista, importação, perfil, conquistas, navegação)
   lib/
     parsers/     # GPX e FIT
-    storage.ts   # IndexedDB v7 (activitySummaries, activityTracks, profile, gear, routes, workouts)
+    storage.ts   # IndexedDB v9 (activitySummaries, activityTracks, dashboardStats, profile, gear, routes, workouts)
     activities.ts
     gear.ts      # Utilitários de equipamentos
     achievements.ts  # Cálculo dinâmico de conquistas
