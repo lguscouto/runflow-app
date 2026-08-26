@@ -40,6 +40,8 @@
   --color-surface-control-hover: #14284b;
   --color-surface-leaflet: #1a2030;
   --color-surface-bottom-nav: rgba(21, 26, 34, 0.92);
+  --color-skeleton-base: #1c2330;
+  --color-skeleton-highlight: #2a3344;
   --color-border-default: #2a3344;
   --color-brand-accent-soft: #ff6b3520;
   --color-brand-accent-shadow: rgba(255, 107, 53, 0.4);
@@ -218,6 +220,37 @@ a {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem 1.25rem;
+}
+
+/* Placeholder estrutural para estados de leitura, com dimensões reservadas
+   para reduzir a mudança de layout percebida enquanto os dados chegam. */
+.skeleton {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+  background: var(--color-skeleton-base);
+}
+
+.skeleton::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-skeleton-highlight),
+    transparent
+  );
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .activity-row {
@@ -434,5 +467,9 @@ a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .skeleton::after {
+    animation: none;
   }
 }

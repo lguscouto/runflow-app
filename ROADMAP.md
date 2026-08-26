@@ -25,6 +25,10 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 | **Fase 4.0: Fine-Tuning & Performance** | Implementação visual/performance e Android 13–16; matriz completa, benchmarks formais e hardware físico ainda pendentes | ⚠️ Implementada; validação formal parcial |
 | **Fase Final: Publicação** | Google Play Store Release Assinado (.aab, Proguard/R8, Keystore, Data Safety) | ⏳ Próxima |
 
+## ✅ Otimizações incrementais de UX — 2026
+
+- [x] **V4 — Skeletons nos loadings**: placeholders estruturais reutilizáveis para dashboard, lista de atividades, análises, rotas, perfil, detalhe de treino e mapas lazy; dimensões reservadas reduzem a mudança de layout percebida (CLS).
+
 ---
 
 # 🚴 Fase 3.0: Ecossistema de Ciclismo (Concluído)
@@ -195,4 +199,4 @@ flowchart TD
 
 ```
 
-*Última atualização: agosto 2026 — etapa 7 registrada como implementação concluída, com benchmark formal pendente; timeout de body WebDAV coberto por regressão.*
+*Última atualização: agosto 2026 — V4 de skeletons nos loadings implementada e validada; etapa 7 registrada como implementação concluída, com benchmark formal pendente; timeout de body WebDAV coberto por regressão.*

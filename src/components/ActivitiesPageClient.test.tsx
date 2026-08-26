@@ -143,4 +143,37 @@ describe("ActivitiesPageClient analytics boundary", () => {
     expect(await screen.findByText("activities.stats_load_error")).toBeTruthy();
     expect(screen.getByRole("button", { name: "common.retry" })).toBeTruthy();
   });
+
+  it("renders a structural list skeleton while the first page is loading", () => {
+    useActivityListMock.mockReturnValue({
+      activities: [],
+      loading: true,
+      loadingMore: false,
+      hasMore: false,
+      loadMore: vi.fn(),
+      refresh: vi.fn(),
+      totalCount: 0,
+      error: null,
+      retryLoadMore: vi.fn(),
+    });
+
+    render(createElement(ActivitiesPageClient));
+
+    expect(screen.getByTestId("activity-list-skeleton")).toBeTruthy();
+    expect(screen.getByRole("status", { name: "common.loading" })).toBeTruthy();
+  });
+
+  it("renders a chart-shaped skeleton while full-history analytics loads", async () => {
+    useActivityAnalyticsMock.mockReturnValue({
+      activities: [],
+      loading: true,
+      error: null,
+      refresh: vi.fn(),
+    });
+
+    render(createElement(ActivitiesPageClient));
+    fireEvent.click(screen.getByRole("button", { name: "stats.tab_charts" }));
+
+    expect(await screen.findByTestId("analytics-skeleton")).toBeTruthy();
+  });
 });

@@ -42,10 +42,7 @@ const ActivityMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div
-        className="rounded-xl bg-[var(--surface)] border border-[var(--border)] animate-pulse"
-        style={{ height: "360px" }}
-      />
+      <MapSkeleton height={360} />
     ),
   }
 );
@@ -55,12 +52,7 @@ const ActivityFlyover3D = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div
-        className="rounded-2xl bg-[var(--color-surface-canvas)] border border-[var(--border)] animate-pulse flex items-center justify-center text-sm text-[var(--muted)]"
-        style={{ height: "440px" }}
-      >
-        Carregando visualização 3D...
-      </div>
+      <MapSkeleton label="Carregando visualização 3D / Loading 3D view" height={440} />
     ),
   }
 );
@@ -78,6 +70,7 @@ import { StructuredWorkoutReportCard } from "@/components/StructuredWorkoutRepor
 import { useActivityDetail } from "@/hooks/useActivities";
 import { firePRConfetti } from "@/lib/confetti";
 import { haptics } from "@/lib/haptics";
+import { ActivityDetailSkeleton, MapSkeleton } from "@/components/LoadingSkeletons";
 
 import {
   formatDate,
@@ -202,7 +195,7 @@ export function ActivityDetailClient() {
   }
 
   if (loading || !activity) {
-    return <p className="text-[var(--muted)]">{t("detail.loading")}</p>;
+    return <ActivityDetailSkeleton label={t("detail.loading")} />;
   }
 
   const isCycling = activity.sport === "cycling";

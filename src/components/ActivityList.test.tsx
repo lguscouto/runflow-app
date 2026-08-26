@@ -195,4 +195,18 @@ describe("ActivityList variable-height virtualization", () => {
     fireEvent.click(screen.getByRole("button", { name: "common.retry" }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
+
+  it("shows reserved skeleton rows while requesting another page", () => {
+    render(
+      <ActivityList
+        activities={activities.slice(0, 3)}
+        hasMore
+        loadingMore
+        onLoadMore={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId("activity-list-skeleton")).toBeTruthy();
+    expect(screen.getByRole("status", { name: "common.loading" })).toBeTruthy();
+  });
 });

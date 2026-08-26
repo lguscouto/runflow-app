@@ -12,6 +12,7 @@ import { formatDistance } from "@/lib/format";
 import { MapPin, Plus, Trash2, Route, ArrowLeft, Mountain, Sparkles } from "lucide-react";
 import { detectClimbs, getCategoryBadgeStyle } from "@/lib/climb-detection";
 import { colorTokens } from "@/lib/color-tokens";
+import { RoutesSkeleton } from "@/components/LoadingSkeletons";
 
 export function RoutesPageClient() {
   const { t } = useI18n();
@@ -200,9 +201,7 @@ export function RoutesPageClient() {
 
       {/* Loading */}
       {loading && (
-        <div className="py-12 text-center text-[var(--muted)] text-sm">
-          {t("common.loading")}
-        </div>
+        <RoutesSkeleton label={t("common.loading")} />
       )}
 
       {/* Empty State */}

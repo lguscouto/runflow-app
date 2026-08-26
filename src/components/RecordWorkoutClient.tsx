@@ -63,18 +63,14 @@ import { registerAndroidBackHandler } from "@/lib/android-back";
 import type { Sport, UserProfile, ActivitySummary, GhostConfig, SavedRoute, StructuredWorkout } from "@/lib/types";
 import { getAllStoredRoutes } from "@/lib/storage";
 import { colorTokens } from "@/lib/color-tokens";
+import { MapSkeleton } from "@/components/LoadingSkeletons";
 
 const LiveMapTrack = dynamic(
   () => import("@/components/LiveMapTrack").then((m) => m.LiveMapTrack),
   {
     ssr: false,
     loading: () => (
-      <div
-        className="rounded-xl bg-[var(--surface)] border border-[var(--border)] animate-pulse flex items-center justify-center text-[var(--muted)] text-sm"
-        style={{ height: "280px" }}
-      >
-        Carregando mapa / Loading map...
-      </div>
+      <MapSkeleton label="Carregando mapa / Loading map" height={280} />
     ),
   }
 );

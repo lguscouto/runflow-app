@@ -54,15 +54,14 @@ import { v4 as uuidv4 } from "uuid";
 import { exportBackup, importBackup } from "@/lib/backup";
 import { BikeGarageManager } from "@/components/BikeGarageManager";
 import { haptics } from "@/lib/haptics";
+import { InlineSkeleton, ProfileSkeleton } from "@/components/LoadingSkeletons";
 
 const SyncPanel = dynamic(
   () => import("@/components/SyncPanel").then((module) => module.SyncPanel),
   {
     ssr: false,
     loading: () => (
-      <div className="stat-card text-sm text-[var(--muted)]" role="status">
-        Carregando sincronização...
-      </div>
+      <InlineSkeleton label="Carregando sincronização / Loading sync" />
     ),
   },
 );
@@ -503,7 +502,7 @@ export function ProfilePageClient() {
       </div>
 
       {loading ? (
-        <p className="text-[var(--muted)]">{t("common.loading")}</p>
+        <ProfileSkeleton label={t("common.loading")} />
       ) : (
         <>
           {/* TAB 1: Profile Details */}

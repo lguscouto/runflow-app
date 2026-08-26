@@ -2,11 +2,12 @@
 
 import { Suspense } from "react";
 import { ActivityDetailClient } from "@/components/ActivityDetailClient";
+import { ActivityDetailSkeleton } from "@/components/LoadingSkeletons";
 import { useI18n } from "@/lib/i18n";
 
 function Loader() {
   const { t } = useI18n();
-  return <p className="text-[var(--muted)]">{t("common.loading")}</p>;
+  return <ActivityDetailSkeleton label={t("common.loading")} />;
 }
 
 export default function ActivityDetailPage() {

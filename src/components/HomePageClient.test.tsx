@@ -51,3 +51,24 @@ describe("HomePageClient dashboard failure", () => {
     expect(refreshMock).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("HomePageClient loading state", () => {
+  it("renders stable skeleton regions for insights and dashboard data", () => {
+    useProfileDataMock.mockReturnValue({ profile: null, loading: true });
+    useDashboardMock.mockReturnValue({
+      stats: null,
+      recent: [],
+      summaries: [],
+      loading: true,
+      error: null,
+      refresh: refreshMock,
+    });
+
+    render(<HomePageClient />);
+
+    expect(screen.getByTestId("home-insights-skeleton")).toBeTruthy();
+    expect(screen.getByTestId("dashboard-stats-skeleton")).toBeTruthy();
+    expect(screen.getByRole("status", { name: "home.loading_records" })).toBeTruthy();
+    expect(screen.getByRole("status", { name: "home.loading_stats" })).toBeTruthy();
+  });
+});

@@ -4,16 +4,14 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, Flame, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { MapSkeleton } from "@/components/LoadingSkeletons";
 
 const PersonalHeatmap = dynamic(
   () => import("@/components/PersonalHeatmap").then((m) => m.PersonalHeatmap),
   {
     ssr: false,
     loading: () => (
-      <div className="h-[620px] w-full rounded-2xl bg-[var(--color-surface-map)] border border-[var(--border)] animate-pulse flex flex-col items-center justify-center gap-3 text-[var(--muted)] text-sm">
-        <Flame size={32} className="text-orange-500 animate-bounce" />
-        <span>Carregando mapa de calor...</span>
-      </div>
+      <MapSkeleton label="Carregando mapa de calor / Loading heatmap" height={620} />
     ),
   }
 );

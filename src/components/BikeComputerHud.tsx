@@ -62,15 +62,14 @@ import {
 } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 import { haptics } from "@/lib/haptics";
+import { MapSkeleton } from "@/components/LoadingSkeletons";
 
 const LiveMapTrack = dynamic(
   () => import("@/components/LiveMapTrack").then((m) => m.LiveMapTrack),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full bg-[var(--color-surface-hud)] rounded-2xl flex items-center justify-center text-xs text-[var(--muted)] animate-pulse">
-        Carregando mapa...
-      </div>
+      <MapSkeleton label="Carregando mapa / Loading map" height={280} className="h-full" />
     ),
   }
 );

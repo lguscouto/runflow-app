@@ -9,16 +9,14 @@ import { useActivityList, useActivityAnalytics } from "@/hooks/useActivities";
 import { getUserProfile } from "@/lib/profile";
 import { getPersonalRecords, getPRMap, type PRCategory } from "@/lib/prs";
 import { useI18n } from "@/lib/i18n";
+import { ActivityListSkeleton, AnalyticsSkeleton, MapSkeleton } from "@/components/LoadingSkeletons";
 
 const PersonalHeatmap = dynamic(
   () => import("@/components/PersonalHeatmap").then((m) => m.PersonalHeatmap),
   {
     ssr: false,
     loading: () => (
-      <div className="h-[520px] w-full rounded-2xl bg-[var(--color-surface-map)] border border-[var(--border)] animate-pulse flex flex-col items-center justify-center gap-3 text-[var(--muted)] text-sm">
-        <Flame size={32} className="text-orange-500 animate-bounce" />
-        <span>Carregando mapa de calor...</span>
-      </div>
+      <MapSkeleton label="Carregando mapa de calor / Loading heatmap" height={520} />
     ),
   }
 );
@@ -77,7 +75,7 @@ export function ActivitiesPageClient() {
           <h1 className="text-2xl font-bold">{t("activities.title")}</h1>
           <p className="text-[var(--muted)] text-sm">
             {loading
-              ? t("common.loading")
+              ? <span className="inline-block align-middle"><span className="sr-only">{t("common.loading")}</span><span aria-hidden="true" className="skeleton h-3 w-28" /></span>
               : t("activities.registered_count", { count: totalCount })}
           </p>
         </div>
@@ -119,9 +117,7 @@ export function ActivitiesPageClient() {
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-[var(--muted)] text-sm">
-          {t("common.loading")}
-        </div>
+        <ActivityListSkeleton label={t("common.loading")} />
       ) : activeTab === "list" ? (
         <ActivityList
           activities={activities}
@@ -134,9 +130,7 @@ export function ActivitiesPageClient() {
         />
       ) : activeTab === "stats" ? (
         analyticsLoading ? (
-          <div className="py-12 text-center text-[var(--muted)] text-sm">
-            {t("common.loading")}
-          </div>
+          <AnalyticsSkeleton label={t("common.loading")} />
         ) : analyticsError ? (
           <div role="alert" className="py-12 text-center text-[var(--muted)] text-sm">
             <p>{t("activities.stats_load_error")}</p>

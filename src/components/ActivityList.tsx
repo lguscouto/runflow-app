@@ -15,6 +15,7 @@ import {
 } from "@/lib/format";
 import { useI18n, type Language } from "@/lib/i18n";
 import { haptics } from "@/lib/haptics";
+import { ActivityListSkeleton } from "@/components/LoadingSkeletons";
 
 const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
   longestDistance: "prs.longest_distance",
@@ -292,18 +293,23 @@ export function ActivityList({
 
       {/* Sentinel e fallback acessível de carregamento */}
       {hasMore && (
-        <div ref={sentinelRef} className="py-2 text-center">
-          <button
-            type="button"
-            onClick={onLoadMore}
-            disabled={loadingMore}
-            aria-busy={loadingMore}
-            className="btn-ghost text-xs text-[var(--muted)] hover:text-[var(--text)] border border-[var(--border)] px-4 py-2 rounded-xl inline-flex items-center gap-2"
-          >
-            {loadingMore && <Loader2 size={14} className="animate-spin text-[var(--accent)]" />}
-            <span>{loadingMore ? t("common.loading") : "Carregar mais treinos"}</span>
-          </button>
-        </div>
+        <>
+          <div ref={sentinelRef} className="py-2 text-center">
+            <button
+              type="button"
+              onClick={onLoadMore}
+              disabled={loadingMore}
+              aria-busy={loadingMore}
+              className="btn-ghost text-xs text-[var(--muted)] hover:text-[var(--text)] border border-[var(--border)] px-4 py-2 rounded-xl inline-flex items-center gap-2"
+            >
+              {loadingMore && <Loader2 size={14} className="animate-spin text-[var(--accent)]" />}
+              <span>{loadingMore ? t("common.loading") : "Carregar mais treinos"}</span>
+            </button>
+          </div>
+          {loadingMore && (
+            <ActivityListSkeleton label={t("common.loading")} count={2} />
+          )}
+        </>
       )}
     </div>
   );

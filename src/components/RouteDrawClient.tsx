@@ -8,18 +8,14 @@ import { useI18n } from "@/lib/i18n";
 import type { RoutePoint, SavedRoute } from "@/lib/types";
 import { routeDistanceM } from "@/lib/route-geo";
 import { putRoute } from "@/lib/storage";
+import { MapSkeleton } from "@/components/LoadingSkeletons";
 
 const DrawMap = dynamic(
   () => import("@/components/DrawMap").then((m) => m.DrawMap),
   {
     ssr: false,
     loading: () => (
-      <div
-        className="rounded-xl bg-[var(--surface)] border border-[var(--border)] animate-pulse flex items-center justify-center text-[var(--muted)] text-sm"
-        style={{ height: "420px" }}
-      >
-        Carregando mapa / Loading map...
-      </div>
+      <MapSkeleton label="Carregando mapa / Loading map" height={420} />
     ),
   }
 );

@@ -15,6 +15,7 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - **Importação** de arquivos `.gpx` e `.fit` (arrastar ou selecionar)
 - Dados de treino armazenados **localmente** no dispositivo (IndexedDB); o Android Auto Backup permanece desabilitado
 - **Performance**: catálogo de traduções e painel de sincronização carregados sob demanda; bundle inicial medido em `410.970 bytes`
+- **UX de carregamento**: skeletons estruturais para dashboard, atividades, análises, rotas, perfil e mapas, preservando espaço durante a leitura local
 - **Acessibilidade**: respeito a `prefers-reduced-motion` (animações anuladas) e indicador de foco visível por `:focus-visible` (WCAG 2.2)
 - **App Android (APK)** via Capacitor
 - Interface multilíngue (Português do Brasil 🇧🇷 e Inglês 🇺🇸)
@@ -215,10 +216,11 @@ na pasta `android/`, com JDK 21/JBR e SDK Android configurados.
 
 ### Estado verificado do checkout 0.9.8
 
-- `npm test`: **66 arquivos / 258 testes** aprovados.
+- `npm test`: **67 arquivos / 265 testes** aprovados.
 - E2E: **25/25** aprovados.
-- Bundle: **2.689.684 bytes total / 406.135 bytes inicial**, dentro do orçamento; redução de **92.029 bytes (18,5%)** no inicial após lazy loading de i18n e SyncPanel.
+- Bundle: **2.743.613 bytes total / 410.970 bytes inicial**, dentro do orçamento; o catálogo de skeletons preserva o bundle inicial e reserva dimensões estáveis para os loadings.
 - Dashboard com leitura única de summaries (stats, PRs, VO2 Max e previsões derivados em memória, sem segunda leitura do IndexedDB).
+- Skeletons estruturais aplicados aos estados de leitura do dashboard, atividades, análises, rotas, perfil, detalhe e mapas lazy, com `role="status"`, `aria-busy` e suporte a `prefers-reduced-motion`.
 - `npm run build:mobile`: aprovado; APK debug final em
   `android/app/build/outputs/apk/debug/app-debug.apk`.
 - A matriz Android 33–36, hardware físico, medição acústica e CI hospedado permanecem fora do escopo desta entrega.

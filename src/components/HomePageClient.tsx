@@ -17,6 +17,7 @@ import { VO2MaxFitnessCard } from "@/components/VO2MaxFitnessCard";
 import { RacePredictorCard } from "@/components/RacePredictorCard";
 import type { VO2MaxEstimate, RacePrediction } from "@/lib/types";
 import { useI18n } from "@/lib/i18n";
+import { DashboardStatsSkeleton, HomeInsightsSkeleton } from "@/components/LoadingSkeletons";
 
 export function HomePageClient() {
   const { t } = useI18n();
@@ -94,9 +95,7 @@ export function HomePageClient() {
       <ConsistencyStreakCard activities={summaries} />
 
       {loadingPrs ? (
-        <div className="stat-card">
-          <p className="text-sm text-[var(--muted)]">{t("home.loading_records")}</p>
-        </div>
+        <HomeInsightsSkeleton label={t("home.loading_records")} />
       ) : (
         <>
           {prs && <PersonalRecordsCard prs={prs} />}
@@ -115,7 +114,7 @@ export function HomePageClient() {
           </button>
         </div>
       ) : loading || !stats ? (
-        <p className="text-[var(--muted)]">{t("home.loading_stats")}</p>
+        <DashboardStatsSkeleton label={t("home.loading_stats")} />
       ) : (
         <>
           <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
