@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  computeDashboardStats,
   getActivity,
-  getDashboardStats,
   listActivities,
 } from "@/lib/activities";
 import {
@@ -36,6 +36,7 @@ function useMountedRef() {
 export function useDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recent, setRecent] = useState<ActivitySummary[]>([]);
+  const [summaries, setSummaries] = useState<ActivitySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useMountedRef();
@@ -46,13 +47,17 @@ export function useDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [s, list] = await Promise.all([
-        getDashboardStats(),
+      // Uma única leitura do IndexedDB: as summaries alimentam tanto os stats
+      // (derivados em memória) quanto os consumidores de analytics da Home,
+      // evitando leituras duplicadas por visita.
+      const [list, recentItems] = await Promise.all([
+        getAllStoredSummaries(),
         listActivities(5),
       ]);
       if (!mountedRef.current || generation !== generationRef.current) return;
-      setStats(s);
-      setRecent(list);
+      setSummaries(list);
+      setStats(computeDashboardStats(list));
+      setRecent(recentItems);
     } catch (reason) {
       if (mountedRef.current && generation === generationRef.current) {
         setError(getErrorMessage(reason));
@@ -68,7 +73,7 @@ export function useDashboard() {
     refresh();
   }, [refresh]);
 
-  return { stats, recent, loading, error, refresh };
+  return { stats, recent, summaries, loading, error, refresh };
 }
 
 export function useActivityList(pageSize = 50) {

@@ -3,13 +3,15 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useActivityDetail, useActivityList, useDashboard } from "./useActivities";
 import type { ActivityPage } from "@/lib/storage";
-import { listStoredActivitiesPaged } from "@/lib/storage";
-import { getActivity, getDashboardStats, listActivities } from "@/lib/activities";
+import { getAllStoredSummaries, listStoredActivitiesPaged } from "@/lib/storage";
+import { getActivity, listActivities } from "@/lib/activities";
+import type { ActivitySummary } from "@/lib/types";
 
 vi.mock("@/lib/storage", async () => {
   const actual = await vi.importActual<typeof import("@/lib/storage")>("@/lib/storage");
   return {
     ...actual,
+    getAllStoredSummaries: vi.fn(),
     listStoredActivitiesPaged: vi.fn(),
   };
 });
@@ -19,7 +21,6 @@ vi.mock("@/lib/activities", async () => {
   return {
     ...actual,
     getActivity: vi.fn(),
-    getDashboardStats: vi.fn(),
     listActivities: vi.fn(),
   };
 });
@@ -64,13 +65,13 @@ const page2: ActivityPage = {
 
 describe("useActivityList", () => {
   const listMock = vi.mocked(listStoredActivitiesPaged);
-  const dashboardStatsMock = vi.mocked(getDashboardStats);
+  const summariesMock = vi.mocked(getAllStoredSummaries);
   const recentMock = vi.mocked(listActivities);
   const activityMock = vi.mocked(getActivity);
 
   beforeEach(() => {
     listMock.mockReset();
-    dashboardStatsMock.mockReset();
+    summariesMock.mockReset();
     recentMock.mockReset();
     activityMock.mockReset();
   });
@@ -114,7 +115,7 @@ describe("useActivityList", () => {
   });
 
   it("clears dashboard loading and exposes storage failures", async () => {
-    dashboardStatsMock.mockRejectedValueOnce(new Error("dashboard storage down"));
+    summariesMock.mockRejectedValueOnce(new Error("dashboard storage down"));
     recentMock.mockResolvedValueOnce([]);
     const { result } = renderHook(() => useDashboard());
 
@@ -123,6 +124,57 @@ describe("useActivityList", () => {
     expect(result.current.error).toBe("activities.load_error");
     expect(result.current.stats).toBeNull();
     expect(result.current.recent).toEqual([]);
+    expect(result.current.summaries).toEqual([]);
+  });
+
+  it("reads summaries once and derives stats without extra storage calls", async () => {
+    const all: ActivitySummary[] = [
+      {
+        id: "a",
+        name: "A",
+        sport: "running",
+        startedAt: new Date(Date.now() - 1000).toISOString(),
+        durationSec: 600,
+        distanceM: 2000,
+        avgPaceSecKm: 300,
+        elevationGainM: 0,
+        avgHr: null,
+        calories: null,
+        source: "synthetic-test",
+        fileName: null,
+        gearId: null,
+      },
+      {
+        id: "b",
+        name: "B",
+        sport: "running",
+        startedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        durationSec: 1800,
+        distanceM: 5000,
+        avgPaceSecKm: 360,
+        elevationGainM: 0,
+        avgHr: null,
+        calories: null,
+        source: "synthetic-test",
+        fileName: null,
+        gearId: null,
+      },
+    ];
+    summariesMock.mockResolvedValueOnce(all);
+    recentMock.mockResolvedValueOnce([all[0]]);
+    const { result } = renderHook(() => useDashboard());
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(summariesMock).toHaveBeenCalledTimes(1);
+    expect(recentMock).toHaveBeenCalledTimes(1);
+    expect(result.current.summaries).toEqual(all);
+    expect(result.current.recent).toEqual([all[0]]);
+    // Atividade "a" é da última hora; "b" tem mais de 30 dias.
+    expect(result.current.stats?.totalActivities).toBe(2);
+    expect(result.current.stats?.totalDistanceM).toBe(7000);
+    expect(result.current.stats?.thisWeekActivities).toBe(1);
+    expect(result.current.stats?.thisWeekDistanceM).toBe(2000);
   });
 
   it("clears detail loading and exposes a retryable storage failure", async () => {

@@ -207,8 +207,14 @@ export async function deleteActivity(id: string): Promise<boolean> {
   return removeActivity(id);
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const all = await getAllStoredSummaries();
+/**
+ * Deriva as estatísticas do dashboard a partir de uma lista já carregada de resumos.
+ * Pura — permite reuso quando o chamador já possui as summaries em memória,
+ * evitando uma segunda leitura do IndexedDB.
+ */
+export function computeDashboardStats(
+  all: ActivitySummary[]
+): DashboardStats {
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
   let totalDistanceM = 0;
@@ -232,6 +238,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     thisWeekDistanceM,
     thisWeekActivities,
   };
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  return computeDashboardStats(await getAllStoredSummaries());
 }
 
 export function createDemoActivity(): ParsedActivity {

@@ -213,9 +213,10 @@ na pasta `android/`, com JDK 21/JBR e SDK Android configurados.
 
 ### Estado verificado do checkout 0.9.8
 
-- `npm test`: **65 arquivos / 253 testes** aprovados.
+- `npm test`: **66 arquivos / 258 testes** aprovados.
 - E2E: **25/25** aprovados.
-- Bundle: **2.688.935 bytes total / 498.164 bytes inicial**, dentro do orçamento.
+- Bundle: **2.691.954 bytes total / 498.164 bytes inicial**, dentro do orçamento.
+- Dashboard com leitura única de summaries (stats, PRs, VO2 Max e previsões derivados em memória, sem segunda leitura do IndexedDB).
 - `npm run build:mobile`: aprovado; APK debug final em
   `android/app/build/outputs/apk/debug/app-debug.apk`.
 - A matriz Android 33–36, hardware físico, medição acústica e CI hospedado permanecem fora do escopo desta entrega.

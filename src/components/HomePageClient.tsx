@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { Play, Upload, Zap, Flame } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
@@ -8,63 +8,45 @@ import { ActivityList } from "@/components/ActivityList";
 import { WeeklyGoalsCard } from "@/components/WeeklyGoalsCard";
 import { useDashboard } from "@/hooks/useActivities";
 import { formatDistance, formatDuration } from "@/lib/format";
-import { getUserProfile } from "@/lib/profile";
-import { getPersonalRecords, getPRMap, type PersonalRecords, type PRCategory } from "@/lib/prs";
-import { getAllStoredSummaries } from "@/lib/storage";
+import { useProfileData } from "@/hooks/useProfileData";
+import { getPersonalRecords, getPRMap, type PRCategory } from "@/lib/prs";
 import { PersonalRecordsCard } from "@/components/PersonalRecordsCard";
 import { ConsistencyStreakCard } from "@/components/ConsistencyStreakCard";
 import { estimateUserVO2Max, calculateRacePredictions } from "@/lib/vo2max";
 import { VO2MaxFitnessCard } from "@/components/VO2MaxFitnessCard";
 import { RacePredictorCard } from "@/components/RacePredictorCard";
-import type { VO2MaxEstimate, RacePrediction, ActivitySummary } from "@/lib/types";
+import type { VO2MaxEstimate, RacePrediction } from "@/lib/types";
 import { useI18n } from "@/lib/i18n";
 
 export function HomePageClient() {
   const { t } = useI18n();
-  const { stats, recent, loading, error, refresh } = useDashboard();
-  const [activitiesList, setActivitiesList] = useState<ActivitySummary[]>([]);
-  const [prs, setPrs] = useState<PersonalRecords | null>(null);
-  const [prMap, setPrMap] = useState<Record<string, PRCategory[]>>({});
-  const [vo2Estimate, setVo2Estimate] = useState<VO2MaxEstimate | null>(null);
-  const [racePredictions, setRacePredictions] = useState<RacePrediction[]>([]);
-  const [loadingPrs, setLoadingPrs] = useState(true);
-  const [profileName, setProfileName] = useState<string | null>(null);
+  // Uma única leitura de summaries compartilhada entre stats, recentes e analytics.
+  const { stats, recent, summaries, loading, error, refresh } = useDashboard();
+  const { profile, loading: loadingProfile } = useProfileData();
 
-  useEffect(() => {
-    async function loadPRs() {
-      try {
-        const [profile, allActivities] = await Promise.all([
-          getUserProfile(),
-          getAllStoredSummaries(),
-        ]);
-        setActivitiesList(allActivities);
-        if (profile?.name) {
-          setProfileName(profile.name);
-        }
-        const computedPrs = getPersonalRecords(allActivities, profile);
-        setPrs(computedPrs);
-        setPrMap(getPRMap(allActivities, computedPrs));
+  // Métricas derivadas em memória — sem nova leitura do IndexedDB e sem
+  // refetch em cascata quando a lista de recentes muda.
+  const prs = useMemo(
+    () => getPersonalRecords(summaries, profile),
+    [summaries, profile],
+  );
+  const prMap = useMemo(() => getPRMap(summaries, prs), [summaries, prs]);
+  const vo2Estimate = useMemo<VO2MaxEstimate | null>(
+    () => estimateUserVO2Max(summaries, profile),
+    [summaries, profile],
+  );
+  const racePredictions = useMemo<RacePrediction[]>(
+    () => calculateRacePredictions(summaries, profile),
+    [summaries, profile],
+  );
 
-        // Calcular VO2 Max e Previsões de Provas
-        const estimatedVo2 = estimateUserVO2Max(allActivities, profile);
-        setVo2Estimate(estimatedVo2);
-
-        const predictions = calculateRacePredictions(allActivities, profile);
-        setRacePredictions(predictions);
-      } catch (err) {
-        console.error("Erro ao calcular métricas de performance:", err);
-      } finally {
-        setLoadingPrs(false);
-      }
-    }
-    loadPRs();
-  }, [recent]);
+  const loadingPrs = loading || loadingProfile;
 
   return (
     <div className="space-y-8">
       <section>
         <h1 className="text-3xl font-bold tracking-tight mb-2">
-          {profileName ? t("home.greeting", { name: profileName }) : t("home.title")}
+          {profile?.name ? t("home.greeting", { name: profile.name }) : t("home.title")}
         </h1>
         <p className="text-[var(--muted)] max-w-xl">
           {t("home.subtitle")}
@@ -109,7 +91,7 @@ export function HomePageClient() {
 
       <WeeklyGoalsCard />
 
-      <ConsistencyStreakCard activities={activitiesList} />
+      <ConsistencyStreakCard activities={summaries} />
 
       {loadingPrs ? (
         <div className="stat-card">

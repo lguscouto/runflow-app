@@ -4,8 +4,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { HomePageClient } from "./HomePageClient";
 
-const { useDashboardMock, refreshMock } = vi.hoisted(() => ({
+const { useDashboardMock, useProfileDataMock, refreshMock } = vi.hoisted(() => ({
   useDashboardMock: vi.fn(),
+  useProfileDataMock: vi.fn(),
   refreshMock: vi.fn(),
 }));
 
@@ -15,11 +16,10 @@ vi.mock("next/link", () => ({
   ),
 }));
 vi.mock("@/hooks/useActivities", () => ({ useDashboard: useDashboardMock }));
+vi.mock("@/hooks/useProfileData", () => ({ useProfileData: useProfileDataMock }));
 vi.mock("@/lib/i18n", () => ({
   useI18n: () => ({ t: (key: string) => key, language: "en" }),
 }));
-vi.mock("@/lib/profile", () => ({ getUserProfile: vi.fn(() => new Promise(() => {})) }));
-vi.mock("@/lib/storage", () => ({ getAllStoredSummaries: vi.fn(() => new Promise(() => {})) }));
 vi.mock("@/components/WeeklyGoalsCard", () => ({ WeeklyGoalsCard: () => null }));
 vi.mock("@/components/ConsistencyStreakCard", () => ({ ConsistencyStreakCard: () => null }));
 vi.mock("@/components/PersonalRecordsCard", () => ({ PersonalRecordsCard: () => null }));
@@ -28,9 +28,11 @@ vi.mock("@/components/RacePredictorCard", () => ({ RacePredictorCard: () => null
 
 beforeEach(() => {
   refreshMock.mockReset();
+  useProfileDataMock.mockReturnValue({ profile: null, loading: false });
   useDashboardMock.mockReturnValue({
     stats: null,
     recent: [],
+    summaries: [],
     loading: false,
     error: "activities.load_error",
     refresh: refreshMock,
