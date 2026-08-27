@@ -30,7 +30,7 @@ Pesquisa de mercado e análise comparativa baseada nos aplicativos líderes da c
 - [x] **V4 — Skeletons nos loadings**: placeholders estruturais reutilizáveis para dashboard, lista de atividades, análises, rotas, perfil, detalhe de treino e mapas lazy; dimensões reservadas reduzem a mudança de layout percebida (CLS).
 - [x] **P2 — Stats incrementais no dashboard**: agregado persistido no IndexedDB atualizado por delta em inserções/edições/exclusões; migração v9 com índice temporal numérico e rebuild transacional em backup/sync; indicadores semanais consultam apenas a janela móvel de 7 dias.
 - [x] **P4 — Gets paralelos em backup/sync**: `getAllStoredActivities` lê tracks em lotes paralelos de até 32 na mesma transação, reconstruindo a ordem por índice de IDs e limitando as leituras pendentes sem enfileirar todo o histórico; o resultado final continua proporcional ao histórico, e os fluxos de backup e sincronização reutilizam essa reconstrução sem criar transações concorrentes entre stores.
-- [x] **V3/V5 — Modo claro e auditoria de contraste**: alternância global persistente no cabeçalho (modo escuro preservado como padrão), tokens semânticos claros com ajuste de status/ações, integração da barra de status Android e auditoria automatizada WCAG AA para os pares essenciais; HUDs de gravação e Flyover mantêm seus temas visuais próprios.
+- [x] **V3/V5 — Modo claro e auditoria de contraste**: alternância global persistente no cabeçalho (modo escuro preservado como padrão), tokens semânticos claros com ajuste de status/ações, integração da barra de status Android e auditoria automatizada WCAG AA para os pares essenciais; HUDs de gravação e Flyover mantêm seus temas visuais próprios. O cold start/deep link do Capacitor também resolve o fallback para o `index.html` correto sem 404 de assets.
 
 ---
 
@@ -127,7 +127,7 @@ Divisão estratégica em **12 etapas** estruturadas em 3 pilares técnicos funda
 - [x] `SyncPanel` carregado sob demanda somente ao abrir a aba de sincronização no Perfil, com fallback de carregamento; o `peerjs` permanece lazy dentro do fluxo P2P
 - [x] Catálogo de i18n (`i18n-dictionaries.ts`, ~104 KB) removido do bundle inicial e carregado/cacheado após a resolução do idioma, com fallback mínimo para o estado inicial
 - [x] Memoização com `useMemo`/`useCallback`/`React.memo` em cálculos intensivos (NP™ Coggan, Zonas de Potência, ClimbPro, VO2 Max)
-- [x] Bundle atual medido em `2.790.957` bytes total e `417.541` bytes inicial, dentro do orçamento após code splitting, skeletons e stats incrementais
+- [x] Bundle atual medido em `2.791.632` bytes total e `417.541` bytes inicial, dentro do orçamento após code splitting, skeletons, stats incrementais e a correção de deep links Capacitor
 - [x] Stats incrementais no Dashboard: `dashboardStats` (schema v9) mantém totais históricos por delta em `putActivity`/`removeActivity`; `startedAtMs` + índice numérico preservam a janela semanal para datas com offset, e `getStoredDashboardStats` lê apenas essa janela. Backup e sync mantêm o agregado na mesma transação, com rebuild seguro apenas quando necessário.
 
 ---
@@ -202,4 +202,4 @@ flowchart TD
 
 ```
 
-*Última atualização: agosto 2026 — V4 de skeletons nos loadings, P2 de stats incrementais, P4 de leituras paralelas em backup/sync e V3/V5 de modo claro/auditoria de contraste implementados e validados; etapa 7 registrada como implementação concluída, com benchmark formal pendente; timeout de body WebDAV coberto por regressão.*
+*Última atualização: agosto 2026 — V4 de skeletons nos loadings, P2 de stats incrementais, P4 de leituras paralelas em backup/sync, V3/V5 de modo claro/auditoria de contraste e correção de cold start/deep links Capacitor implementados e validados; etapa 7 registrada como implementação concluída, com benchmark formal pendente; timeout de body WebDAV coberto por regressão.*

@@ -6,7 +6,7 @@
 
 **Architecture:** Separar o tratamento de assets do export estático por destino. O export para `file://` continuará usando caminhos relativos e o bootstrap existente; o export empacotado no Capacitor deverá preservar caminhos absolutos na raiz (`/_next/...`), que correspondem ao servidor `https://localhost` do WebView. A correção deve ser coberta por teste de exportação e por uma regressão real no emulador.
 
-**Tech Stack:** Next.js static export, Capacitor Android, WebView `https://localhost`, TypeScript/JavaScript, Vitest, Playwright/Puppeteer via CDP, ADB/Gradle.
+**Tech Stack:** Next.js static export, Capacitor Android, WebView `https://localhost`, TypeScript/JavaScript, Vitest, `@playwright/test` via CDP, ADB/Gradle.
 
 ---
 
@@ -89,13 +89,13 @@ Expected after the test is written: the Capacitor case fails for the current rel
 **Objective:** Impedir regressão no fluxo que falhou neste diagnóstico.
 
 **Files:**
-- Create or modify: `scripts/android/test-capacitor-deep-links.mjs` ou equivalente de teste existente
+- Create: `scripts/android/test-capacitor-deep-links.mjs`
 - Modify: `package.json` se for criado um script explícito de smoke test
 
 **Steps:**
 1. Instalar o APK recém-gerado no `Pixel_8` sem limpar dados por padrão.
 2. Iniciar `com.runflow.app`, localizar o socket `webview_devtools_remote_<PID>` e refazer o forward TCP 9222 após cada relaunch/reinstall.
-3. Conectar via CDP usando `browserURL`/Puppeteer, evitando WebSocket cru em Android 14+.
+3. Conectar via CDP usando `chromium.connectOverCDP` de `@playwright/test`, evitando WebSocket cru em Android 14+.
 4. Para cada rota `/`, `/gravar/`, `/atividades/`, `/importar/`, `/rotas/`, `/perfil/` e `/heatmap/`, abrir diretamente após cold start/reload e verificar:
    - `window.location.pathname` correto;
    - `main` presente;
@@ -219,6 +219,8 @@ git diff --stat
 ## Estado atual
 
 - Diagnóstico: concluído.
-- Implementação da correção: pendente, não executar sem solicitação explícita.
+- Implementação da correção: concluída nesta execução.
 - Plano salvo em: `.hermes/plans/2026-08-27_105639-runflow-android-deep-link.md`.
-- Testes realizados nesta sessão: instalação/launch, CDP, navegação interna, alternância de temas, cold-start/deep-link reproduzido e inspeção visual da home.
+- Arquivos implementados: `scripts/build/patch-file-export.mjs`, `scripts/build/build-mobile.mjs`, `scripts/build/patch-file-export.test.ts`, `scripts/android/test-capacitor-deep-links.mjs`, `src/lib/capacitor-deep-link.ts`, `src/lib/capacitor-deep-link.test.ts`, `src/components/CapacitorDeepLinkRedirect.tsx`, `src/app/page.tsx` e `package.json`.
+- Testes realizados nesta sessão: instalação/launch, CDP, navegação interna, alternância de temas, cold-start/deep-link reproduzido antes da correção, export `file://`, export Capacitor, testes unitários, TypeScript, lint, E2E web, build mobile e deep links diretos no APK final.
+- Resultado final do emulador: 7 rotas profundas carregadas com conteúdo completo, tema claro persistido, zero 4xx de assets, zero erros de console e zero overflow horizontal.

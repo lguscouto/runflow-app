@@ -14,12 +14,13 @@ App **open source** e **gratuito** para gerenciar treinos de corrida — alterna
 - **Gravar treino** com GPS ao vivo (distância, tempo, ritmo, mapa) — estilo Strava
 - **Importação** de arquivos `.gpx` e `.fit` (arrastar ou selecionar)
 - Dados de treino armazenados **localmente** no dispositivo (IndexedDB); o Android Auto Backup permanece desabilitado
-- **Performance**: catálogo de traduções e painel de sincronização carregados sob demanda; bundle medido em `2.790.957 bytes total / 417.541 bytes inicial`, dentro do orçamento
+- **Performance**: catálogo de traduções e painel de sincronização carregados sob demanda; bundle medido em `2.791.632 bytes total / 417.541 bytes inicial`, dentro do orçamento
 - **Estatísticas incrementais**: totais históricos do dashboard mantidos em agregado local atualizado por delta; a semana consulta apenas a janela móvel de 7 dias, sem reduzir todo o histórico a cada visita
 - **Backup e sincronização otimizados**: summaries e tracks são lidos em lotes paralelos de até 32 na mesma transação; os fluxos de backup e sincronização reutilizam essa reconstrução sem enfileirar todo o histórico de tracks nem criar leituras concorrentes entre stores, mantendo o resultado final proporcional ao histórico
 - **UX de carregamento**: skeletons estruturais para dashboard, atividades, análises, rotas, perfil e mapas, preservando espaço durante a leitura local
 - **Acessibilidade**: respeito a `prefers-reduced-motion` (animações anuladas) e indicador de foco visível por `:focus-visible` (WCAG 2.2)
 - **App Android (APK)** via Capacitor
+- **Deep links Android**: cold start em rotas estáticas resolve o fallback do WebView sem 404 de assets, preservando o conteúdo e o tema persistido
 - Interface multilíngue (Português do Brasil 🇧🇷 e Inglês 🇺🇸)
 - **Assistente de configuração inicial (Wizard de Boas-vindas)** para novos usuários
 - **Recordes pessoais (PRs)** automáticos (distância, ritmo, duração e ganho de altitude)
@@ -218,15 +219,17 @@ na pasta `android/`, com JDK 21/JBR e SDK Android configurados.
 
 ### Estado verificado do checkout 0.9.8
 
-- `npm test`: **71 arquivos / 284 testes** aprovados.
+- `npm test`: **73 arquivos / 291 testes** aprovados.
 - E2E: **26/26** aprovados.
-- Bundle: **2.790.957 bytes total / 417.541 bytes inicial**, dentro do orçamento; o agregado incremental de stats mantém os totais históricos sem reduzir todo o histórico a cada visita.
+- Bundle: **2.791.632 bytes total / 417.541 bytes inicial**, dentro do orçamento; o agregado incremental de stats mantém os totais históricos sem reduzir todo o histórico a cada visita.
 - Dashboard com agregado incremental de stats: gravações, edições, exclusões e sync atualizam os totais históricos por delta transacional; backup e recuperação usam rebuild transacional quando necessário; a Home ainda carrega summaries para PRs, VO2 Max e previsões, sem reduzir o histórico para obter os totais.
 - Skeletons estruturais aplicados aos estados de leitura do dashboard, atividades, análises, rotas, perfil, detalhe e mapas lazy, com `role="status"`, `aria-busy` e suporte a `prefers-reduced-motion`.
 - Modo claro disponível pelo botão sol/lua no cabeçalho, com preferência local persistida (`runflow_theme`), tokens semânticos próprios, texto de ação com contraste AA e atualização da barra de status no Android; o modo escuro continua sendo o padrão.
 - Auditoria de contraste executável com `npm run quality:contrast`, cobrindo os pares essenciais de texto, accent, sucesso e erro nos dois temas conforme WCAG AA.
-- `npm run build:mobile`: aprovado; APK debug final em
+- `npm run build:mobile`: aprovado; o export Capacitor preserva assets absolutos em `/_next/...` e o APK debug final fica em
   `android/app/build/outputs/apk/debug/app-debug.apk`.
+- `npm run test:android:deep-links`: aprovado no emulador conectado via CDP, cobrindo cold start/deep links e preservação de query string.
+- Deep links/cold start validados no `Pixel_8` (Android API 37) para `/`, `/gravar/`, `/atividades/`, `/importar/`, `/rotas/`, `/perfil/` e `/heatmap/`: conteúdo completo, tema claro persistido, sem 404 de assets, erros de console ou overflow horizontal.
 - A matriz Android 33–36, hardware físico, medição acústica e CI hospedado permanecem fora do escopo desta entrega.
 
 ## Licença
