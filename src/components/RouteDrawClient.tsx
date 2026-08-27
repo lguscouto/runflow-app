@@ -115,10 +115,11 @@ export function RouteDrawClient() {
 
       {/* Name input */}
       <div>
-        <label className="block text-xs font-semibold text-[var(--muted)] mb-1.5">
+        <label htmlFor="route-draw-name" className="block text-xs font-semibold text-[var(--muted)] mb-1.5">
           {language === "en" ? "Route Name" : "Nome da Rota"}
         </label>
         <input
+          id="route-draw-name"
           type="text"
           value={name}
           onChange={(e) => {
@@ -141,7 +142,7 @@ export function RouteDrawClient() {
 
       {/* Save success message */}
       {saved && (
-        <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-sm font-semibold text-center">
+        <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--color-status-positive)] text-sm font-semibold text-center">
           ✅ {t("route_draw.saved")}
         </div>
       )}
@@ -153,7 +154,7 @@ export function RouteDrawClient() {
         disabled={!canSave}
         className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base transition-all ${
           canSave
-            ? "bg-[var(--accent)] text-white active:scale-95"
+            ? "bg-[var(--accent)] text-[var(--on-accent)] active:scale-95"
             : "border border-[var(--border)] text-[var(--muted)] cursor-not-allowed"
         }`}
       >
@@ -162,7 +163,7 @@ export function RouteDrawClient() {
       </button>
 
       {points.length < 2 && points.length > 0 && (
-        <p className="text-xs text-amber-500/80 text-center">{t("route_draw.min_points")}</p>
+        <p className="text-xs text-[var(--color-status-warning)] text-center">{t("route_draw.min_points")}</p>
       )}
     </div>
   );

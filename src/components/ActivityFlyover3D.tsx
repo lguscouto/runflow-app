@@ -37,13 +37,21 @@ export function ActivityFlyover3D({
   activityName,
   onClose,
 }: ActivityFlyover3DProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const fullscreenLabel = (() => {
+    const translated = t("flyover.fullscreen");
+    return translated === "flyover.fullscreen"
+      ? language === "en"
+        ? "Fullscreen"
+        : "Tela cheia"
+      : translated;
+  })();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Fallback state on GPU/WebGL errors
-  const [webglError, setWebglError] = useState<string | null>(null);
+  const [webglErrorKey, setWebglErrorKey] = useState<string | null>(null);
 
   // Playback States
   const [isPlaying, setIsPlaying] = useState(true);
@@ -69,6 +77,7 @@ export function ActivityFlyover3D({
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cleanupSceneRef = useRef<(() => void) | null>(null);
   const animFrameIdRef = useRef<number | null>(null);
   const rafScheduledRef = useRef(false);
   const rendererDisposedRef = useRef(false);
@@ -84,7 +93,9 @@ export function ActivityFlyover3D({
     try {
       const data = processTrackPoints3D(points);
       if (!data || data.points.length < 2) {
-        setWebglError("Pontos GPS insuficientes para gerar a visualização 3D.");
+        trackDataRef.current = null;
+        curveRef.current = null;
+        setWebglErrorKey("flyover.insufficient_points");
         return;
       }
 
@@ -96,9 +107,12 @@ export function ActivityFlyover3D({
       curve.curveType = "catmullrom";
       curve.tension = 0.5;
       curveRef.current = curve;
+      setWebglErrorKey(null);
     } catch (err) {
       console.warn("Erro ao processar pontos 3D:", err);
-      setWebglError("Falha ao processar trajetória 3D.");
+      trackDataRef.current = null;
+      curveRef.current = null;
+      setWebglErrorKey("flyover.processing_error");
     }
   }, [points]);
 
@@ -123,9 +137,55 @@ export function ActivityFlyover3D({
       segments: Math.min(data.points.length * 3, 1_500),
     });
 
-    let renderer: THREE.WebGLRenderer;
-    let scene: THREE.Scene;
-    let camera: THREE.PerspectiveCamera;
+    let renderer: THREE.WebGLRenderer | undefined;
+    let scene: THREE.Scene | undefined;
+    let camera: THREE.PerspectiveCamera | undefined;
+    let handleResize: (() => void) | null = null;
+    let onContextLost: ((event: Event) => void) | null = null;
+    let cleanupComplete = false;
+
+    const cleanup = () => {
+      if (cleanupComplete) return;
+      cleanupComplete = true;
+      rendererDisposedRef.current = true;
+      if (cleanupSceneRef.current === cleanup) cleanupSceneRef.current = null;
+
+      if (animFrameIdRef.current !== null) {
+        cancelAnimationFrame(animFrameIdRef.current);
+        animFrameIdRef.current = null;
+      }
+      rafScheduledRef.current = false;
+
+      if (handleResize) window.removeEventListener("resize", handleResize);
+      if (onContextLost) canvas.removeEventListener("webglcontextlost", onContextLost);
+
+      if (scene) {
+        scene.traverse((object) => {
+          if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points) {
+            object.geometry?.dispose();
+            if (object.material) {
+              if (Array.isArray(object.material)) object.material.forEach((material) => material.dispose());
+              else object.material.dispose();
+            }
+          }
+        });
+        scene.clear();
+      }
+
+      try {
+        renderer?.dispose();
+        renderer?.forceContextLoss?.();
+      } catch {
+        // ignore disposal errors
+      }
+
+      sceneRef.current = null;
+      cameraRef.current = null;
+      rendererRef.current = null;
+      runnerMeshRef.current = null;
+      runnerLightRef.current = null;
+    };
+    cleanupSceneRef.current = cleanup;
 
     try {
       // Cena
@@ -156,18 +216,21 @@ export function ActivityFlyover3D({
       rendererDisposedRef.current = false;
     } catch (err) {
       console.warn("WebGL initialization failed:", err);
-      setWebglError("WebGL não suportado ou contexto indisponível no dispositivo.");
+      cleanup();
+      setWebglErrorKey("flyover.webgl_unavailable");
       return;
     }
 
-    const onContextLost = (e: Event) => {
+    if (!renderer || !scene || !camera) {
+      cleanup();
+      setWebglErrorKey("flyover.webgl_unavailable");
+      return;
+    }
+
+    onContextLost = (e: Event) => {
       e.preventDefault();
-      rendererDisposedRef.current = true;
-      if (animFrameIdRef.current !== null) {
-        cancelAnimationFrame(animFrameIdRef.current);
-        animFrameIdRef.current = null;
-      }
-      setWebglError("Contexto gráfico WebGL temporariamente perdido pelo dispositivo.");
+      setWebglErrorKey("flyover.context_lost");
+      cleanup();
     };
 
     canvas.addEventListener("webglcontextlost", onContextLost);
@@ -313,12 +376,13 @@ export function ActivityFlyover3D({
       runnerMeshRef.current = runnerGroup;
     } catch (err) {
       console.warn("Error building Three.js scene:", err);
-      setWebglError("Erro ao construir geometria 3D.");
+      cleanup();
+      setWebglErrorKey("flyover.geometry_error");
       return;
     }
 
     // Resize Handler
-    const handleResize = () => {
+    handleResize = () => {
       if (!containerRef.current || !rendererRef.current || !cameraRef.current) return;
       const w = containerRef.current.clientWidth || 800;
       const h = containerRef.current.clientHeight || 440;
@@ -328,46 +392,8 @@ export function ActivityFlyover3D({
     };
     window.addEventListener("resize", handleResize);
 
-    return () => {
-      if (rendererDisposedRef.current) return;
-      rendererDisposedRef.current = true;
-      window.removeEventListener("resize", handleResize);
-
-      // Desalocação profunda recursiva de objetos WebGL/Three.js
-      scene.traverse((object) => {
-        if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points) {
-          if (object.geometry) {
-            object.geometry.dispose();
-          }
-          if (object.material) {
-            if (Array.isArray(object.material)) {
-              object.material.forEach((mat) => {
-                mat.dispose();
-              });
-            } else {
-              object.material.dispose();
-            }
-          }
-        }
-      });
-
-      canvas.removeEventListener("webglcontextlost", onContextLost);
-
-      try {
-        scene.clear();
-        renderer.dispose();
-        renderer.forceContextLoss?.();
-      } catch {
-        // ignore disposal errors
-      }
-
-      sceneRef.current = null;
-      cameraRef.current = null;
-      rendererRef.current = null;
-      runnerMeshRef.current = null;
-      runnerLightRef.current = null;
-    };
-  }, []);
+    return cleanup;
+  }, [points]);
 
   // Refs para controle contínuo sem re-render do loop de 60fps
   const isPlayingRef = useRef(isPlaying);
@@ -380,7 +406,7 @@ export function ActivityFlyover3D({
 
   // 3. Loop Estável de Animação e Renderização da Câmera (Single Loop desacoplado)
   useEffect(() => {
-    if (webglError) return;
+    if (webglErrorKey) return;
 
     let lastTime = performance.now();
     let lastUiUpdateTime = performance.now();
@@ -478,8 +504,8 @@ export function ActivityFlyover3D({
           renderer.render(scene, camera);
         } catch (err) {
           console.warn("Render call failed:", err);
-          rendererDisposedRef.current = true;
-          setWebglError("Contexto gráfico interrompido.");
+          cleanupSceneRef.current?.();
+          setWebglErrorKey("flyover.render_error");
           return;
         }
       }
@@ -513,7 +539,7 @@ export function ActivityFlyover3D({
       animFrameIdRef.current = null;
       rafScheduledRef.current = false;
     };
-  }, [webglError]);
+  }, [webglErrorKey]);
 
   // ── Controles de Toque / Mouse para Modo Órbita ──
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -569,16 +595,16 @@ export function ActivityFlyover3D({
   };
 
   // Se houver erro WebGL, renderiza fallback limpo com botão para retornar ao 2D
-  if (webglError) {
+  if (webglErrorKey) {
     return (
       <div className="relative w-full rounded-2xl overflow-hidden border border-amber-500/30 bg-[var(--color-surface-canvas)] p-6 flex flex-col items-center justify-center text-center gap-4 min-h-[320px]">
-        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[var(--color-status-warning)]">
           <AlertTriangle size={24} />
         </div>
         <div className="space-y-1 max-w-md">
-          <h3 className="font-bold text-white text-base">Visualização 3D Indisponível</h3>
+          <h3 className="font-bold text-[var(--text)] text-base">{t("flyover.unavailable_title")}</h3>
           <p className="text-xs text-[var(--muted)] leading-relaxed">
-            {webglError}
+            {t(webglErrorKey)}
           </p>
         </div>
         {onClose && (
@@ -588,7 +614,7 @@ export function ActivityFlyover3D({
             className="btn-primary text-xs flex items-center gap-2 mt-1"
           >
             <MapIcon size={14} />
-            Voltar ao Mapa 2D
+            {t("flyover.back_to_map")}
           </button>
         )}
       </div>
@@ -614,7 +640,7 @@ export function ActivityFlyover3D({
       />
 
       {/* ── Top Bar HUD ── */}
-      <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none gap-2">
+      <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none gap-2 text-white">
         <div className="flex items-center gap-2 pointer-events-auto bg-black/50 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl text-xs font-semibold">
           <Video size={15} className="text-[var(--accent)]" />
           <span className="truncate max-w-[140px] sm:max-w-[220px]">
@@ -630,7 +656,7 @@ export function ActivityFlyover3D({
               onClick={() => setCameraMode("chase")}
               className={`p-1.5 rounded-lg text-xs flex items-center gap-1 transition-all ${
                 cameraMode === "chase"
-                  ? "bg-[var(--accent)] text-white shadow"
+                  ? "bg-[var(--accent)] text-[var(--on-accent)] shadow"
                   : "text-white/60 hover:text-white"
               }`}
               title={t("flyover.camera_chase")}
@@ -643,7 +669,7 @@ export function ActivityFlyover3D({
               onClick={() => setCameraMode("aerial")}
               className={`p-1.5 rounded-lg text-xs flex items-center gap-1 transition-all ${
                 cameraMode === "aerial"
-                  ? "bg-[var(--accent)] text-white shadow"
+                  ? "bg-[var(--accent)] text-[var(--on-accent)] shadow"
                   : "text-white/60 hover:text-white"
               }`}
               title={t("flyover.camera_top")}
@@ -656,7 +682,7 @@ export function ActivityFlyover3D({
               onClick={() => setCameraMode("free")}
               className={`p-1.5 rounded-lg text-xs flex items-center gap-1 transition-all ${
                 cameraMode === "free"
-                  ? "bg-[var(--accent)] text-white shadow"
+                  ? "bg-[var(--accent)] text-[var(--on-accent)] shadow"
                   : "text-white/60 hover:text-white"
               }`}
               title={t("flyover.camera_free")}
@@ -671,7 +697,7 @@ export function ActivityFlyover3D({
             type="button"
             onClick={toggleFullscreen}
             className="btn-ghost bg-black/60 backdrop-blur-md border border-white/10 p-2 text-white/80 hover:text-white rounded-xl"
-            title="Tela cheia"
+            title={fullscreenLabel}
           >
             {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
@@ -682,7 +708,7 @@ export function ActivityFlyover3D({
               type="button"
               onClick={onClose}
               className="btn-ghost bg-black/60 backdrop-blur-md border border-white/10 p-2 text-white/80 hover:text-white rounded-xl"
-              title="Fechar 3D"
+              title={t("flyover.close")}
             >
               <X size={16} />
             </button>
@@ -694,7 +720,7 @@ export function ActivityFlyover3D({
       <div className="absolute top-18 left-4 flex flex-wrap gap-2 pointer-events-none">
         {/* Distância */}
         <div className="bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs text-white shadow-lg">
-          <span className="text-[var(--muted)] font-mono">KM</span>
+          <span className="text-white/70 font-mono">KM</span>
           <span className="font-bold text-emerald-400 text-sm">{currentDistKm}</span>
         </div>
 
@@ -702,14 +728,14 @@ export function ActivityFlyover3D({
         <div className="bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs text-white shadow-lg">
           <Gauge size={13} className="text-amber-400" />
           <span className="font-bold text-sm">{currentPace}</span>
-          <span className="text-[10px] text-[var(--muted)]">/km</span>
+          <span className="text-[10px] text-white/70">/km</span>
         </div>
 
         {/* Altitude */}
         <div className="bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs text-white shadow-lg">
           <Mountain size={13} className="text-sky-400" />
           <span className="font-bold text-sm">{currentElevM}</span>
-          <span className="text-[10px] text-[var(--muted)]">m</span>
+          <span className="text-[10px] text-white/70">m</span>
         </div>
 
         {/* Frequência Cardíaca (se houver) */}
@@ -717,19 +743,19 @@ export function ActivityFlyover3D({
           <div className="bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs text-white shadow-lg">
             <Heart size={13} className="text-red-400 animate-pulse" />
             <span className="font-bold text-sm">{currentHr}</span>
-            <span className="text-[10px] text-[var(--muted)]">bpm</span>
+            <span className="text-[10px] text-white/70">bpm</span>
           </div>
         )}
 
         {/* Tempo decorrido */}
         <div className="bg-black/55 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl flex items-center gap-1.5 text-xs text-white shadow-lg">
-          <Timer size={13} className="text-[var(--muted)]" />
+          <Timer size={13} className="text-white/70" />
           <span className="font-mono font-bold text-sm">{formatDuration(currentElapsedSec)}</span>
         </div>
       </div>
 
       {/* ── Barra Inferior: Scrubber & Playback Controls ── */}
-      <div className="absolute bottom-4 left-4 right-4 bg-black/65 backdrop-blur-xl border border-white/15 rounded-2xl p-3 space-y-2 shadow-2xl">
+      <div className="absolute bottom-4 left-4 right-4 bg-black/65 backdrop-blur-xl border border-white/15 rounded-2xl p-3 space-y-2 shadow-2xl text-white">
         {/* Scrubber Timeline Slider */}
         <div className="flex items-center gap-3">
           <input
@@ -768,7 +794,7 @@ export function ActivityFlyover3D({
                 }
                 setIsPlaying(!isPlaying);
               }}
-              className="p-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white font-bold transition-all shadow-md active:scale-95"
+              className="p-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-[var(--on-accent)] font-bold transition-all shadow-md active:scale-95"
               title={isPlaying ? "Pausar" : "Reproduzir"}
             >
               {isPlaying ? <Pause size={16} /> : <Play size={16} />}
@@ -797,7 +823,7 @@ export function ActivityFlyover3D({
                 onClick={() => setSpeedMultiplier(spd)}
                 className={`px-2 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
                   speedMultiplier === spd
-                    ? "bg-[var(--accent)] text-white shadow"
+                    ? "bg-[var(--accent)] text-[var(--on-accent)] shadow"
                     : "text-white/60 hover:text-white"
                 }`}
               >

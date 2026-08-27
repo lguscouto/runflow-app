@@ -176,7 +176,7 @@ export function RoutesPageClient() {
         </button>
         <Link
           href="/rotas/criar/"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--on-accent)] rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
         >
           <Plus className="w-4 h-4" />
           {t("routes.create_btn")}
@@ -185,16 +185,16 @@ export function RoutesPageClient() {
           type="button"
           onClick={handleCreateSampleMountainRoute}
           disabled={importing}
-          className="inline-flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg font-semibold text-xs hover:bg-amber-500/20 transition-colors"
+          className="inline-flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/30 text-[var(--color-status-warning)] rounded-lg font-semibold text-xs hover:bg-amber-500/20 transition-colors"
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <Sparkles className="w-3.5 h-3.5 text-[var(--color-status-warning)]" />
           <span>+ Rota Altimetria (ClimbPro)</span>
         </button>
       </div>
 
       {/* Error */}
       {error && (
-        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+        <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-[var(--color-status-danger)] text-sm">
           {error}
         </div>
       )}
@@ -214,7 +214,7 @@ export function RoutesPageClient() {
           <div className="flex flex-wrap gap-3 justify-center">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-white rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)] text-[var(--on-accent)] rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity cursor-pointer"
             >
               <MapPin className="w-4 h-4" />
               {t("routes.import_btn")}
@@ -229,9 +229,9 @@ export function RoutesPageClient() {
             <button
               type="button"
               onClick={handleCreateSampleMountainRoute}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/15 border border-amber-500/30 text-amber-300 rounded-lg font-semibold text-sm hover:bg-amber-500/25 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500/15 border border-amber-500/30 text-[var(--color-status-warning)] rounded-lg font-semibold text-sm hover:bg-amber-500/25 transition-colors cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-amber-400" />
+              <Sparkles className="w-4 h-4 text-[var(--color-status-warning)]" />
               <span>+ Gerar Rota com Subidas</span>
             </button>
           </div>
@@ -268,8 +268,8 @@ export function RoutesPageClient() {
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         route.source === "imported"
-                          ? "bg-blue-500/10 text-blue-400"
-                          : "bg-green-500/10 text-green-400"
+                          ? "bg-blue-500/10 text-[var(--color-status-info)]"
+                          : "bg-green-500/10 text-[var(--color-status-positive)]"
                       }`}
                     >
                       {route.source === "imported"
@@ -281,7 +281,7 @@ export function RoutesPageClient() {
                   {/* Climb Badges Preview */}
                   {climbs.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                      <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
+                      <span className="text-[11px] text-[var(--color-status-warning)] font-bold flex items-center gap-1">
                         <Mountain size={12} />
                         <span>{climbs.length} subida(s):</span>
                       </span>
@@ -290,8 +290,8 @@ export function RoutesPageClient() {
                         return (
                           <span
                             key={climb.id}
-                            style={{ backgroundColor: badgeStyle.badgeBg }}
-                            className="px-1.5 py-0.2 rounded text-[9px] font-extrabold text-white uppercase"
+                            style={{ backgroundColor: badgeStyle.badgeBg, color: badgeStyle.badgeText }}
+                            className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase"
                           >
                             {badgeStyle.label} ({climb.avgGradePct.toFixed(1)}%)
                           </span>
@@ -305,14 +305,14 @@ export function RoutesPageClient() {
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
                     href={`/gravar/?routeId=${route.id}`}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[var(--accent)] text-white rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[var(--accent)] text-[var(--on-accent)] rounded-lg text-xs font-semibold hover:opacity-90 transition-opacity"
                   >
                     <MapPin className="w-3.5 h-3.5" />
                     {t("routes.use_in_workout")}
                   </Link>
                   <button
                     onClick={() => handleDelete(route)}
-                    className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--muted)] hover:text-red-400 transition-colors cursor-pointer"
+                    className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--muted)] hover:text-[var(--color-status-danger)] transition-colors cursor-pointer"
                     aria-label={t("routes.delete")}
                   >
                     <Trash2 className="w-4 h-4" />

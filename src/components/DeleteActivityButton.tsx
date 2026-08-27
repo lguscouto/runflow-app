@@ -21,7 +21,7 @@ export function DeleteActivityButton({ id }: { id: string }) {
   return (
     <button
       type="button"
-      className="btn-ghost text-red-400 hover:text-red-300"
+      className="btn-ghost text-[var(--color-status-danger)] hover:text-[var(--color-status-danger)]"
       onClick={handleDelete}
       disabled={loading}
     >

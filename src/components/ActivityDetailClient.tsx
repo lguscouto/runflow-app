@@ -25,6 +25,7 @@ import { getAllStoredGear, getAllStoredSummaries } from "@/lib/storage";
 import { associateGearToActivity } from "@/lib/gear";
 import type { Gear, UserProfile } from "@/lib/types";
 import { PowerDurationCurve } from "@/components/PowerDurationCurve";
+import { getFitnessBadgeBackgroundVar, getFitnessForegroundVar } from "@/lib/color-tokens";
 
 const PR_CATEGORY_KEYS: Record<PRCategory, string> = {
   longestDistance: "prs.longest_distance",
@@ -246,10 +247,10 @@ export function ActivityDetailClient() {
       </div>
 
       {prCategories.length > 0 && (
-        <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400">
-          <Trophy className="text-amber-500 shrink-0" size={28} />
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[var(--color-status-warning)]">
+          <Trophy className="text-[var(--color-status-warning)] shrink-0" size={28} />
           <div>
-            <p className="font-semibold text-base text-amber-500 flex items-center gap-1.5 animate-pulse">
+            <p className="font-semibold text-base text-[var(--color-status-warning)] flex items-center gap-1.5 animate-pulse">
               {t("prs.congrats_title")}
             </p>
             <p className="text-sm text-[var(--muted)] leading-normal mt-0.5">
@@ -272,7 +273,7 @@ export function ActivityDetailClient() {
               onClick={() => setView3D(false)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 !view3D
-                  ? "bg-[var(--accent)] text-white shadow"
+                  ? "bg-[var(--accent)] text-[var(--on-accent)] shadow"
                   : "text-[var(--muted)] hover:text-[var(--text)]"
               }`}
             >
@@ -284,7 +285,7 @@ export function ActivityDetailClient() {
               onClick={() => setView3D(true)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 view3D
-                  ? "bg-[var(--accent)] text-white shadow"
+                  ? "bg-[var(--accent)] text-[var(--on-accent)] shadow"
                   : "text-[var(--muted)] hover:text-[var(--text)]"
               }`}
             >
@@ -334,7 +335,7 @@ export function ActivityDetailClient() {
           <span
             className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 ${
               isCycling
-                ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                ? "bg-amber-500/10 text-[var(--color-status-warning)] border border-amber-500/20"
                 : "bg-[var(--accent-soft)]"
             }`}
           >
@@ -344,13 +345,13 @@ export function ActivityDetailClient() {
             <h3 className="text-sm font-semibold text-[var(--muted)]">
               {isCycling ? "Bicicleta Utilizada" : t("detail.gear")}
             </h3>
-            <p className="text-base font-bold text-white">
+            <p className="text-base font-bold text-[var(--text)]">
               {associatedGear ? (
                 <>
                   {associatedGear.name}
                   {associatedGear.brand && ` (${associatedGear.brand})`}
                   {associatedGear.weightKg != null && (
-                    <span className="text-xs text-amber-400 font-normal ml-2">
+                    <span className="text-xs text-[var(--color-status-warning)] font-normal ml-2">
                       · {associatedGear.weightKg} kg
                     </span>
                   )}
@@ -455,10 +456,10 @@ export function ActivityDetailClient() {
         {isCycling && (
           <>
             <div className="stat-card flex gap-2 border-amber-500/20 bg-amber-500/5">
-              <Zap className="text-amber-400 shrink-0 mt-1 fill-amber-400" size={18} />
+              <Zap className="text-[var(--color-status-warning)] shrink-0 mt-1 fill-amber-400" size={18} />
               <div>
-                <p className="text-sm text-amber-400 font-bold">{t("detail.avg_watts")}</p>
-                <p className="text-xl font-bold text-amber-300">
+                <p className="text-sm text-[var(--color-status-warning)] font-bold">{t("detail.avg_watts")}</p>
+                <p className="text-xl font-bold text-[var(--color-status-warning)]">
                   {formatWatts(activity.avgWatts)}
                 </p>
                 <p className="text-xs text-[var(--muted)] mt-0.5 font-mono">
@@ -471,10 +472,10 @@ export function ActivityDetailClient() {
               </div>
             </div>
             <div className="stat-card flex gap-2 border-emerald-500/20 bg-emerald-500/5">
-              <Gauge className="text-emerald-400 shrink-0 mt-1" size={18} />
+              <Gauge className="text-[var(--color-status-positive)] shrink-0 mt-1" size={18} />
               <div>
-                <p className="text-sm text-emerald-400 font-bold">{t("detail.vam")}</p>
-                <p className="text-xl font-bold text-emerald-300">
+                <p className="text-sm text-[var(--color-status-positive)] font-bold">{t("detail.vam")}</p>
+                <p className="text-xl font-bold text-[var(--color-status-positive)]">
                   {activity.vamMh ? formatVam(activity.vamMh) : "—"}
                 </p>
                 {activity.maxGradePercent != null && (
@@ -488,7 +489,7 @@ export function ActivityDetailClient() {
         )}
 
         <div className="stat-card flex gap-2">
-          <Flame className="text-orange-400 shrink-0 mt-1" size={18} />
+          <Flame className="text-[var(--color-status-warning)] shrink-0 mt-1" size={18} />
           <div>
             <p className="text-sm text-[var(--muted)]">{t("detail.calories")}</p>
             <p className="text-xl font-bold">
@@ -505,7 +506,7 @@ export function ActivityDetailClient() {
         </div>
         {activity.avgHr != null && (
           <div className="stat-card flex gap-2">
-            <Heart className="text-red-400 shrink-0 mt-1" size={18} />
+            <Heart className="text-[var(--color-status-danger)] shrink-0 mt-1" size={18} />
             <div>
               <p className="text-sm text-[var(--muted)]">{t("detail.avg_max_hr")}</p>
               <p className="text-xl font-bold">
@@ -517,15 +518,27 @@ export function ActivityDetailClient() {
         )}
         {workoutVo2 && vo2Classification && (
           <div className="stat-card flex gap-2">
-            <ActivityIcon className="shrink-0 mt-1" size={18} style={{ color: vo2Classification.color }} />
+            <ActivityIcon
+              className="shrink-0 mt-1"
+              size={18}
+              style={{ color: getFitnessForegroundVar(vo2Classification.category) }}
+            />
             <div>
               <p className="text-sm text-[var(--muted)]">{t("vo2max.workout_score")}</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-xl font-bold font-mono" style={{ color: vo2Classification.color }}>
+                <p
+                  className="text-xl font-bold font-mono"
+                  style={{ color: getFitnessForegroundVar(vo2Classification.category) }}
+                >
                   {workoutVo2.toFixed(1)}
                 </p>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: vo2Classification.bgRgba, color: vo2Classification.color }}>
+                <span
+                  className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: getFitnessBadgeBackgroundVar(vo2Classification.category),
+                    color: "var(--color-fitness-badge-foreground)",
+                  }}
+                >
                   {t(vo2Classification.labelKey)}
                 </span>
               </div>

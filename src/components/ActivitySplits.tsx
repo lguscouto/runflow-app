@@ -50,7 +50,7 @@ export function ActivitySplits({ points, sport = "running" }: ActivitySplitsProp
                 {isCycling ? t("splits.speed") : t("splits.pace")}
               </th>
               {hasWatts && (
-                <th className="px-4 py-3 font-semibold text-amber-400">
+                <th className="px-4 py-3 font-semibold text-[var(--color-status-warning)]">
                   {t("splits.watts")}
                 </th>
               )}
@@ -89,7 +89,7 @@ export function ActivitySplits({ points, sport = "running" }: ActivitySplitsProp
                       : formatPace(split.paceSecKm)}
                   </td>
                   {hasWatts && (
-                    <td className="px-4 py-3 font-medium text-amber-400">
+                    <td className="px-4 py-3 font-medium text-[var(--color-status-warning)]">
                       {formatWatts(split.avgWatts)}
                     </td>
                   )}

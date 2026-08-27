@@ -9,9 +9,9 @@
 
 ## Evidência final desta rodada
 
-- `npm test`: **65 arquivos / 253 testes** aprovados.
-- `npm run test:e2e`: **25/25** aprovados.
-- Bundle: **2.688.935 bytes total / 498.164 bytes inicial**, dentro do orçamento.
+- `npm test`: **71 arquivos / 284 testes** aprovados.
+- `npm run test:e2e`: **26/26** aprovados.
+- Bundle: **2.790.957 bytes total / 417.541 bytes inicial**, dentro do orçamento.
 - `npm run build:mobile`: aprovado.
 - APK debug: `android/app/build/outputs/apk/debug/app-debug.apk`.
 - `git diff --check`: aprovado.
@@ -28,8 +28,8 @@
 ## Limitações e entrega
 
 - A matriz Android 33–36, hardware físico, medição acústica e CI hospedado permanecem pendentes ou fora do escopo definido.
-- Nenhum commit, push, stage, stash ou reset foi realizado.
-- Uma aprovação independente válida continua obrigatória antes de qualquer commit ou push.
+- Esta página registra evidências técnicas da rodada; o estado de publicação deve ser confirmado no repositório após o gate de entrega.
+- A aprovação independente continua obrigatória antes de qualquer commit ou push.
 
 ## Política de artefatos
 

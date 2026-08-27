@@ -6,7 +6,7 @@ import type { ActivityDetail, UserProfile } from "@/lib/types";
 import { calculateActivityPowerCurve, PeakPowerEffort } from "@/lib/power-curve";
 import { formatWatts } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
-import { colorTokens } from "@/lib/color-tokens";
+
 
 interface PowerDurationCurveProps {
   activity: ActivityDetail;
@@ -65,14 +65,14 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border)] pb-3.5">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-[var(--color-status-warning)] flex items-center justify-center shrink-0">
             <Zap size={20} className="fill-amber-400" />
           </div>
           <div>
             <h2 className="text-base font-bold text-[var(--text)] flex items-center gap-2">
               <span>{t("power_curve.title")}</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase tracking-wider">
-                MMP / Potência Crítica
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-[var(--color-status-warning)] border border-amber-500/20 uppercase tracking-wider">
+                {t("power_curve.mmp_badge")}
               </span>
             </h2>
             <p className="text-xs text-[var(--muted)]">{t("power_curve.subtitle")}</p>
@@ -84,12 +84,12 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
           <div className="flex items-center gap-2 text-xs font-semibold">
             <div className="px-2.5 py-1 rounded-lg bg-[var(--bg)] border border-[var(--border)] flex items-center gap-1.5">
               <span className="text-[var(--muted)]">FTP:</span>
-              <span className="text-amber-400 font-bold font-mono">{ftpWatts} W</span>
+              <span className="text-[var(--color-status-warning)] font-bold font-mono">{ftpWatts} W</span>
             </div>
             {weightKg && (
               <div className="px-2.5 py-1 rounded-lg bg-[var(--bg)] border border-[var(--border)] flex items-center gap-1.5">
                 <span className="text-[var(--muted)]">Peso:</span>
-                <span className="text-cyan-400 font-bold font-mono">{weightKg} kg</span>
+                <span className="text-[var(--color-status-info)] font-bold font-mono">{weightKg} kg</span>
               </div>
             )}
           </div>
@@ -100,10 +100,10 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-[var(--muted)]">
           <span className="font-semibold flex items-center gap-1.5">
-            <Trophy size={13} className="text-amber-400" />
+            <Trophy size={13} className="text-[var(--color-status-warning)]" />
             {t("power_curve.peak_efforts_title")}
           </span>
-          <span className="text-[11px]">Intervalos contínuos de maior média</span>
+          <span className="text-[11px]">{t("power_curve.peak_efforts_subtitle")}</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -121,18 +121,18 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                 }`}
               >
                 <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono">
+                  <span className="text-[10px] font-black px-1.5 py-0.2 rounded bg-amber-500/20 text-[var(--color-status-warning)] font-mono">
                     {effort.label}
                   </span>
                   {effort.percentFtp && (
-                    <span className="text-[10px] font-bold text-amber-400 font-mono">
+                    <span className="text-[10px] font-bold text-[var(--color-status-warning)] font-mono">
                       {effort.percentFtp}% FTP
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-baseline gap-1 my-0.5">
-                  <span className="text-lg font-black text-white font-mono tracking-tight">
+                  <span className="text-lg font-black text-[var(--text)] font-mono tracking-tight">
                     {effort.watts}
                   </span>
                   <span className="text-[10px] text-[var(--muted)]">W</span>
@@ -140,7 +140,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
 
                 <div className="flex items-center justify-between text-[10px] text-[var(--muted)] font-mono">
                   {effort.wattsPerKg ? (
-                    <span className="text-cyan-300 font-semibold">{effort.wattsPerKg} W/kg</span>
+                    <span className="text-[var(--color-status-info)] font-semibold">{effort.wattsPerKg} W/kg</span>
                   ) : (
                     <span>{t(effort.nameKey)}</span>
                   )}
@@ -152,15 +152,17 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
       </div>
 
       {/* SVG Power-Duration Curve Chart */}
-      <div className="p-3 rounded-2xl bg-[var(--color-surface-hud)] border border-[var(--border)] space-y-2">
+      <div
+        className="p-3 rounded-2xl bg-[var(--color-surface-chart)] border border-[var(--border)] space-y-2"
+      >
         <div className="flex items-center justify-between text-xs text-[var(--muted)] px-1">
-          <span className="font-semibold text-white flex items-center gap-1.5">
-            <Activity size={13} className="text-amber-400" />
-            Curva de Potência vs Duração (Segundos / Minutos)
+          <span className="font-semibold text-[var(--text)] flex items-center gap-1.5">
+            <Activity size={13} className="text-[var(--color-status-warning)]" />
+            {t("power_curve.chart_title")}
           </span>
           {hoveredEffort && (
-            <span className="text-amber-300 font-mono font-bold animate-fadeIn">
-              Pico {hoveredEffort.label}: {hoveredEffort.watts} W ({hoveredEffort.wattsPerKg ? `${hoveredEffort.wattsPerKg} W/kg` : ""})
+            <span className="text-[var(--color-status-warning)] font-mono font-bold animate-fadeIn">
+              {t("power_curve.peak_hover", { label: hoveredEffort.label, watts: hoveredEffort.watts, ratio: hoveredEffort.wattsPerKg ? `${hoveredEffort.wattsPerKg} W/kg` : "" })}
             </span>
           )}
         </div>
@@ -169,8 +171,8 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto min-w-[320px]">
             <defs>
               <linearGradient id="powerCurveGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={colorTokens.chart.power} stopOpacity="0.35" />
-                <stop offset="100%" stopColor={colorTokens.chart.power} stopOpacity="0.02" />
+                <stop offset="0%" stopColor="var(--color-chart-power)" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="var(--color-chart-power)" stopOpacity="0.02" />
               </linearGradient>
             </defs>
 
@@ -210,7 +212,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                   y1={scaleY(ftpWatts)}
                   x2={width - pad.right}
                   y2={scaleY(ftpWatts)}
-                  stroke={colorTokens.map.elevation}
+                  stroke="var(--color-chart-elevation)"
                   strokeWidth={1.2}
                   strokeDasharray="3 3"
                 />
@@ -218,7 +220,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                   x={width - pad.right - 4}
                   y={scaleY(ftpWatts) - 4}
                   textAnchor="end"
-                  fill={colorTokens.map.elevation}
+                  fill="var(--color-chart-elevation)"
                   fontSize={8.5}
                   fontWeight="bold"
                   fontFamily="monospace"
@@ -233,7 +235,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
             <polyline
               points={linePoints}
               fill="none"
-              stroke={colorTokens.chart.power}
+              stroke="var(--color-chart-power)"
               strokeWidth={2.5}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -258,8 +260,8 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                     cx={cx}
                     cy={cy}
                     r={isHovered ? 6 : 3.5}
-                    fill={isHovered ? colorTokens.zones.power4 : colorTokens.chart.power}
-                    stroke={colorTokens.surface.hud}
+                    fill={isHovered ? "var(--color-zone-power-4)" : "var(--color-chart-power)"}
+                    stroke="var(--border)"
                     strokeWidth={2}
                     className="transition-all"
                   />
@@ -268,7 +270,7 @@ export function PowerDurationCurve({ activity, userProfile }: PowerDurationCurve
                       x={cx}
                       y={cy - 10}
                       textAnchor="middle"
-                      fill={colorTokens.content.warning}
+                      fill="var(--color-status-warning)"
                       fontSize={10}
                       fontWeight="bold"
                       fontFamily="monospace"

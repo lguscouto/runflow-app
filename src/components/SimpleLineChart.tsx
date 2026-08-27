@@ -3,7 +3,7 @@
 import React, { useRef, useCallback, memo } from "react";
 import type { ChartPoint } from "@/lib/chart-data";
 import { useI18n } from "@/lib/i18n";
-import { colorTokens } from "@/lib/color-tokens";
+
 
 interface SimpleLineChartProps {
   data: ChartPoint[];
@@ -24,7 +24,7 @@ const PAD = { top: 14, right: 12, bottom: 28, left: 44 };
 export const SimpleLineChart = memo(function SimpleLineChart({
   data,
   height = 160,
-  color = colorTokens.chart.pace,
+  color = "var(--color-chart-pace)",
   yLabel,
   xLabel,
   formatY = (v) => String(Math.round(v)),
@@ -198,7 +198,7 @@ export const SimpleLineChart = memo(function SimpleLineChart({
               y1={PAD.top - 4}
               x2={scaleX(hoveredPoint.x)}
               y2={height - PAD.bottom + 2}
-              stroke="white"
+              stroke="var(--color-chart-crosshair)"
               strokeWidth={1.5}
               strokeDasharray="3 3"
               strokeOpacity={0.7}
@@ -210,7 +210,7 @@ export const SimpleLineChart = memo(function SimpleLineChart({
               cy={scaleY(hoveredPoint.y)}
               r={5}
               fill={color}
-              stroke="white"
+              stroke="var(--color-chart-crosshair)"
               strokeWidth={2}
             />
 
@@ -227,8 +227,8 @@ export const SimpleLineChart = memo(function SimpleLineChart({
                 width={64}
                 height={16}
                 rx={4}
-                fill={colorTokens.surface.chart}
-                stroke="white"
+                fill="var(--color-surface-chart)"
+                stroke="var(--border)"
                 strokeOpacity={0.3}
                 strokeWidth={1}
               />
@@ -236,7 +236,7 @@ export const SimpleLineChart = memo(function SimpleLineChart({
                 x={0}
                 y={0}
                 textAnchor="middle"
-                fill="white"
+                fill="var(--text)"
                 fontSize={9.5}
                 fontWeight="bold"
                 fontFamily="monospace"

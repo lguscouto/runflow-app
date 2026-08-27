@@ -86,7 +86,7 @@ export function MergeFitButton({ activityId }: { activityId: string }) {
         {loading ? (
           <Loader2 size={16} className="animate-spin" />
         ) : (
-          <Heart size={16} className="text-red-400" />
+          <Heart size={16} className="text-[var(--color-status-danger)]" />
         )}
         {loading
           ? t("detail.merge_fit_loading")
@@ -96,7 +96,7 @@ export function MergeFitButton({ activityId }: { activityId: string }) {
       {result && (
         <div
           className={`flex items-center gap-1 text-xs max-w-[220px] text-right ${
-            result.success ? "text-green-400" : "text-red-400"
+            result.success ? "text-[var(--color-status-positive)]" : "text-[var(--color-status-danger)]"
           }`}
         >
           {result.success ? (

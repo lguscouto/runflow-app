@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { colorTokens } from "./color-tokens";
+import { colorTokens, getFitnessBadgeBackgroundVar } from "./color-tokens";
 
 const COLOR_VALUE = /^(#[0-9a-f]{3,8}|rgba?\([^)]*\))$/i;
 
@@ -28,6 +28,11 @@ describe("colorTokens", () => {
     expect(colorTokens.content.inverse).toBe("#ffffff");
   });
 
+  it("mantém backgrounds de badges de fitness em tokens próprios", () => {
+    expect(getFitnessBadgeBackgroundVar("superior")).toBe("var(--color-fitness-badge-superior)");
+    expect(getFitnessBadgeBackgroundVar("poor")).toBe("var(--color-fitness-badge-poor)");
+  });
+
   it("mantém os aliases CSS compartilhados sincronizados", () => {
     const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
     const aliases = [
@@ -42,5 +47,11 @@ describe("colorTokens", () => {
     for (const [name, value] of aliases) {
       expect(css).toContain(`--${name}: ${value};`);
     }
+
+    expect(css).toContain(`--color-content-on-accent: ${colorTokens.content.onAccent};`);
+    expect(css).toContain(`html[data-theme="light"]`);
+    expect(css).toContain(`--color-brand-accent: ${colorTokens.lightMode.accent};`);
+    expect(css).toContain(`--color-content-muted: ${colorTokens.lightMode.muted};`);
+    expect(css).toContain(`--color-chart-pace: ${colorTokens.lightMode.chartPace};`);
   });
 });

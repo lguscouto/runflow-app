@@ -27,14 +27,14 @@ export function HeatmapPageClient() {
           <div className="flex items-center gap-2 mb-1">
             <Link
               href="/atividades/"
-              className="text-xs text-[var(--muted)] hover:text-white flex items-center gap-1 transition-colors"
+              className="text-xs text-[var(--muted)] hover:text-[var(--text)] flex items-center gap-1 transition-colors"
             >
               <ArrowLeft size={14} />
               {t("common.back")}
             </Link>
           </div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <span className="p-1.5 rounded-xl bg-orange-500/10 text-orange-500 border border-orange-500/20">
+            <span className="p-1.5 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
               <Flame size={22} />
             </span>
             {t("heatmap.title")}
@@ -45,7 +45,7 @@ export function HeatmapPageClient() {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-orange-500/10 text-orange-400 border border-orange-500/30">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30">
             <Sparkles size={13} />
             100% Local & Privado
           </span>

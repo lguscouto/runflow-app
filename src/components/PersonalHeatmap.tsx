@@ -310,7 +310,7 @@ export function PersonalHeatmap({
       {/* Top Floating Control Bar */}
       <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         {/* Left: Quick Sport Filter Tabs */}
-        <div className="flex items-center gap-1 bg-[var(--color-surface-github)]/90 backdrop-blur-md p-1 rounded-xl border border-[var(--border)] text-xs pointer-events-auto shadow-lg">
+        <div className="flex items-center gap-1 bg-[var(--color-surface-github)]/90 backdrop-blur-md p-1 rounded-xl border border-[var(--border)] text-xs text-[var(--text)] pointer-events-auto shadow-lg">
           {[
             { id: "all", label: t("heatmap.sport_all"), icon: "🌐" },
             { id: "running", label: t("sport.running"), icon: "🏃" },
@@ -330,8 +330,8 @@ export function PersonalHeatmap({
                 selectedSport === sp.id
                   ? sp.id === "cycling"
                     ? "bg-amber-500 text-black font-bold shadow"
-                    : "bg-[var(--accent)] text-white shadow"
-                  : "text-[var(--muted)] hover:text-white"
+                    : "bg-[var(--accent)] text-[var(--on-accent)] shadow"
+                  : "text-[var(--muted)] hover:text-[var(--text)]"
               }`}
             >
               <span>{sp.icon}</span>
@@ -345,7 +345,7 @@ export function PersonalHeatmap({
           {/* Total Distance & Activity Count Badge */}
           <div className="hidden md:flex items-center gap-2 bg-[var(--color-surface-github)]/90 backdrop-blur-md border border-[var(--border)] px-3 py-1.5 rounded-xl shadow-lg text-xs">
             <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
-            <span className="text-white font-semibold">
+            <span className="text-[var(--text)] font-semibold">
               {totalStats.distanceKm} km
             </span>
             <span className="text-[var(--muted)]">
@@ -359,7 +359,7 @@ export function PersonalHeatmap({
             onClick={() => setShowControls(!showControls)}
             className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border shadow-lg transition-all cursor-pointer ${
               showControls
-                ? "bg-[var(--accent)] text-white border-[var(--accent)]"
+                ? "bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)]"
                 : "bg-[var(--color-surface-github)]/90 backdrop-blur-md text-[var(--text)] border-[var(--border)] hover:bg-[var(--color-surface-github-hover)]"
             }`}
             title="Ajustes do Mapa de Calor"
@@ -392,16 +392,16 @@ export function PersonalHeatmap({
 
       {/* Expandable Controls Panel */}
       {showControls && (
-        <div className="absolute top-16 left-3 right-3 sm:right-auto sm:w-96 z-[1000] bg-[var(--color-surface-github)]/95 backdrop-blur-xl border border-[var(--border)] p-4 rounded-2xl shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto pointer-events-auto">
+        <div className="absolute top-16 left-3 right-3 sm:right-auto sm:w-96 z-[1000] bg-[var(--color-surface-github)]/95 backdrop-blur-xl border border-[var(--border)] p-4 rounded-2xl shadow-2xl space-y-4 max-h-[80vh] overflow-y-auto pointer-events-auto text-[var(--text)]">
           <div className="flex items-center justify-between border-b border-[var(--border)] pb-2">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-[var(--text)] flex items-center gap-2">
               <Sliders size={16} className="text-[var(--accent)]" />
               Controles do Heatmap
             </h3>
             <button
               type="button"
               onClick={() => setShowControls(false)}
-              className="p-1.5 text-sm font-bold text-[var(--muted)] hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+              className="p-1.5 text-sm font-bold text-[var(--muted)] hover:text-[var(--text)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
             >
               ✕
             </button>
@@ -409,11 +409,11 @@ export function PersonalHeatmap({
 
           {/* Color Themes */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[var(--muted)] flex items-center gap-1.5">
+            <span id="heatmap-theme-label" className="text-xs font-semibold text-[var(--muted)] flex items-center gap-1.5">
               <Sparkles size={13} className="text-amber-400" />
               {t("heatmap.theme")}
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+            </span>
+            <div role="group" aria-labelledby="heatmap-theme-label" className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {(Object.keys(HEATMAP_THEMES) as HeatmapTheme[]).map((thm) => {
                 const item = HEATMAP_THEMES[thm];
                 const active = theme === thm;
@@ -424,8 +424,8 @@ export function PersonalHeatmap({
                     onClick={() => setTheme(thm)}
                     className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
                       active
-                        ? "border-white bg-[var(--color-surface-github-hover)] text-white ring-2 ring-[var(--accent)]"
-                        : "border-[var(--border)] bg-[var(--color-surface-map)] text-[var(--muted)] hover:text-white"
+                        ? "border-[var(--accent)] bg-[var(--color-surface-github-hover)] text-[var(--text)] ring-2 ring-[var(--accent)]"
+                        : "border-[var(--border)] bg-[var(--color-surface-map)] text-[var(--muted)] hover:text-[var(--text)]"
                     }`}
                   >
                     <span className={`w-3.5 h-3.5 rounded-full ${item.previewBg} shrink-0`} />
@@ -438,11 +438,11 @@ export function PersonalHeatmap({
 
           {/* Basemap Style */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[var(--muted)] flex items-center gap-1.5">
-              <Layers size={13} className="text-blue-400" />
+            <span id="heatmap-basemap-label" className="text-xs font-semibold text-[var(--muted)] flex items-center gap-1.5">
+              <Layers size={13} className="text-[var(--color-status-info)]" />
               {t("heatmap.basemap")}
-            </label>
-            <div className="grid grid-cols-2 gap-1.5">
+            </span>
+            <div role="group" aria-labelledby="heatmap-basemap-label" className="grid grid-cols-2 gap-1.5">
               {(
                 [
                   { id: "dark", labelKey: "heatmap.basemap_dark" },
@@ -457,8 +457,8 @@ export function PersonalHeatmap({
                   onClick={() => setBasemap(bm.id)}
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border text-left transition-all cursor-pointer ${
                     basemap === bm.id
-                      ? "border-[var(--accent)] bg-[var(--accent)]/15 text-white"
-                      : "border-[var(--border)] bg-[var(--color-surface-map)] text-[var(--muted)] hover:text-white"
+                      ? "border-[var(--accent)] bg-[var(--accent)]/15 text-[var(--text)]"
+                      : "border-[var(--border)] bg-[var(--color-surface-map)] text-[var(--muted)] hover:text-[var(--text)]"
                   }`}
                 >
                   {t(bm.labelKey)}
@@ -469,14 +469,15 @@ export function PersonalHeatmap({
 
           {/* Sport Filter */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-[var(--muted)] flex items-center gap-1.5">
+            <label htmlFor="heatmap-sport" className="text-xs font-semibold text-[var(--muted)] flex items-center gap-1.5">
               <Activity size={13} className="text-emerald-400" />
               {t("heatmap.sport_filter")}
             </label>
             <select
+              id="heatmap-sport"
               value={selectedSport}
               onChange={(e) => setSelectedSport(e.target.value)}
-              className="w-full text-xs p-2 rounded-lg bg-[var(--color-surface-map)] border border-[var(--border)] text-white focus:outline-none focus:border-[var(--accent)]"
+              className="w-full text-xs p-2 rounded-lg bg-[var(--color-surface-map)] border border-[var(--border)] text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
             >
               <option value="all">{t("heatmap.sport_all")}</option>
               <option value="running">🏃 {t("heatmap.sport_running")}</option>
@@ -489,14 +490,15 @@ export function PersonalHeatmap({
           {/* Year Filter */}
           {availableYears.length > 0 && (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[var(--muted)] flex items-center gap-1.5">
+              <label htmlFor="heatmap-year" className="text-xs font-semibold text-[var(--muted)] flex items-center gap-1.5">
                 <Calendar size={13} className="text-purple-400" />
                 {t("heatmap.year_filter")}
               </label>
               <select
+                id="heatmap-year"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="w-full text-xs p-2 rounded-lg bg-[var(--color-surface-map)] border border-[var(--border)] text-white focus:outline-none focus:border-[var(--accent)]"
+                className="w-full text-xs p-2 rounded-lg bg-[var(--color-surface-map)] border border-[var(--border)] text-[var(--text)] focus:outline-none focus:border-[var(--accent)]"
               >
                 <option value="all">{t("heatmap.year_all")}</option>
                 {availableYears.map((yr) => (
@@ -511,10 +513,10 @@ export function PersonalHeatmap({
           {/* Stroke Width & Opacity */}
           <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[var(--border)]">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[var(--muted)]">
+              <span id="heatmap-stroke-label" className="text-xs font-semibold text-[var(--muted)]">
                 {t("heatmap.stroke")}
-              </label>
-              <div className="flex bg-[var(--color-surface-map)] border border-[var(--border)] rounded-lg p-0.5">
+              </span>
+              <div role="group" aria-labelledby="heatmap-stroke-label" className="flex bg-[var(--color-surface-map)] border border-[var(--border)] rounded-lg p-0.5">
                 {(["thin", "medium", "thick"] as HeatmapStroke[]).map((st) => (
                   <button
                     key={st}
@@ -522,8 +524,8 @@ export function PersonalHeatmap({
                     onClick={() => setStroke(st)}
                     className={`flex-1 py-1 text-xs rounded font-semibold transition-all cursor-pointer ${
                       stroke === st
-                        ? "bg-[var(--accent)] text-white"
-                        : "text-[var(--muted)] hover:text-white"
+                        ? "bg-[var(--accent)] text-[var(--on-accent)]"
+                        : "text-[var(--muted)] hover:text-[var(--text)]"
                     }`}
                   >
                     {t(`heatmap.stroke_${st}`)}
@@ -533,10 +535,11 @@ export function PersonalHeatmap({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-[var(--muted)]">
+              <label htmlFor="heatmap-opacity" className="text-xs font-semibold text-[var(--muted)]">
                 {t("heatmap.opacity")} ({Math.round(opacity * 100)}%)
               </label>
               <input
+                id="heatmap-opacity"
                 type="range"
                 min="0.3"
                 max="1.0"
@@ -550,7 +553,7 @@ export function PersonalHeatmap({
 
           {/* Saved Routes Toggle */}
           <div className="pt-2 border-t border-[var(--border)]">
-            <label className="flex items-center gap-2 text-xs text-[var(--muted)] hover:text-white cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs text-[var(--muted)] hover:text-[var(--text)] cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={includeRoutes}
@@ -624,7 +627,7 @@ export function PersonalHeatmap({
                   <Popup className="heatmap-popup">
                     <div className="p-1 space-y-1.5 min-w-[170px] text-gray-900">
                       <div className="flex items-center gap-1.5 font-bold text-xs">
-                        <MapPin size={13} className="text-orange-500 shrink-0" />
+                        <MapPin size={13} className="text-orange-700 shrink-0" />
                         <span className="truncate">{track.name}</span>
                       </div>
                       <div className="text-[11px] text-gray-600">
@@ -653,7 +656,7 @@ export function PersonalHeatmap({
                         )}
                       </div>
                       {track.avgWatts && track.avgWatts > 0 && (
-                        <div className="text-[10px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded flex items-center justify-between">
+                        <div className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-1.5 py-0.5 rounded flex items-center justify-between">
                           <span>⚡ Potência Média:</span>
                           <span>{formatWatts(track.avgWatts)}</span>
                         </div>
@@ -661,7 +664,7 @@ export function PersonalHeatmap({
                       {!track.isRoute && (
                         <Link
                           href={`/atividades/ver?id=${track.id}`}
-                          className="block text-center text-xs font-bold text-orange-600 hover:text-orange-700 pt-1"
+                          className="block text-center text-xs font-bold text-orange-700 hover:text-orange-800 pt-1"
                         >
                           {t("heatmap.view_activity")} →
                         </Link>

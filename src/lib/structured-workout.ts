@@ -220,7 +220,7 @@ export function getStepTypeBadgeStyle(type: WorkoutStepType): {
     case "warmup":
       return {
         bg: "bg-amber-500/15",
-        text: "text-amber-400",
+        text: "text-[var(--color-workout-warmup)]",
         border: "border-amber-500/30",
         dotColor: "bg-amber-400",
         namePt: "Aquecimento",
@@ -229,7 +229,7 @@ export function getStepTypeBadgeStyle(type: WorkoutStepType): {
     case "work":
       return {
         bg: "bg-rose-500/15",
-        text: "text-rose-400",
+        text: "text-[var(--color-workout-work)]",
         border: "border-rose-500/30",
         dotColor: "bg-rose-400",
         namePt: "Tiro / Trabalho",
@@ -238,7 +238,7 @@ export function getStepTypeBadgeStyle(type: WorkoutStepType): {
     case "recovery":
       return {
         bg: "bg-emerald-500/15",
-        text: "text-emerald-400",
+        text: "text-[var(--color-workout-recovery)]",
         border: "border-emerald-500/30",
         dotColor: "bg-emerald-400",
         namePt: "Recuperação",
@@ -247,7 +247,7 @@ export function getStepTypeBadgeStyle(type: WorkoutStepType): {
     case "cooldown":
       return {
         bg: "bg-sky-500/15",
-        text: "text-sky-400",
+        text: "text-[var(--color-workout-cooldown)]",
         border: "border-sky-500/30",
         dotColor: "bg-sky-400",
         namePt: "Desaquecimento",

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   /* Semantic color tokens. Keep in sync with src/lib/color-tokens.ts for
      canvas, Leaflet and native integrations that cannot read CSS variables. */
   --color-brand-accent: #ff6b35;
@@ -8,6 +9,7 @@
   --color-brand-success: #3dd68c;
   --color-content-primary: #f0f4f8;
   --color-content-inverse: #ffffff;
+  --color-content-on-accent: #000000;
   --color-content-muted: #8b9bb4;
   --color-surface-app: #0c0f14;
   --color-surface-panel: #151a22;
@@ -59,17 +61,55 @@
   --color-chart-cadence: #06b6d4;
   --color-chart-elevation: #60a5fa;
   --color-chart-heart-rate: #f87171;
+  --color-chart-crosshair: #8b9bb4;
+  --color-grade-downhill: #38bdf8;
+  --color-grade-flat: #22c55e;
+  --color-grade-moderate: #eab308;
+  --color-grade-steep: #f97316;
+  --color-grade-very-steep: #ef4444;
+  --color-grade-extreme: #a855f7;
+  --color-workout-warmup: #fbbf24;
+  --color-workout-work: #fb7185;
+  --color-workout-recovery: #34d399;
+  --color-workout-cooldown: #38bdf8;
+  --color-workout-repeat: #c084fc;
   --color-status-danger: #ef4444;
   --color-status-warning: #f59e0b;
   --color-status-info: #38bdf8;
   --color-status-positive: #10b981;
+  --color-status-purple: #c084fc;
+  --color-fitness-superior: #8b5cf6;
+  --color-fitness-excellent: #10b981;
+  --color-fitness-good: #0ea5e9;
+  --color-fitness-fair: #f59e0b;
+  --color-fitness-poor: #ef4444;
+  --color-fitness-badge-superior: #8b5cf6;
+  --color-fitness-badge-excellent: #10b981;
+  --color-fitness-badge-good: #0ea5e9;
+  --color-fitness-badge-fair: #f59e0b;
+  --color-fitness-badge-poor: #ef4444;
+  --color-zone-hr-1: #94a3b8;
+  --color-zone-hr-2: #38bdf8;
+  --color-zone-hr-3: #4ade80;
+  --color-zone-hr-4: #fbbf24;
+  --color-zone-hr-5: #f43f5e;
+  --color-zone-power-1: #94a3b8;
+  --color-zone-power-2: #38bdf8;
+  --color-zone-power-3: #4ade80;
+  --color-zone-power-4: #fbbf24;
+  --color-zone-power-5: #fb923c;
+  --color-zone-power-6: #f43f5e;
+  --color-zone-power-7: #c084fc;
+  --color-zone-badge-foreground: #000000;
+  --color-fitness-badge-foreground: #000000;
 
   --color-surface-github: #161b22;
   --color-surface-github-hover: #21262d;
   --color-surface-blackout: #000000;
 
-  /* Tailwind palette bridge: existing utility classes resolve through the
-     same centralized palette instead of embedding color decisions per view. */
+  /* Palette values are available to Canvas, Leaflet and native integrations.
+     Tailwind's built-in color namespace remains intact so opacity modifiers
+     such as bg-amber-500/10 compile to translucent colors correctly. */
   --color-palette-orange-300: #fdba74;
   --color-palette-orange-400: #fb923c;
   --color-palette-orange-500: #f97316;
@@ -131,62 +171,104 @@
   --accent: var(--color-brand-accent);
   --accent-soft: var(--color-brand-accent-soft);
   --success: var(--color-brand-success);
+  --on-accent: var(--color-content-on-accent);
   --map-height: 320px;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --color-brand-accent: #c2410c;
+  --color-brand-accent-hover: #9a3412;
+  --color-brand-success: #047857;
+  --color-content-primary: #18181b;
+  --color-content-on-accent: #ffffff;
+  --color-content-muted: #52525b;
+  --color-surface-app: #ffffff;
+  --color-surface-panel: #ffffff;
+  --color-surface-panel-hover: #f4f4f5;
+  --color-surface-raised: #f4f4f5;
+  --color-surface-map: #eef2ff;
+  --color-surface-canvas: #f4f4f5;
+  --color-surface-panel-deep: #f8fafc;
+  --color-surface-form: #ffffff;
+  --color-surface-chart: #ffffff;
+  --color-surface-fitness-start: #f8fafc;
+  --color-surface-fitness-middle: #f1f5f9;
+  --color-surface-climb: #f8fafc;
+  --color-surface-overlay: #ffffff;
+  --color-surface-modal-header: #ffffff;
+  --color-surface-modal-hover: #f4f4f5;
+  --color-surface-race-start: #f8fafc;
+  --color-surface-race-middle: #f1f5f9;
+  --color-surface-race-end: #e4e4e7;
+  --color-surface-github: #ffffff;
+  --color-surface-github-hover: #e4e4e7;
+  --color-surface-control: #e0e7ff;
+  --color-surface-control-hover: #c7d2fe;
+  --color-surface-leaflet: #e5e7eb;
+  --color-surface-bottom-nav: rgba(255, 255, 255, 0.94);
+  --color-skeleton-base: #e4e4e7;
+  --color-skeleton-highlight: #f4f4f5;
+  --color-border-default: #71717a;
+  --color-brand-accent-soft: rgba(194, 65, 12, 0.12);
+  --color-brand-accent-shadow: rgba(154, 52, 18, 0.28);
+  --color-brand-accent-shadow-active: rgba(154, 52, 18, 0.2);
+  --color-status-danger: #b91c1c;
+  --color-status-warning: #a16207;
+  --color-status-info: #0369a1;
+  --color-status-positive: #047857;
+  --color-status-purple: #7e22ce;
+  --color-chart-pace: #c2410c;
+  --color-chart-speed: #047857;
+  --color-chart-power: #a16207;
+  --color-chart-cadence: #0e7490;
+  --color-chart-elevation: #1d4ed8;
+  --color-chart-heart-rate: #b91c1c;
+  --color-chart-crosshair: #52525b;
+  --color-grade-downhill: #0284c7;
+  --color-grade-flat: #15803d;
+  --color-grade-moderate: #a16207;
+  --color-grade-steep: #c2410c;
+  --color-grade-very-steep: #b91c1c;
+  --color-grade-extreme: #7e22ce;
+  --color-workout-warmup: #92400e;
+  --color-workout-work: #be123c;
+  --color-workout-recovery: #047857;
+  --color-workout-cooldown: #0369a1;
+  --color-workout-repeat: #7e22ce;
+  --color-fitness-superior: #6d28d9;
+  --color-fitness-excellent: #047857;
+  --color-fitness-good: #0369a1;
+  --color-fitness-fair: #a16207;
+  --color-fitness-poor: #b91c1c;
+  --color-fitness-badge-superior: #6d28d9;
+  --color-fitness-badge-excellent: #047857;
+  --color-fitness-badge-good: #0369a1;
+  --color-fitness-badge-fair: #a16207;
+  --color-fitness-badge-poor: #b91c1c;
+  --color-zone-hr-1: #475569;
+  --color-zone-hr-2: #0369a1;
+  --color-zone-hr-3: #15803d;
+  --color-zone-hr-4: #a16207;
+  --color-zone-hr-5: #be123c;
+  --color-zone-power-1: #475569;
+  --color-zone-power-2: #0369a1;
+  --color-zone-power-3: #15803d;
+  --color-zone-power-4: #a16207;
+  --color-zone-power-5: #c2410c;
+  --color-zone-power-6: #be123c;
+  --color-zone-power-7: #7e22ce;
+  --color-zone-badge-foreground: #ffffff;
+  --color-fitness-badge-foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text);
   --color-white: var(--color-content-inverse);
+  --color-on-accent: var(--on-accent);
   --color-black: var(--color-surface-blackout);
   --font-sans: var(--font-geist-sans);
-  --color-orange-300: var(--color-palette-orange-300);
-  --color-orange-400: var(--color-palette-orange-400);
-  --color-orange-500: var(--color-palette-orange-500);
-  --color-orange-600: var(--color-palette-orange-600);
-  --color-orange-700: var(--color-palette-orange-700);
-  --color-amber-300: var(--color-palette-amber-300);
-  --color-amber-400: var(--color-palette-amber-400);
-  --color-amber-500: var(--color-palette-amber-500);
-  --color-amber-600: var(--color-palette-amber-600);
-  --color-emerald-300: var(--color-palette-emerald-300);
-  --color-emerald-400: var(--color-palette-emerald-400);
-  --color-emerald-500: var(--color-palette-emerald-500);
-  --color-emerald-600: var(--color-palette-emerald-600);
-  --color-red-200: var(--color-palette-red-200);
-  --color-red-300: var(--color-palette-red-300);
-  --color-red-400: var(--color-palette-red-400);
-  --color-red-500: var(--color-palette-red-500);
-  --color-red-700: var(--color-palette-red-700);
-  --color-cyan-300: var(--color-palette-cyan-300);
-  --color-cyan-400: var(--color-palette-cyan-400);
-  --color-cyan-500: var(--color-palette-cyan-500);
-  --color-cyan-600: var(--color-palette-cyan-600);
-  --color-blue-300: var(--color-palette-blue-300);
-  --color-blue-400: var(--color-palette-blue-400);
-  --color-blue-500: var(--color-palette-blue-500);
-  --color-blue-600: var(--color-palette-blue-600);
-  --color-rose-300: var(--color-palette-rose-300);
-  --color-rose-400: var(--color-palette-rose-400);
-  --color-rose-500: var(--color-palette-rose-500);
-  --color-sky-300: var(--color-palette-sky-300);
-  --color-sky-400: var(--color-palette-sky-400);
-  --color-purple-400: var(--color-palette-purple-400);
-  --color-purple-500: var(--color-palette-purple-500);
-  --color-purple-600: var(--color-palette-purple-600);
-  --color-pink-500: var(--color-palette-pink-500);
-  --color-yellow-400: var(--color-palette-yellow-400);
-  --color-lime-300: var(--color-palette-lime-300);
-  --color-lime-400: var(--color-palette-lime-400);
-  --color-teal-300: var(--color-palette-teal-300);
-  --color-teal-400: var(--color-palette-teal-400);
-  --color-indigo-400: var(--color-palette-indigo-400);
-  --color-neutral-100: var(--color-palette-neutral-100);
-  --color-neutral-200: var(--color-palette-neutral-200);
-  --color-neutral-400: var(--color-palette-neutral-400);
-  --color-neutral-700: var(--color-palette-neutral-700);
-  --color-neutral-800: var(--color-palette-neutral-800);
-  --color-neutral-900: var(--color-palette-neutral-900);
 }
 
 * {
@@ -271,7 +353,7 @@ a {
   align-items: center;
   gap: 0.5rem;
   background: var(--accent);
-  color: var(--color-content-inverse);
+  color: var(--on-accent);
   font-weight: 600;
   padding: 0.625rem 1.25rem;
   border-radius: 8px;
@@ -298,7 +380,7 @@ a {
   align-items: center;
   gap: 0.5rem;
   background: transparent;
-  color: var(--muted);
+  color: inherit;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -306,7 +388,6 @@ a {
 }
 
 .btn-ghost:hover {
-  color: var(--text);
   border-color: var(--muted);
 }
 
@@ -416,7 +497,7 @@ a {
 
 .bottom-nav-fab {
   background: var(--accent);
-  color: var(--color-content-inverse);
+  color: var(--on-accent);
   width: 48px;
   height: 48px;
   border-radius: 9999px;
@@ -446,6 +527,17 @@ a {
 .profile-input:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+.theme-toggle {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.theme-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--accent);
 }
 
 /* Acessibilidade — Indicador de Foco Visível (WCAG 2.2 / 2.4.7).

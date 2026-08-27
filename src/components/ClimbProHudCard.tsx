@@ -1,11 +1,10 @@
 "use client";
 
-import React from "react";
 import type { ClimbProgressState } from "@/lib/types";
-import { getCategoryBadgeStyle, getGradeColor } from "@/lib/climb-detection";
+import { getCategoryBadgeStyle } from "@/lib/climb-detection";
 import { formatDistance, formatElevation, formatGrade, formatDuration } from "@/lib/format";
 import { Mountain, Flag, TrendingUp, Zap, Clock, AlertTriangle } from "lucide-react";
-import { colorTokens } from "@/lib/color-tokens";
+import { getGradeColorVar } from "@/lib/color-tokens";
 import { useI18n } from "@/lib/i18n";
 
 interface ClimbProHudCardProps {
@@ -50,18 +49,18 @@ export function ClimbProHudCard({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-[var(--color-status-warning)]">
               <Mountain size={18} />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span
-                  style={{ backgroundColor: badgeStyle.badgeBg }}
-                  className="px-1.5 py-0.5 rounded text-[10px] font-extrabold text-white uppercase tracking-wider"
+                  style={{ backgroundColor: badgeStyle.badgeBg, color: badgeStyle.badgeText }}
+                  className="px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider"
                 >
                   {badgeStyle.label}
                 </span>
-                <p className="text-xs font-bold text-amber-300">
+                <p className="text-xs font-bold text-[var(--color-status-warning)]">
                   {t("climb.approach_title")} ({distanceToNextClimbM}m)
                 </p>
               </div>
@@ -76,7 +75,7 @@ export function ClimbProHudCard({
           </div>
 
           <div className="text-right">
-            <span className="text-sm font-black text-amber-400 font-mono">
+            <span className="text-sm font-black text-[var(--color-status-warning)] font-mono">
               +{Math.round(nextClimb.elevationGainM)}m
             </span>
           </div>
@@ -88,7 +87,7 @@ export function ClimbProHudCard({
   // 2. Subida Ativa em Andamento (ClimbPro HUD Completo)
   if (isActiveClimb && currentClimb) {
     const badgeStyle = getCategoryBadgeStyle(currentClimb.category);
-    const gradeColor = getGradeColor(currentGradePct);
+    const gradeColor = getGradeColorVar(currentGradePct);
 
     // Estimativa de tempo para o topo
     let etaSec: number | null = null;
@@ -110,17 +109,17 @@ export function ClimbProHudCard({
         />
 
         {/* Top Header da Subida */}
-        <div className="flex items-center justify-between pb-2 border-b border-white/10">
+        <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
           <div className="flex items-center gap-2">
             <span
-              style={{ backgroundColor: badgeStyle.badgeBg }}
-              className="px-2 py-0.5 rounded-lg text-xs font-black text-white uppercase tracking-wider shadow-md"
+              style={{ backgroundColor: badgeStyle.badgeBg, color: badgeStyle.badgeText }}
+              className="px-2 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider shadow-md"
             >
               {badgeStyle.label}
             </span>
             <div>
-              <h4 className="text-xs font-bold text-white uppercase tracking-wide flex items-center gap-1">
-                <Mountain size={14} className="text-rose-400" />
+              <h4 className="text-xs font-bold text-[var(--text)] uppercase tracking-wide flex items-center gap-1">
+                <Mountain size={14} className="text-[var(--color-status-danger)]" />
                 <span>
                   {t("climb.climb_n_of_total", {
                     current: currentClimbNumber || 1,
@@ -129,14 +128,14 @@ export function ClimbProHudCard({
                 </span>
               </h4>
               <p className="text-[10px] text-[var(--muted)]">
-                {currentClimb.name} • Total: {formatDistance(currentClimb.distanceM)} (+{Math.round(currentClimb.elevationGainM)}m)
+                {t("climb.climb_name", { current: currentClimb.climbIndex })} • {t("climb.total", { value: `${formatDistance(currentClimb.distanceM)} (+${Math.round(currentClimb.elevationGainM)}m)` })}
               </p>
             </div>
           </div>
 
           <div className="text-right">
             <span
-              style={{ backgroundColor: `${gradeColor}25`, borderColor: gradeColor, color: gradeColor }}
+              style={{ backgroundColor: `color-mix(in srgb, ${gradeColor} 15%, transparent)`, borderColor: gradeColor, color: "var(--text)" }}
               className="px-2.5 py-1 rounded-lg border text-xs font-black tabular-nums inline-block"
             >
               {formatGrade(currentGradePct)}
@@ -149,12 +148,12 @@ export function ClimbProHudCard({
 
         {/* Barra de Progresso da Subida com Cores de Gradiente */}
         <div className="relative pt-4 pb-2">
-          <div className="h-2.5 w-full rounded-full bg-white/10 relative overflow-hidden border border-white/10">
+          <div className="h-2.5 w-full rounded-full bg-[var(--surface-hover)] relative overflow-hidden border border-[var(--border)]">
             <div
               className="absolute left-0 top-0 bottom-0 transition-all duration-300 ease-out"
               style={{
                 width: `${climbProgressPct}%`,
-                background: `linear-gradient(to right, ${badgeStyle.badgeBg}, ${colorTokens.status.danger})`,
+                background: "linear-gradient(to right, var(--color-status-warning), var(--color-status-danger))",
               }}
             />
           </div>
@@ -175,38 +174,38 @@ export function ClimbProHudCard({
 
         {/* Grid de 4 Métricas de Esforço */}
         <div className="grid grid-cols-4 gap-2 pt-1 text-center">
-          <div className="bg-white/5 rounded-xl p-2 border border-white/5">
+          <div className="bg-[var(--surface-hover)] rounded-xl p-2 border border-[var(--border)]">
             <p className="text-[10px] text-[var(--muted)] uppercase font-semibold">
               {t("climb.remaining_dist")}
             </p>
-            <p className="text-sm font-bold text-white tabular-nums mt-0.5">
+            <p className="text-sm font-bold text-[var(--text)] tabular-nums mt-0.5">
               {formatDistance(distanceRemainingM)}
             </p>
           </div>
 
-          <div className="bg-white/5 rounded-xl p-2 border border-white/5">
+          <div className="bg-[var(--surface-hover)] rounded-xl p-2 border border-[var(--border)]">
             <p className="text-[10px] text-[var(--muted)] uppercase font-semibold">
               {t("climb.remaining_gain")}
             </p>
-            <p className="text-sm font-bold text-rose-400 tabular-nums mt-0.5">
+            <p className="text-sm font-bold text-[var(--color-status-danger)] tabular-nums mt-0.5">
               +{Math.round(elevationRemainingM)}m
             </p>
           </div>
 
-          <div className="bg-white/5 rounded-xl p-2 border border-white/5">
+          <div className="bg-[var(--surface-hover)] rounded-xl p-2 border border-[var(--border)]">
             <p className="text-[10px] text-[var(--muted)] uppercase font-semibold">
               {t("climb.avg_remaining_grade")}
             </p>
-            <p className="text-sm font-bold text-amber-300 tabular-nums mt-0.5">
+            <p className="text-sm font-bold text-[var(--color-status-warning)] tabular-nums mt-0.5">
               {avgGradeRemainingPct.toFixed(1)}%
             </p>
           </div>
 
-          <div className="bg-white/5 rounded-xl p-2 border border-white/5">
+          <div className="bg-[var(--surface-hover)] rounded-xl p-2 border border-[var(--border)]">
             <p className="text-[10px] text-[var(--muted)] uppercase font-semibold">
               {t("climb.eta_summit")}
             </p>
-            <p className="text-sm font-bold text-cyan-300 tabular-nums mt-0.5 font-mono">
+            <p className="text-sm font-bold text-[var(--color-status-info)] tabular-nums mt-0.5 font-mono">
               {etaSec != null ? formatDuration(etaSec) : "—"}
             </p>
           </div>
@@ -221,22 +220,22 @@ export function ClimbProHudCard({
 
     return (
       <div
-        className={`rounded-2xl border border-white/10 bg-[var(--color-surface-panel-deep)] p-3 shadow-lg flex items-center justify-between ${className}`}
+        className={`rounded-2xl border border-[var(--border)] bg-[var(--color-surface-panel-deep)] p-3 shadow-lg flex items-center justify-between ${className}`}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white/70">
+          <div className="w-7 h-7 rounded-lg bg-[var(--surface-hover)] flex items-center justify-center text-[var(--muted)]">
             <Mountain size={15} />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
               <span
-                style={{ backgroundColor: badgeStyle.badgeBg }}
-                className="px-1.5 py-0.2 rounded text-[9px] font-extrabold text-white uppercase"
+                style={{ backgroundColor: badgeStyle.badgeBg, color: badgeStyle.badgeText }}
+                className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase"
               >
                 {badgeStyle.label}
               </span>
-              <p className="text-xs font-bold text-white">
-                {t("climb.upcoming_badge")}: {nextClimb.name}
+              <p className="text-xs font-bold text-[var(--text)]">
+                {t("climb.upcoming_badge")}: {t("climb.climb_name", { current: nextClimb.climbIndex })}
               </p>
             </div>
             <p className="text-[10px] text-[var(--muted)] mt-0.5">
@@ -247,10 +246,10 @@ export function ClimbProHudCard({
 
         {distanceToNextClimbM !== null && (
           <div className="text-right">
-            <p className="text-xs font-black text-amber-400 font-mono">
-              em {formatDistance(distanceToNextClimbM)}
+            <p className="text-xs font-black text-[var(--color-status-warning)] font-mono">
+              {t("climb.in_distance", { value: formatDistance(distanceToNextClimbM) })}
             </p>
-            <p className="text-[9px] text-[var(--muted)]">até o início</p>
+            <p className="text-[9px] text-[var(--muted)]">{t("climb.until_start")}</p>
           </div>
         )}
       </div>

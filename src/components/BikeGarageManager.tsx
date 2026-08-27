@@ -305,7 +305,7 @@ export function BikeGarageManager({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold flex items-center gap-2">
-            <Bike className="text-amber-400" size={20} />
+            <Bike className="text-[var(--color-status-warning)]" size={20} />
             {t("bike_garage.title")}
           </h2>
           <p className="text-xs text-[var(--muted)] mt-0.5">
@@ -338,7 +338,7 @@ export function BikeGarageManager({
           className="stat-card space-y-4 border-amber-500/40 bg-[var(--surface-hover)] shadow-lg animate-in fade-in duration-300"
         >
           <div className="flex items-center gap-2 border-b border-[var(--border)] pb-3">
-            <Bike className="text-amber-400" size={18} />
+            <Bike className="text-[var(--color-status-warning)]" size={18} />
             <h3 className="font-bold text-sm text-[var(--text)]">
               {t("bike_garage.add_bike_btn")}
             </h3>
@@ -346,10 +346,11 @@ export function BikeGarageManager({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-name" className="block text-xs text-[var(--muted)] mb-1">
                 {t("bike_garage.name")} *
               </label>
               <input
+                id="bike-name"
                 type="text"
                 required
                 value={name}
@@ -359,10 +360,11 @@ export function BikeGarageManager({
               />
             </div>
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-brand" className="block text-xs text-[var(--muted)] mb-1">
                 {t("bike_garage.brand")}
               </label>
               <input
+                id="bike-brand"
                 type="text"
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
@@ -374,10 +376,11 @@ export function BikeGarageManager({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-type" className="block text-xs text-[var(--muted)] mb-1">
                 {t("bike_garage.type")}
               </label>
               <select
+                id="bike-type"
                 value={bikeType}
                 onChange={(e) => setBikeType(e.target.value as BikeType)}
                 className="profile-input text-sm bg-[var(--surface)] text-[var(--text)]"
@@ -393,11 +396,12 @@ export function BikeGarageManager({
             </div>
 
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1 flex items-center justify-between">
+              <label htmlFor="bike-weight" className="block text-xs text-[var(--muted)] mb-1 flex items-center justify-between">
                 <span>{t("bike_garage.weight_kg")}</span>
-                <span className="text-[10px] text-amber-400">⚡ Watts</span>
+                <span className="text-[10px] text-[var(--color-status-warning)]">⚡ Watts</span>
               </label>
               <input
+                id="bike-weight"
                 type="number"
                 step={0.1}
                 min={4}
@@ -413,10 +417,11 @@ export function BikeGarageManager({
             </div>
 
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-wheel-size" className="block text-xs text-[var(--muted)] mb-1">
                 {t("bike_garage.wheel_size")}
               </label>
               <input
+                id="bike-wheel-size"
                 type="text"
                 value={wheelSize}
                 onChange={(e) => setWheelSize(e.target.value)}
@@ -428,10 +433,11 @@ export function BikeGarageManager({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-initial-distance" className="block text-xs text-[var(--muted)] mb-1">
                 {t("bike_garage.initial_distance")}
               </label>
               <input
+                id="bike-initial-distance"
                 type="number"
                 min={0}
                 step={1}
@@ -512,12 +518,12 @@ export function BikeGarageManager({
                 {/* Bike Header */}
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-[var(--color-status-warning)] flex items-center justify-center shrink-0">
                       <Bike size={24} />
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-bold text-lg text-white">
+                        <h3 className="font-bold text-lg text-[var(--text)]">
                           {bike.name}
                         </h3>
                         {bike.brand && (
@@ -525,7 +531,7 @@ export function BikeGarageManager({
                             {bike.brand}
                           </span>
                         )}
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-amber-300 font-medium">
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--color-status-warning)] font-medium">
                           {BIKE_TYPE_ICONS[bike.bikeType || "road"] || "🚲"}
                         </span>
                       </div>
@@ -533,7 +539,7 @@ export function BikeGarageManager({
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--muted)] mt-1.5">
                         {bike.weightKg != null && (
                           <span className="flex items-center gap-1">
-                            <Scale size={12} className="text-amber-400" />
+                            <Scale size={12} className="text-[var(--color-status-warning)]" />
                             {bike.weightKg} kg
                           </span>
                         )}
@@ -543,8 +549,8 @@ export function BikeGarageManager({
                             {bike.wheelSize}
                           </span>
                         )}
-                        <span className="text-white font-semibold flex items-center gap-1">
-                          <Activity size={12} className="text-emerald-400" />
+                        <span className="text-[var(--text)] font-semibold flex items-center gap-1">
+                          <Activity size={12} className="text-[var(--color-status-positive)]" />
                           {t("bike_garage.odometer")}: {bikeKm.toFixed(1)} km
                         </span>
                       </div>
@@ -554,7 +560,7 @@ export function BikeGarageManager({
                   {/* Top Badges & Actions */}
                   <div className="flex items-center gap-2 self-start">
                     {isCyclingDefault && bike.status === "active" && (
-                      <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
+                      <span className="text-xs bg-amber-500/20 text-[var(--color-status-warning)] border border-amber-500/40 px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
                         <Sparkles size={12} />
                         {t("bike_garage.default_cycling")}
                       </span>
@@ -562,8 +568,8 @@ export function BikeGarageManager({
                     <span
                       className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full ${
                         bike.status === "active"
-                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                          : "bg-red-500/10 text-red-400 border border-red-500/20"
+                          ? "bg-emerald-500/10 text-[var(--color-status-positive)] border border-emerald-500/20"
+                          : "bg-red-500/10 text-[var(--color-status-danger)] border border-red-500/20"
                       }`}
                     >
                       {bike.status === "active"
@@ -577,7 +583,7 @@ export function BikeGarageManager({
                 <div className="border-t border-[var(--border)] pt-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Wrench size={15} className="text-amber-400" />
+                      <Wrench size={15} className="text-[var(--color-status-warning)]" />
                       <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--text)]">
                         {t("bike_garage.components_title")} ({components.length})
                       </h4>
@@ -590,7 +596,7 @@ export function BikeGarageManager({
                           haptics.light();
                           setActiveAddComponentModal({ bikeId: bike.id });
                         }}
-                        className="text-xs text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1"
+                        className="text-xs text-[var(--color-status-warning)] hover:text-[var(--color-status-warning)] font-semibold flex items-center gap-1"
                       >
                         <Plus size={13} />
                         {t("bike_garage.add_component")}
@@ -622,7 +628,7 @@ export function BikeGarageManager({
                                 ? "border-red-500/50 bg-red-500/10 shadow"
                                 : isWarning
                                 ? "border-amber-500/40 bg-amber-500/5"
-                                : "border-[var(--border)] bg-white/[0.02]"
+                                : "border-[var(--border)] bg-[var(--surface)]"
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2">
@@ -631,7 +637,7 @@ export function BikeGarageManager({
                                   {COMPONENT_ICONS[comp.type] || "⚙️"}
                                 </span>
                                 <div>
-                                  <p className="text-xs font-bold text-white leading-tight">
+                                  <p className="text-xs font-bold text-[var(--text)] leading-tight">
                                     {comp.name}
                                   </p>
                                   {comp.brandModel && (
@@ -645,17 +651,17 @@ export function BikeGarageManager({
                               {/* Status indicator badge */}
                               <div className="shrink-0">
                                 {isExceeded ? (
-                                  <span className="text-[10px] font-extrabold text-red-400 bg-red-500/20 border border-red-500/40 px-1.5 py-0.5 rounded flex items-center gap-1 animate-pulse">
+                                  <span className="text-[10px] font-extrabold text-[var(--color-status-danger)] bg-red-500/20 border border-red-500/40 px-1.5 py-0.5 rounded flex items-center gap-1 animate-pulse">
                                     <AlertOctagon size={10} />
                                     TROCAR
                                   </span>
                                 ) : isWarning ? (
-                                  <span className="text-[10px] font-bold text-amber-400 bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                  <span className="text-[10px] font-bold text-[var(--color-status-warning)] bg-amber-500/20 border border-amber-500/40 px-1.5 py-0.5 rounded flex items-center gap-1">
                                     <AlertTriangle size={10} />
                                     ATENÇÃO
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                  <span className="text-[10px] font-medium text-[var(--color-status-positive)] bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded flex items-center gap-1">
                                     <CheckCircle size={10} />
                                     OK
                                   </span>
@@ -672,16 +678,16 @@ export function BikeGarageManager({
                                 <span
                                   className={`font-bold tabular-nums ${
                                     isExceeded
-                                      ? "text-red-400"
+                                      ? "text-[var(--color-status-danger)]"
                                       : isWarning
-                                      ? "text-amber-400"
+                                      ? "text-[var(--color-status-warning)]"
                                       : "text-[var(--text)]"
                                   }`}
                                 >
                                   {wear.wearPercentage}%
                                 </span>
                               </div>
-                              <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/10">
+                              <div className="w-full bg-[var(--surface-hover)] h-2 rounded-full overflow-hidden border border-[var(--border)]">
                                 <div
                                   style={{
                                     width: `${Math.min(100, wear.wearPercentage)}%`,
@@ -698,7 +704,7 @@ export function BikeGarageManager({
                             </div>
 
                             {/* Actions & Replace Button */}
-                            <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[10px]">
+                            <div className="flex items-center justify-between pt-1 border-t border-[var(--border)] text-[10px]">
                               <span className="text-[var(--muted)]">
                                 {comp.lastServiceAt
                                   ? `Troca: ${new Date(
@@ -717,7 +723,7 @@ export function BikeGarageManager({
                                   onClick={() =>
                                     openReplaceModal(bike.id, comp, bikeKm)
                                   }
-                                  className="text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1 underline"
+                                  className="text-[var(--color-status-warning)] hover:text-[var(--color-status-warning)] font-bold flex items-center gap-1 underline"
                                 >
                                   <RotateCcw size={11} />
                                   {t("bike_garage.replace_component")}
@@ -731,7 +737,7 @@ export function BikeGarageManager({
                                       comp.name
                                     )
                                   }
-                                  className="text-[var(--muted)] hover:text-red-400 p-1"
+                                  className="text-[var(--muted)] hover:text-[var(--color-status-danger)] p-1"
                                   title="Remover peça"
                                 >
                                   <Trash2 size={12} />
@@ -752,7 +758,7 @@ export function BikeGarageManager({
                       <button
                         type="button"
                         onClick={() => handleSetDefault(bike.id)}
-                        className="btn-ghost py-1.5 px-3 text-xs border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 font-semibold flex items-center gap-1"
+                        className="btn-ghost py-1.5 px-3 text-xs border border-amber-500/40 text-[var(--color-status-warning)] hover:bg-amber-500/10 font-semibold flex items-center gap-1"
                       >
                         <Sparkles size={12} />
                         {t("bike_garage.set_default_cycling")}
@@ -764,7 +770,7 @@ export function BikeGarageManager({
                     <button
                       type="button"
                       onClick={() => handleToggleStatus(bike)}
-                      className="btn-ghost py-1.5 px-3 text-xs flex items-center gap-1 text-[var(--muted)] hover:text-white"
+                      className="btn-ghost py-1.5 px-3 text-xs flex items-center gap-1 text-[var(--muted)] hover:text-[var(--text)]"
                     >
                       <Archive size={13} />
                       {bike.status === "active"
@@ -774,7 +780,7 @@ export function BikeGarageManager({
                     <button
                       type="button"
                       onClick={() => handleDeleteBike(bike.id)}
-                      className="btn-ghost py-1.5 px-3 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-1"
+                      className="btn-ghost py-1.5 px-3 text-xs text-[var(--color-status-danger)] hover:text-[var(--color-status-danger)] hover:bg-red-500/10 flex items-center gap-1"
                     >
                       <Trash2 size={13} />
                       {t("gear.delete")}
@@ -799,9 +805,9 @@ export function BikeGarageManager({
             className="stat-card max-w-md w-full border-amber-500/50 bg-[var(--surface)] p-6 space-y-4 shadow-2xl"
           >
             <div className="flex items-center gap-2 border-b border-[var(--border)] pb-3">
-              <RotateCcw className="text-amber-400" size={20} />
+              <RotateCcw className="text-[var(--color-status-warning)]" size={20} />
               <div>
-                <h3 className="font-bold text-base text-white">
+                <h3 className="font-bold text-base text-[var(--text)]">
                   {t("bike_garage.replace_component")}
                 </h3>
                 <p className="text-xs text-[var(--muted)]">
@@ -813,17 +819,18 @@ export function BikeGarageManager({
             <p className="text-xs text-[var(--text)]">
               Ao registrar a substituição, o contador de desgaste deste componente
               será zerado e calibrado para o hodômetro atual da bicicleta (
-              <strong className="text-amber-400">
+              <strong className="text-[var(--color-status-warning)]">
                 {activeReplaceModal.bikeKm.toFixed(1)} km
               </strong>
               ).
             </p>
 
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-replace-limit" className="block text-xs text-[var(--muted)] mb-1">
                 Limite Recomendado para a Nova Peça (km)
               </label>
               <input
+                id="bike-replace-limit"
                 type="number"
                 min={100}
                 step={100}
@@ -835,10 +842,11 @@ export function BikeGarageManager({
             </div>
 
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-replace-notes" className="block text-xs text-[var(--muted)] mb-1">
                 {t("bike_garage.service_notes")}
               </label>
               <input
+                id="bike-replace-notes"
                 type="text"
                 value={replaceNotes}
                 onChange={(e) => setReplaceNotes(e.target.value)}
@@ -878,9 +886,9 @@ export function BikeGarageManager({
             className="stat-card max-w-md w-full border-amber-500/50 bg-[var(--surface)] p-6 space-y-4 shadow-2xl"
           >
             <div className="flex items-center gap-2 border-b border-[var(--border)] pb-3">
-              <Plus className="text-amber-400" size={20} />
+              <Plus className="text-[var(--color-status-warning)]" size={20} />
               <div>
-                <h3 className="font-bold text-base text-white">
+                <h3 className="font-bold text-base text-[var(--text)]">
                   {t("bike_garage.add_component")}
                 </h3>
                 <p className="text-xs text-[var(--muted)]">
@@ -890,10 +898,11 @@ export function BikeGarageManager({
             </div>
 
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-component-name" className="block text-xs text-[var(--muted)] mb-1">
                 Nome da Peça *
               </label>
               <input
+                id="bike-component-name"
                 type="text"
                 required
                 value={compName}
@@ -905,10 +914,11 @@ export function BikeGarageManager({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-[var(--muted)] mb-1">
+                <label htmlFor="bike-component-type" className="block text-xs text-[var(--muted)] mb-1">
                   Tipo
                 </label>
                 <select
+                  id="bike-component-type"
                   value={compType}
                   onChange={(e) =>
                     setCompType(e.target.value as BikeComponentType)
@@ -927,10 +937,11 @@ export function BikeGarageManager({
               </div>
 
               <div>
-                <label className="block text-xs text-[var(--muted)] mb-1">
+                <label htmlFor="bike-component-limit" className="block text-xs text-[var(--muted)] mb-1">
                   Limite Recomendado (km)
                 </label>
                 <input
+                  id="bike-component-limit"
                   type="number"
                   min={100}
                   step={100}
@@ -944,10 +955,11 @@ export function BikeGarageManager({
             </div>
 
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="bike-component-brand" className="block text-xs text-[var(--muted)] mb-1">
                 Marca / Modelo (Opcional)
               </label>
               <input
+                id="bike-component-brand"
                 type="text"
                 value={compBrandModel}
                 onChange={(e) => setCompBrandModel(e.target.value)}

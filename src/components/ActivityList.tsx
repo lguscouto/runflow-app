@@ -276,7 +276,7 @@ export function ActivityList({
       {error && (
         <div
           role="alert"
-          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200 flex items-center justify-between gap-3"
+          className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-[var(--color-status-danger)] flex items-center justify-between gap-3"
         >
           <span>{t(error)}</span>
           {onRetry && (

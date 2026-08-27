@@ -69,3 +69,24 @@ test.describe("RunFlow shell navigation and responsive visual matrix", () => {
     });
   }
 });
+
+test("alterna o modo claro e preserva a preferência após reload", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const runtime = installRuntimeGuard(page);
+
+  await openSeededHome(page);
+
+  const lightToggle = page.getByRole("button", { name: "Ativar modo claro" });
+  await expect(lightToggle).toBeVisible();
+  await lightToggle.click();
+  await expect.poll(() => page.locator("html").getAttribute("data-theme")).toBe("light");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator("body")).toHaveCSS("color", "rgb(24, 24, 27)");
+  await expect(page.getByRole("button", { name: "Ativar modo escuro" })).toBeVisible();
+
+  await page.reload();
+  await expect.poll(() => page.locator("html").getAttribute("data-theme")).toBe("light");
+  await expect(page.getByRole("button", { name: "Ativar modo escuro" })).toBeVisible();
+
+  runtime.assertClean();
+});

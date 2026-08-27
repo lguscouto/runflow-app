@@ -12,6 +12,8 @@ type TranslationCatalog = Record<Language, TranslationDictionary>;
 
 const FALLBACK_TRANSLATIONS: TranslationDictionary = {
   "common.loading": "Carregando...",
+  "theme.switch_to_light": "Ativar modo claro",
+  "theme.switch_to_dark": "Ativar modo escuro",
 };
 
 const dictionaryCache = new Map<Language, TranslationDictionary>();
@@ -71,6 +73,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       }
     }),
   );
+
+  useEffect(() => {
+    document.documentElement.lang = language === "en" ? "en" : "pt-BR";
+  }, [language]);
 
   useEffect(() => {
     let active = true;

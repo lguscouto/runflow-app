@@ -201,7 +201,7 @@ export function SocialShareCardModal({
                 type="button"
                 onClick={() => setIsOpen(false)}
                 aria-label={language === "en" ? "Close modal" : "Fechar modal"}
-                className="w-8 h-8 rounded-lg bg-[var(--surface-hover)] text-[var(--muted)] hover:text-white flex items-center justify-center transition-all"
+                className="w-8 h-8 rounded-lg bg-[var(--surface-hover)] text-[var(--muted)] hover:text-[var(--text)] flex items-center justify-center transition-all"
               >
                 <X size={18} />
               </button>
@@ -221,7 +221,7 @@ export function SocialShareCardModal({
                     className="max-h-[55vh] max-w-full w-auto h-auto object-contain rounded-xl"
                   />
                 </div>
-                <p className="text-[11px] text-[var(--muted)] mt-2">
+                <p className="text-[11px] text-white/70 mt-2">
                   {format === "stories" ? "1080 × 1920 px (9:16)" : "1080 × 1080 px (1:1)"}
                 </p>
               </div>
@@ -280,7 +280,7 @@ export function SocialShareCardModal({
                         onClick={() => setTheme(item.key)}
                         className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-medium transition-all text-left ${
                           theme === item.key
-                            ? "border-[var(--accent)] bg-[var(--accent)]/10 text-white shadow"
+                            ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)] shadow"
                             : "border-[var(--border)] bg-[var(--bg)] text-[var(--muted)] hover:text-[var(--text)]"
                         }`}
                       >
@@ -303,7 +303,7 @@ export function SocialShareCardModal({
                       }}
                       className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-medium transition-all text-left ${
                         theme === "custom"
-                          ? "border-[var(--accent)] bg-[var(--accent)]/10 text-white shadow"
+                          ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)] shadow"
                           : "border-[var(--border)] bg-[var(--bg)] text-[var(--muted)] hover:text-[var(--text)]"
                       }`}
                     >
@@ -412,8 +412,8 @@ export function SocialShareCardModal({
                   <div
                     className={`p-2.5 rounded-lg text-xs font-semibold ${
                       statusMsg.type === "ok"
-                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        : "bg-red-500/10 text-red-400 border border-red-500/20"
+                        ? "bg-emerald-500/10 text-[var(--color-status-positive)] border border-emerald-500/20"
+                        : "bg-red-500/10 text-[var(--color-status-danger)] border border-red-500/20"
                     }`}
                   >
                     {statusMsg.text}

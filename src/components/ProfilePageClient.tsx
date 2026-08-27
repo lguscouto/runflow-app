@@ -50,6 +50,7 @@ import { useI18n } from "@/lib/i18n";
 import { listGearWithUsage, setDefaultGear, type GearWithUsage } from "@/lib/gear";
 import { putGear, removeGear, getAllStoredSummaries } from "@/lib/storage";
 import { calculateAchievements, type Achievement } from "@/lib/achievements";
+import { getZoneColorVar } from "@/lib/color-tokens";
 import { v4 as uuidv4 } from "uuid";
 import { exportBackup, importBackup } from "@/lib/backup";
 import { BikeGarageManager } from "@/components/BikeGarageManager";
@@ -475,7 +476,7 @@ export function ProfilePageClient() {
       </div>
 
       {/* Tabs Menu — grid compacto em mobile para caber todas as 5 tabs */}
-      <div className="grid grid-cols-5 border-b border-[var(--border)]">
+      <div className="grid grid-cols-5 border-b border-[var(--border)]" role="tablist" aria-label={language === "en" ? "Profile sections" : "Seções do perfil"}>
         {([
           { key: "profile" as const, icon: <User size={16} />, label: t("profile.tab_details") },
           { key: "gear" as const, icon: <Award size={16} />, label: t("profile.tab_gear") },
@@ -485,6 +486,11 @@ export function ProfilePageClient() {
         ]).map((tab) => (
           <button
             key={tab.key}
+            type="button"
+            role="tab"
+            id={`profile-tab-${tab.key}`}
+            aria-selected={activeTab === tab.key}
+            aria-controls={`profile-panel-${tab.key}`}
             onClick={() => {
               setActiveTab(tab.key);
               setMessage(null);
@@ -507,7 +513,7 @@ export function ProfilePageClient() {
         <>
           {/* TAB 1: Profile Details */}
           {activeTab === "profile" && (
-            <div className="space-y-6">
+            <div id="profile-panel-profile" role="tabpanel" aria-labelledby="profile-tab-profile" className="space-y-6">
               <section className="stat-card space-y-3 border-[var(--border)]">
                 <h2 className="text-sm font-semibold flex items-center gap-2">
                   <Info size={16} className="text-[var(--accent)]" />
@@ -520,10 +526,11 @@ export function ProfilePageClient() {
 
               <form onSubmit={handleSubmitProfile} className="stat-card space-y-5">
                 <div>
-                  <label className="block text-sm text-[var(--muted)] mb-1.5">
+                  <label htmlFor="profile-name" className="block text-sm text-[var(--muted)] mb-1.5">
                     {t("profile.name")}
                   </label>
                   <input
+                    id="profile-name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -534,10 +541,11 @@ export function ProfilePageClient() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[var(--muted)] mb-1.5">
+                  <label htmlFor="profile-age" className="block text-sm text-[var(--muted)] mb-1.5">
                     {t("profile.age")}
                   </label>
                   <input
+                    id="profile-age"
                     type="number"
                     min={10}
                     max={120}
@@ -549,10 +557,11 @@ export function ProfilePageClient() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[var(--muted)] mb-1.5">
+                  <label htmlFor="profile-height" className="block text-sm text-[var(--muted)] mb-1.5">
                     {t("profile.height")}
                   </label>
                   <input
+                    id="profile-height"
                     type="number"
                     min={100}
                     max={250}
@@ -565,10 +574,11 @@ export function ProfilePageClient() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[var(--muted)] mb-1.5">
+                  <label htmlFor="profile-weight" className="block text-sm text-[var(--muted)] mb-1.5">
                     {t("profile.weight")}
                   </label>
                   <input
+                    id="profile-weight"
                     type="number"
                     min={30}
                     max={300}
@@ -581,10 +591,11 @@ export function ProfilePageClient() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[var(--muted)] mb-1.5">
+                  <label htmlFor="profile-body-fat" className="block text-sm text-[var(--muted)] mb-1.5">
                     {t("profile.body_fat")}
                   </label>
                   <input
+                    id="profile-body-fat"
                     type="number"
                     min={3}
                     max={70}
@@ -608,11 +619,12 @@ export function ProfilePageClient() {
                     {t("profile.weekly_goals_sub")}
                   </p>
                   <div>
-                    <label className="block text-sm text-[var(--muted)] mb-1.5">
+                    <label htmlFor="profile-weekly-distance" className="block text-sm text-[var(--muted)] mb-1.5">
                       {t("profile.weekly_distance")}
                     </label>
                     <input
-                      type="number"
+                      id="profile-weekly-distance"
+                    type="number"
                       min={1}
                       max={500}
                       step={0.5}
@@ -623,10 +635,11 @@ export function ProfilePageClient() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-[var(--muted)] mb-1.5">
+                    <label htmlFor="profile-weekly-workouts" className="block text-sm text-[var(--muted)] mb-1.5">
                       {t("profile.weekly_workouts")}
                     </label>
                     <input
+                      id="profile-weekly-workouts"
                       type="number"
                       min={1}
                       max={14}
@@ -647,10 +660,11 @@ export function ProfilePageClient() {
                     {t("profile.personal_records_sub")}
                   </p>
                   <div>
-                    <label className="block text-sm text-[var(--muted)] mb-1.5">
+                    <label htmlFor="profile-pr-distance" className="block text-sm text-[var(--muted)] mb-1.5">
                       {t("profile.min_pace_distance")}
                     </label>
                     <input
+                      id="profile-pr-distance"
                       type="number"
                       min={1}
                       max={100}
@@ -665,7 +679,7 @@ export function ProfilePageClient() {
 
                 <div className="border-t border-[var(--border)] pt-5 space-y-4">
                   <h3 className="text-sm font-semibold flex items-center gap-2">
-                    <Heart size={16} className="text-rose-500" />
+                    <Heart size={16} className="text-[var(--color-status-danger)]" />
                     {t("profile.heart_rate")}
                   </h3>
                   <p className="text-xs text-[var(--muted)]">
@@ -673,7 +687,7 @@ export function ProfilePageClient() {
                   </p>
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-sm text-[var(--muted)]">
+                      <label htmlFor="profile-max-hr" className="text-sm text-[var(--muted)]">
                         {t("profile.max_hr")}
                       </label>
                       <button
@@ -686,6 +700,7 @@ export function ProfilePageClient() {
                       </button>
                     </div>
                     <input
+                      id="profile-max-hr"
                       type="number"
                       min={100}
                       max={240}
@@ -697,10 +712,11 @@ export function ProfilePageClient() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-[var(--muted)] mb-1.5">
+                    <label htmlFor="profile-resting-hr" className="block text-sm text-[var(--muted)] mb-1.5">
                       {t("profile.resting_hr")}
                     </label>
                     <input
+                      id="profile-resting-hr"
                       type="number"
                       min={30}
                       max={120}
@@ -716,11 +732,11 @@ export function ProfilePageClient() {
                 <div className="border-t border-[var(--border)] pt-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold flex items-center gap-2">
-                      <Zap size={16} className="text-amber-400 fill-amber-400" />
+                      <Zap size={16} className="text-[var(--color-status-warning)] fill-amber-400" />
                       {t("profile.cycling_power_title")}
                     </h3>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase tracking-wider">
-                      Coggan 7 Zonas
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-[var(--color-status-warning)] border border-amber-500/20 uppercase tracking-wider">
+                      {t("profile.coggan_badge")}
                     </span>
                   </div>
                   <p className="text-xs text-[var(--muted)]">
@@ -729,10 +745,10 @@ export function ProfilePageClient() {
 
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-sm text-[var(--muted)] flex items-center gap-1.5">
+                      <label htmlFor="profile-cycling-ftp" className="text-sm text-[var(--muted)] flex items-center gap-1.5">
                         <span>{t("profile.cycling_ftp")} (Watts)</span>
                         {cyclingFtpWatts && weightKg && parseFloat(weightKg) > 0 && (
-                          <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20 font-mono">
+                          <span className="text-xs font-bold text-[var(--color-status-info)] bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20 font-mono">
                             {calculateWattsPerKg(parseFloat(cyclingFtpWatts), parseFloat(weightKg))} W/kg
                           </span>
                         )}
@@ -740,7 +756,7 @@ export function ProfilePageClient() {
                       <button
                         type="button"
                         onClick={() => setShowFtpCalc(!showFtpCalc)}
-                        className="text-xs font-semibold text-amber-400 hover:underline flex items-center gap-1"
+                        className="text-xs font-semibold text-[var(--color-status-warning)] hover:underline flex items-center gap-1"
                       >
                         <Zap size={12} />
                         {showFtpCalc ? t("common.cancel") : t("profile.ftp_calc_btn")}
@@ -748,6 +764,7 @@ export function ProfilePageClient() {
                     </div>
 
                     <input
+                      id="profile-cycling-ftp"
                       type="number"
                       min={40}
                       max={700}
@@ -763,24 +780,25 @@ export function ProfilePageClient() {
                   {showFtpCalc && (
                     <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-amber-300">
+                        <span className="text-xs font-bold text-[var(--color-status-warning)]">
                           {t("profile.ftp_calc_title")}
                         </span>
                       </div>
                       
                       {/* Option 1: 20 min test */}
                       <div className="space-y-1.5">
-                        <label className="text-xs text-[var(--muted)]">
+                        <label htmlFor="profile-ftp-20min" className="text-xs text-[var(--muted)]">
                           {t("profile.ftp_calc_20min_label")}
                         </label>
                         <div className="flex gap-2">
                           <input
+                            id="profile-ftp-20min"
                             type="number"
                             min={50}
                             max={800}
                             value={ftp20MinInput}
                             onChange={(e) => setFtp20MinInput(e.target.value)}
-                            placeholder="Ex: 240 W médios"
+                            placeholder={t("profile.ftp_20min_placeholder")}
                             className="profile-input text-xs py-1 px-2.5 flex-1"
                           />
                           <button
@@ -788,26 +806,26 @@ export function ProfilePageClient() {
                             onClick={handleCalcFtp20Min}
                             className="btn-primary text-xs py-1 px-3 shrink-0"
                           >
-                            Aplicar (-5%)
+                            {t("profile.ftp_apply")}
                           </button>
                         </div>
                       </div>
 
                       {/* Option 2: By body weight */}
                       <div className="pt-2 border-t border-amber-500/20 space-y-1.5">
-                        <label className="text-xs text-[var(--muted)]">
+                        <span id="profile-ftp-weight-label" className="text-xs text-[var(--muted)]">
                           {t("profile.ftp_calc_weight_label")}
-                        </label>
-                        <div className="grid grid-cols-2 gap-1.5">
+                        </span>
+                        <div role="group" aria-labelledby="profile-ftp-weight-label" className="grid grid-cols-2 gap-1.5">
                           {(["recreational", "moderate", "trained", "advanced"] as const).map((lvl) => (
                             <button
                               key={lvl}
                               type="button"
                               onClick={() => handleCalcFtpByWeight(lvl)}
-                              className="text-[11px] py-1 px-2 rounded-lg bg-black/40 hover:bg-black/70 border border-white/10 text-left truncate flex items-center justify-between"
+                              className="text-[11px] py-1 px-2 rounded-lg bg-[var(--surface-hover)] hover:bg-[var(--surface-raised)] border border-[var(--border)] text-left truncate flex items-center justify-between"
                             >
                               <span>{t(`profile.ftp_level_${lvl}`)}</span>
-                              <span className="text-[10px] text-amber-400 font-mono">
+                              <span className="text-[10px] text-[var(--color-status-warning)] font-mono">
                                 {lvl === "recreational" ? "2.2" : lvl === "moderate" ? "2.8" : lvl === "trained" ? "3.4" : "4.1"} W/kg
                               </span>
                             </button>
@@ -821,8 +839,8 @@ export function ProfilePageClient() {
                   {cyclingFtpWatts && parseInt(cyclingFtpWatts, 10) >= 40 && (
                     <div className="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--color-surface-form)] space-y-2.5">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-white flex items-center gap-1.5">
-                          <Activity size={13} className="text-amber-400" />
+                        <span className="font-bold text-[var(--text)] flex items-center gap-1.5">
+                          <Activity size={13} className="text-[var(--color-status-warning)]" />
                           {t("profile.coggan_zones_preview_title")}
                         </span>
                         <span className="text-[11px] text-[var(--muted)] font-mono">
@@ -834,11 +852,15 @@ export function ProfilePageClient() {
                         {calculatePowerZones(parseInt(cyclingFtpWatts, 10)).map((z) => (
                           <div
                             key={z.zone}
-                            className="p-1.5 px-2 rounded-lg bg-black/30 border border-white/5 flex items-center justify-between gap-1"
+                            className="p-1.5 px-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] flex items-center justify-between gap-1"
                           >
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span
-                                style={{ backgroundColor: z.bgRgba, color: z.color, borderColor: z.color }}
+                                style={{
+                                  backgroundColor: getZoneColorVar("power", z.zone),
+                                  color: "var(--color-zone-badge-foreground)",
+                                  borderColor: getZoneColorVar("power", z.zone),
+                                }}
                                 className="px-1.5 py-0.2 rounded text-[10px] font-black border font-mono shrink-0"
                               >
                                 Z{z.zone}
@@ -870,10 +892,11 @@ export function ProfilePageClient() {
                     {t("profile.preferences_sub")}
                   </p>
                   <div>
-                    <label className="block text-sm text-[var(--muted)] mb-1.5">
+                    <label htmlFor="profile-language" className="block text-sm text-[var(--muted)] mb-1.5">
                       {t("profile.language")}
                     </label>
                     <select
+                      id="profile-language"
                       value={langSelect}
                       onChange={(e) => handleLangChange(e.target.value as "pt" | "en")}
                       className="profile-input bg-[var(--surface)] text-[var(--text)] border-[var(--border)]"
@@ -888,14 +911,14 @@ export function ProfilePageClient() {
                       <div
                         className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
                           voiceCoachConfig.enabled
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                            ? "bg-emerald-500/10 text-[var(--color-status-positive)] border border-emerald-500/30"
                             : "bg-[var(--border)] text-[var(--muted)]"
                         }`}
                       >
                         <Headphones size={18} />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-[var(--text)]">
                           {t("voice_coach.title")}
                         </p>
                         <p className="text-xs text-[var(--muted)]">
@@ -927,14 +950,14 @@ export function ProfilePageClient() {
                       <div
                         className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
                           autoPauseConfig.enabled
-                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                            ? "bg-amber-500/10 text-[var(--color-status-warning)] border border-amber-500/30"
                             : "bg-[var(--border)] text-[var(--muted)]"
                         }`}
                       >
                         <PauseCircle size={18} />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-[var(--text)]">
                           {t("auto_pause.title")}
                         </p>
                         <p className="text-xs text-[var(--muted)]">
@@ -947,7 +970,7 @@ export function ProfilePageClient() {
                     <button
                       type="button"
                       onClick={() => setIsAutoPauseModalOpen(true)}
-                      className="btn-ghost text-xs py-1.5 px-3 border border-[var(--border)] hover:border-amber-500 text-amber-400 font-semibold shrink-0"
+                      className="btn-ghost text-xs py-1.5 px-3 border border-[var(--border)] hover:border-amber-500 text-[var(--color-status-warning)] font-semibold shrink-0"
                     >
                       ⚙️ Ajustes Auto-Pause
                     </button>
@@ -985,11 +1008,15 @@ export function ProfilePageClient() {
             const shoesList = gears.filter((g) => (g.type || "shoes") === "shoes");
 
             return (
-              <div className="space-y-6">
+              <div id="profile-panel-gear" role="tabpanel" aria-labelledby="profile-tab-gear" className="space-y-6">
                 {/* Segmented Sub-Tab Switch (Bikes vs Shoes) */}
-                <div className="flex p-1 bg-[var(--surface)] border border-[var(--border)] rounded-2xl max-w-md mx-auto sm:mx-0 shadow-inner">
+                <div className="flex p-1 bg-[var(--surface)] border border-[var(--border)] rounded-2xl max-w-md mx-auto sm:mx-0 shadow-inner" role="tablist" aria-label={language === "en" ? "Gear type" : "Tipo de equipamento"}>
                   <button
                     type="button"
+                    role="tab"
+                    id="gear-tab-bikes"
+                    aria-selected={gearSubTab === "bikes"}
+                    aria-controls="gear-panel-bikes"
                     onClick={() => {
                       haptics.light();
                       setGearSubTab("bikes");
@@ -997,7 +1024,7 @@ export function ProfilePageClient() {
                     className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                       gearSubTab === "bikes"
                         ? "bg-amber-500 text-black shadow-md font-extrabold"
-                        : "text-[var(--muted)] hover:text-white"
+                        : "text-[var(--muted)] hover:text-[var(--text)]"
                     }`}
                   >
                     <Bike size={16} />
@@ -1007,14 +1034,18 @@ export function ProfilePageClient() {
                   </button>
                   <button
                     type="button"
+                    role="tab"
+                    id="gear-tab-shoes"
+                    aria-selected={gearSubTab === "shoes"}
+                    aria-controls="gear-panel-shoes"
                     onClick={() => {
                       haptics.light();
                       setGearSubTab("shoes");
                     }}
                     className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                       gearSubTab === "shoes"
-                        ? "bg-[var(--accent)] text-white shadow-md font-extrabold"
-                        : "text-[var(--muted)] hover:text-white"
+                        ? "bg-[var(--accent)] text-[var(--on-accent)] shadow-md font-extrabold"
+                        : "text-[var(--muted)] hover:text-[var(--text)]"
                     }`}
                   >
                     <Award size={16} />
@@ -1026,16 +1057,18 @@ export function ProfilePageClient() {
 
                 {/* Sub-Tab 1: Bike Garage Manager */}
                 {gearSubTab === "bikes" && (
-                  <BikeGarageManager
-                    bikes={bikesList}
-                    onRefresh={refreshData}
-                    setMessage={setMessage}
-                  />
+                  <div id="gear-panel-bikes" role="tabpanel" aria-labelledby="gear-tab-bikes">
+                    <BikeGarageManager
+                      bikes={bikesList}
+                      onRefresh={refreshData}
+                      setMessage={setMessage}
+                    />
+                  </div>
                 )}
 
                 {/* Sub-Tab 2: Running Shoes Manager */}
                 {gearSubTab === "shoes" && (
-                  <div className="space-y-6 animate-in fade-in duration-300">
+                  <div id="gear-panel-shoes" role="tabpanel" aria-labelledby="gear-tab-shoes" className="space-y-6 animate-in fade-in duration-300">
                     <div className="flex justify-between items-center">
                       <div>
                         <h2 className="text-lg font-bold">{t("gear.title")}</h2>
@@ -1070,10 +1103,11 @@ export function ProfilePageClient() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs text-[var(--muted)] mb-1">
+                            <label htmlFor="gear-name" className="block text-xs text-[var(--muted)] mb-1">
                               {t("gear.name")} *
                             </label>
                             <input
+                              id="gear-name"
                               type="text"
                               required
                               value={gearName}
@@ -1083,10 +1117,11 @@ export function ProfilePageClient() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-[var(--muted)] mb-1">
+                            <label htmlFor="gear-brand" className="block text-xs text-[var(--muted)] mb-1">
                               {t("gear.brand")}
                             </label>
                             <input
+                              id="gear-brand"
                               type="text"
                               value={gearBrand}
                               onChange={(e) => setGearBrand(e.target.value)}
@@ -1098,10 +1133,11 @@ export function ProfilePageClient() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs text-[var(--muted)] mb-1">
+                            <label htmlFor="gear-initial-distance" className="block text-xs text-[var(--muted)] mb-1">
                               {t("gear.initial_distance")}
                             </label>
                             <input
+                              id="gear-initial-distance"
                               type="number"
                               min={0}
                               step={0.1}
@@ -1114,10 +1150,11 @@ export function ProfilePageClient() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-[var(--muted)] mb-1">
+                            <label htmlFor="gear-max-distance" className="block text-xs text-[var(--muted)] mb-1">
                               {t("gear.max_distance")}
                             </label>
                             <input
+                              id="gear-max-distance"
                               type="number"
                               min={100}
                               step={50}
@@ -1204,8 +1241,8 @@ export function ProfilePageClient() {
                                   <span
                                     className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full ${
                                       g.status === "active"
-                                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                                        : "bg-red-500/10 text-red-400 border border-red-500/20"
+                                        ? "bg-emerald-500/10 text-[var(--color-status-positive)] border border-emerald-500/20"
+                                        : "bg-red-500/10 text-[var(--color-status-danger)] border border-red-500/20"
                                     }`}
                                   >
                                     {g.status === "active"
@@ -1224,7 +1261,7 @@ export function ProfilePageClient() {
                                   <span
                                     className={`font-semibold ${
                                       wearExceeded
-                                        ? "text-red-400"
+                                        ? "text-[var(--color-status-danger)]"
                                         : "text-[var(--text)]"
                                     }`}
                                   >
@@ -1278,7 +1315,8 @@ export function ProfilePageClient() {
 
                                 <button
                                   onClick={() => handleDeleteGear(g.id)}
-                                  className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
+                                  aria-label={t("gear.delete")}
+                                  className="text-[var(--color-status-danger)] hover:text-[var(--color-status-danger)] p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
                                   title={t("gear.delete")}
                                 >
                                   <Trash2 size={15} />
@@ -1297,7 +1335,7 @@ export function ProfilePageClient() {
 
           {/* TAB 3: Achievements Grid */}
           {activeTab === "achievements" && (
-            <div className="space-y-6">
+            <div id="profile-panel-achievements" role="tabpanel" aria-labelledby="profile-tab-achievements" className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {achievements.map((ach) => {
                   return (
@@ -1368,7 +1406,7 @@ export function ProfilePageClient() {
           )}
 
           {activeTab === "backup" && (
-            <div className="space-y-6">
+            <div id="profile-panel-backup" role="tabpanel" aria-labelledby="profile-tab-backup" className="space-y-6">
               {/* Card Exportar */}
               <div className="stat-card space-y-4">
                 <div className="flex items-center gap-2">
@@ -1418,7 +1456,9 @@ export function ProfilePageClient() {
 
           {/* TAB 5: Sincronização Multidispositivo */}
           {activeTab === "sync" && (
-            <SyncPanel onSyncSuccess={refreshData} />
+            <div id="profile-panel-sync" role="tabpanel" aria-labelledby="profile-tab-sync">
+              <SyncPanel onSyncSuccess={refreshData} />
+            </div>
           )}
         </>
       )}
@@ -1428,7 +1468,7 @@ export function ProfilePageClient() {
           className={`flex items-start gap-3 p-4 rounded-xl border text-sm ${
             message.type === "ok"
               ? "border-[var(--success)]/40 bg-[var(--success)]/10 text-[var(--success)]"
-              : "border-red-500/40 bg-red-500/10 text-red-300"
+              : "border-[var(--color-status-danger)]/40 bg-[var(--color-status-danger)]/10 text-[var(--color-status-danger)]"
           }`}
         >
           {message.type === "ok" && (

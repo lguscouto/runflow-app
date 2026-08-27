@@ -107,11 +107,11 @@ export function ActivitiesPageClient() {
           onClick={() => setActiveTab("heatmap")}
           className={`flex-1 py-2 text-center text-xs sm:text-sm font-semibold rounded-md transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
             activeTab === "heatmap"
-              ? "bg-orange-500/15 text-orange-400 border border-orange-500/30 shadow-sm"
+              ? "bg-orange-500/15 text-[var(--color-status-warning)] border border-orange-500/30 shadow-sm"
               : "text-[var(--muted)] hover:text-[var(--text)]"
           }`}
         >
-          <Flame size={14} className={activeTab === "heatmap" ? "text-orange-400" : "text-[var(--muted)]"} />
+          <Flame size={14} className={activeTab === "heatmap" ? "text-[var(--color-status-warning)]" : "text-[var(--muted)]"} />
           <span>{t("stats.tab_heatmap")}</span>
         </button>
       </div>

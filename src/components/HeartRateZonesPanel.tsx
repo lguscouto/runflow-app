@@ -13,6 +13,7 @@ import {
 import type { ActivityDetail, UserProfile } from "@/lib/types";
 import { getUserProfile } from "@/lib/profile";
 import { useI18n } from "@/lib/i18n";
+import { getZoneColorVar } from "@/lib/color-tokens";
 import { analyzeActivityHeartRate } from "@/lib/hr-zones";
 import { formatDuration } from "@/lib/format";
 
@@ -45,30 +46,30 @@ export function HeartRateZonesPanel({ activity }: HeartRateZonesPanelProps) {
   const getLoadBadgeColor = (label: string) => {
     switch (label) {
       case "light":
-        return "bg-slate-500/15 text-slate-400 border-slate-500/30";
+        return "bg-slate-500/15 text-[var(--muted)] border-slate-500/30";
       case "moderate":
-        return "bg-sky-500/15 text-sky-400 border-sky-500/30";
+        return "bg-sky-500/15 text-[var(--color-status-info)] border-sky-500/30";
       case "optimal":
-        return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+        return "bg-emerald-500/15 text-[var(--color-status-positive)] border-emerald-500/30";
       case "extreme":
-        return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+        return "bg-rose-500/15 text-[var(--color-status-danger)] border-rose-500/30";
       default:
-        return "bg-amber-500/15 text-amber-400 border-amber-500/30";
+        return "bg-amber-500/15 text-[var(--color-status-warning)] border-amber-500/30";
     }
   };
 
   const getEffectIcon = (effect: string) => {
     switch (effect) {
       case "recovery":
-        return <ShieldCheck size={18} className="text-slate-400 shrink-0" />;
+        return <ShieldCheck size={18} className="text-[var(--muted)] shrink-0" />;
       case "aerobic_base":
-        return <TrendingUp size={18} className="text-sky-400 shrink-0" />;
+        return <TrendingUp size={18} className="text-[var(--color-status-info)] shrink-0" />;
       case "tempo":
-        return <Activity size={18} className="text-emerald-400 shrink-0" />;
+        return <Activity size={18} className="text-[var(--color-status-positive)] shrink-0" />;
       case "threshold":
-        return <Flame size={18} className="text-amber-400 shrink-0" />;
+        return <Flame size={18} className="text-[var(--color-status-warning)] shrink-0" />;
       case "anaerobic_vo2":
-        return <Zap size={18} className="text-rose-400 shrink-0" />;
+        return <Zap size={18} className="text-[var(--color-status-danger)] shrink-0" />;
       default:
         return <Activity size={18} className="text-[var(--accent)] shrink-0" />;
     }
@@ -79,7 +80,7 @@ export function HeartRateZonesPanel({ activity }: HeartRateZonesPanelProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-500 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-rose-500/15 text-[var(--color-status-danger)] flex items-center justify-center shrink-0">
             <Heart size={20} className="animate-pulse" />
           </div>
           <div>
@@ -101,7 +102,7 @@ export function HeartRateZonesPanel({ activity }: HeartRateZonesPanelProps) {
           {analysis.peakHr > 0 && (
             <div className="px-3 py-1.5 rounded-lg bg-[var(--bg)] border border-[var(--border)] flex items-center gap-1.5">
               <span className="text-[var(--muted)]">{t("hr_zones.peak_hr_label")}:</span>
-              <span className="text-rose-400 font-bold">{analysis.peakHr} bpm</span>
+              <span className="text-[var(--color-status-danger)] font-bold">{analysis.peakHr} bpm</span>
             </div>
           )}
         </div>
@@ -183,9 +184,9 @@ export function HeartRateZonesPanel({ activity }: HeartRateZonesPanelProps) {
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span
                     style={{
-                      backgroundColor: item.zone.bgRgba,
-                      color: item.zone.color,
-                      borderColor: item.zone.color,
+                      backgroundColor: getZoneColorVar("hr", item.zone.zone),
+                      color: "var(--color-zone-badge-foreground)",
+                      borderColor: getZoneColorVar("hr", item.zone.zone),
                     }}
                     className="px-2 py-0.5 rounded-lg border text-xs font-black shrink-0"
                   >

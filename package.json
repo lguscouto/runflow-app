@@ -19,6 +19,7 @@
     "cap:android": "npx cap open android",
     "cap:run": "npx cap run android",
     "quality:versions": "node scripts/quality/version-consistency.mjs",
+    "quality:contrast": "vitest run src/lib/contrast.test.ts src/lib/color-tokens.test.ts",
     "quality:legacy": "node scripts/android/audit-legacy.mjs",
     "perf:bundle": "node scripts/perf/bundle-budget.mjs"
   },

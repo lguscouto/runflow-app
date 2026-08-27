@@ -59,7 +59,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
     return (
       <section className="stat-card">
         <div className="flex items-center gap-3">
-          <Trophy size={22} className="text-amber-500 shrink-0" />
+          <Trophy size={22} className="text-[var(--color-status-warning)] shrink-0" />
           <div>
             <p className="font-semibold text-lg">{t("prs.title")}</p>
             <p className="text-sm text-[var(--muted)]">{t("prs.empty")}</p>
@@ -75,7 +75,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.longest_distance"),
       activity: runningPrs.longestDistance,
       value: runningPrs.longestDistance ? formatDistance(runningPrs.longestDistance.distanceM) : "—",
-      icon: <Compass className="text-blue-400" size={18} />,
+      icon: <Compass className="text-[var(--color-status-info)]" size={18} />,
       bgClass: "bg-blue-500/10 border-blue-500/20",
     },
     {
@@ -83,7 +83,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.best_pace"),
       activity: runningPrs.bestPace,
       value: runningPrs.bestPace ? formatPace(runningPrs.bestPace.avgPaceSecKm) : "—",
-      icon: <Zap className="text-amber-500" size={18} />,
+      icon: <Zap className="text-[var(--color-status-warning)]" size={18} />,
       bgClass: "bg-amber-500/10 border-amber-500/20",
     },
     {
@@ -91,7 +91,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.longest_duration"),
       activity: runningPrs.longestDuration,
       value: runningPrs.longestDuration ? formatDuration(runningPrs.longestDuration.durationSec) : "—",
-      icon: <Clock className="text-emerald-400" size={18} />,
+      icon: <Clock className="text-[var(--color-status-positive)]" size={18} />,
       bgClass: "bg-emerald-500/10 border-emerald-500/20",
     },
     {
@@ -99,7 +99,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.highest_elevation"),
       activity: runningPrs.highestElevation,
       value: runningPrs.highestElevation ? formatElevation(runningPrs.highestElevation.elevationGainM) : "—",
-      icon: <Landmark className="text-purple-400" size={18} />,
+      icon: <Landmark className="text-[var(--color-status-purple)]" size={18} />,
       bgClass: "bg-purple-500/10 border-purple-500/20",
     },
   ];
@@ -110,7 +110,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.cycling_longest_distance"),
       activity: cyclingPrs.longestDistance,
       value: cyclingPrs.longestDistance ? formatDistance(cyclingPrs.longestDistance.distanceM) : "—",
-      icon: <Compass className="text-blue-400" size={18} />,
+      icon: <Compass className="text-[var(--color-status-info)]" size={18} />,
       bgClass: "bg-blue-500/10 border-blue-500/20",
     },
     {
@@ -118,7 +118,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.cycling_highest_avg_speed"),
       activity: cyclingPrs.highestAvgSpeed,
       value: cyclingPrs.highestAvgSpeed ? formatSpeed(cyclingPrs.highestAvgSpeed.avgSpeedKmh) : "—",
-      icon: <Gauge className="text-emerald-400" size={18} />,
+      icon: <Gauge className="text-[var(--color-status-positive)]" size={18} />,
       bgClass: "bg-emerald-500/10 border-emerald-500/20",
     },
     {
@@ -126,7 +126,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.cycling_max_speed"),
       activity: cyclingPrs.maxSpeed,
       value: cyclingPrs.maxSpeed ? formatSpeed(cyclingPrs.maxSpeed.maxSpeedKmh) : "—",
-      icon: <Zap className="text-orange-400" size={18} />,
+      icon: <Zap className="text-[var(--color-status-warning)]" size={18} />,
       bgClass: "bg-orange-500/10 border-orange-500/20",
     },
     {
@@ -134,7 +134,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.cycling_best_power"),
       activity: cyclingPrs.bestPower,
       value: cyclingPrs.bestPower ? formatWatts(cyclingPrs.bestPower.avgWatts) : "—",
-      icon: <Zap className="text-amber-400 fill-amber-400" size={18} />,
+      icon: <Zap className="text-[var(--color-status-warning)] fill-current" size={18} />,
       bgClass: "bg-amber-500/10 border-amber-500/20",
     },
     {
@@ -142,7 +142,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.cycling_highest_elevation"),
       activity: cyclingPrs.highestElevation,
       value: cyclingPrs.highestElevation ? formatElevation(cyclingPrs.highestElevation.elevationGainM) : "—",
-      icon: <Landmark className="text-purple-400" size={18} />,
+      icon: <Landmark className="text-[var(--color-status-purple)]" size={18} />,
       bgClass: "bg-purple-500/10 border-purple-500/20",
     },
     {
@@ -150,7 +150,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       label: t("prs.cycling_longest_duration"),
       activity: cyclingPrs.longestDuration,
       value: cyclingPrs.longestDuration ? formatDuration(cyclingPrs.longestDuration.durationSec) : "—",
-      icon: <Clock className="text-cyan-400" size={18} />,
+      icon: <Clock className="text-[var(--color-status-info)]" size={18} />,
       bgClass: "bg-cyan-500/10 border-cyan-500/20",
     },
   ];
@@ -162,7 +162,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
       {/* Header with Sport Filter Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
         <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Trophy size={20} className="text-amber-500" />
+          <Trophy size={20} className="text-[var(--color-status-warning)]" />
           <span>{t("prs.title")}</span>
         </h2>
 
@@ -176,8 +176,8 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
             }}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${
               sportTab === "running"
-                ? "bg-orange-500 text-white shadow"
-                : "text-[var(--muted)] hover:text-white"
+                ? "bg-orange-500 text-black shadow"
+                : "text-[var(--muted)] hover:text-[var(--text)]"
             }`}
           >
             <span>🏃</span>
@@ -192,7 +192,7 @@ export function PersonalRecordsCard({ prs }: PersonalRecordsCardProps) {
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5 ${
               sportTab === "cycling"
                 ? "bg-amber-500 text-black font-black shadow"
-                : "text-[var(--muted)] hover:text-white"
+                : "text-[var(--muted)] hover:text-[var(--text)]"
             }`}
           >
             <span>🚴</span>

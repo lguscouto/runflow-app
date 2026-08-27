@@ -14,6 +14,7 @@ export const colorTokens = {
   content: {
     primary: "#f0f4f8",
     inverse: "#ffffff",
+    onAccent: "#000000",
     muted: "#8b9bb4",
     inverseMuted: "rgba(255, 255, 255, 0.4)",
     inverseSoft: "rgba(255, 255, 255, 0.7)",
@@ -22,11 +23,26 @@ export const colorTokens = {
   lightMode: {
     background: "#ffffff",
     surface: "#f4f4f5",
-    text: "#000000",
-    muted: "#27272a",
-    border: "#000000",
-    accent: "#ea580c",
-    accentSoft: "rgba(234, 88, 12, 0.15)",
+    text: "#18181b",
+    muted: "#52525b",
+    border: "#71717a",
+    accent: "#c2410c",
+    accentHover: "#9a3412",
+    accentSoft: "rgba(194, 65, 12, 0.12)",
+    onAccent: "#ffffff",
+    chartPace: "#c2410c",
+    chartSpeed: "#047857",
+    chartPower: "#a16207",
+    chartCadence: "#0e7490",
+    chartElevation: "#1d4ed8",
+    chartHeartRate: "#b91c1c",
+    success: "#047857",
+    danger: "#b91c1c",
+    fitnessSuperior: "#6d28d9",
+    fitnessExcellent: "#047857",
+    fitnessGood: "#0369a1",
+    fitnessFair: "#a16207",
+    fitnessPoor: "#b91c1c",
   },
   surface: {
     app: "#0c0f14",
@@ -221,3 +237,38 @@ export const colorTokens = {
 } as const;
 
 export type ColorTokens = typeof colorTokens;
+
+export function getZoneForegroundVar(kind: "hr" | "power", zone: number): string {
+  const maxZone = kind === "hr" ? 5 : 7;
+  const normalizedZone = Math.trunc(zone);
+  if (normalizedZone < 1 || normalizedZone > maxZone) return "var(--text)";
+  return `var(--color-zone-${kind}-${normalizedZone})`;
+}
+
+export function getZoneColorVar(kind: "hr" | "power", zone: number): string {
+  const maxZone = kind === "hr" ? 5 : 7;
+  const normalizedZone = Math.trunc(zone);
+  if (normalizedZone < 1 || normalizedZone > maxZone) return "var(--border)";
+  return `var(--color-zone-${kind}-${normalizedZone})`;
+}
+
+export function getGradeColorVar(gradePct: number): string {
+  if (gradePct < 0) return "var(--color-grade-downhill)";
+  if (gradePct < 3) return "var(--color-grade-flat)";
+  if (gradePct < 6) return "var(--color-grade-moderate)";
+  if (gradePct < 9) return "var(--color-grade-steep)";
+  if (gradePct < 12) return "var(--color-grade-very-steep)";
+  return "var(--color-grade-extreme)";
+}
+
+export function getFitnessForegroundVar(
+  category: "superior" | "excellent" | "good" | "fair" | "poor"
+): string {
+  return `var(--color-fitness-${category})`;
+}
+
+export function getFitnessBadgeBackgroundVar(
+  category: "superior" | "excellent" | "good" | "fair" | "poor"
+): string {
+  return `var(--color-fitness-badge-${category})`;
+}

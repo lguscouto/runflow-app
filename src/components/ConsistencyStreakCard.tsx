@@ -42,10 +42,10 @@ export function ConsistencyStreakCard({ activities }: ConsistencyStreakCardProps
 
   const flameColors = {
     inactive: "text-zinc-500 from-zinc-500/20 to-zinc-700/20 border-zinc-700/40",
-    warm: "text-amber-500 from-amber-500/20 to-orange-600/20 border-amber-500/40",
-    fire: "text-orange-500 from-orange-500/25 to-red-600/25 border-orange-500/50",
-    blaze: "text-rose-500 from-rose-500/30 to-amber-500/30 border-rose-500/60",
-    legend: "text-yellow-400 from-yellow-500/30 via-orange-500/30 to-purple-600/30 border-yellow-500/70",
+    warm: "text-[var(--color-status-warning)] from-amber-500/20 to-orange-600/20 border-amber-500/40",
+    fire: "text-[var(--accent)] from-orange-500/25 to-red-600/25 border-orange-500/50",
+    blaze: "text-[var(--color-status-danger)] from-rose-500/30 to-amber-500/30 border-rose-500/60",
+    legend: "text-[var(--color-status-warning)] from-yellow-500/30 via-orange-500/30 to-purple-600/30 border-yellow-500/70",
   };
 
   return (
@@ -85,7 +85,7 @@ export function ConsistencyStreakCard({ activities }: ConsistencyStreakCardProps
         </div>
 
         {streakInfo.longestStreakWeeks > 0 && (
-          <div className="flex items-center gap-1 text-[11px] text-[var(--muted)] font-medium px-2 py-0.5 rounded-full bg-white/5 border border-[var(--border)]">
+          <div className="flex items-center gap-1 text-[11px] text-[var(--muted)] font-medium px-2 py-0.5 rounded-full bg-[var(--surface-hover)] border border-[var(--border)]">
             <Trophy size={12} className="text-yellow-400" />
             <span>
               {t("streaks.longest_record", { count: streakInfo.longestStreakWeeks })}
@@ -100,7 +100,7 @@ export function ConsistencyStreakCard({ activities }: ConsistencyStreakCardProps
             <span className="text-3xl font-black text-[var(--text)] tracking-tight font-mono">
               {streakInfo.currentStreakWeeks}
             </span>
-            <span className="text-sm font-semibold text-orange-400">
+            <span className="text-sm font-semibold text-[var(--accent)]">
               {streakInfo.currentStreakWeeks === 1
                 ? t("streaks.single_week")
                 : t("streaks.weeks_count", { count: streakInfo.currentStreakWeeks })}
@@ -118,7 +118,7 @@ export function ConsistencyStreakCard({ activities }: ConsistencyStreakCardProps
             <p className="text-[11px] text-[var(--muted)] font-medium">
               {t("streaks.this_week_workouts", { count: streakInfo.thisWeekCount })}
             </p>
-            <p className="text-sm font-bold text-orange-400 font-mono">
+            <p className="text-sm font-bold text-[var(--accent)] font-mono">
               {formatDistance(streakInfo.thisWeekDistanceM)}
             </p>
           </div>
@@ -133,13 +133,13 @@ export function ConsistencyStreakCard({ activities }: ConsistencyStreakCardProps
             const isToday = idx === currentDayOfWeek;
 
             let circleClass =
-              "bg-white/5 border border-[var(--border)] text-[var(--muted)]";
-            if (isCompleted) {
+              "bg-[var(--surface-hover)] border border-[var(--border)] text-[var(--muted)]";
+              if (isCompleted) {
               circleClass =
-                "bg-gradient-to-br from-orange-500 to-amber-500 border-orange-400 text-white font-bold shadow-md shadow-orange-500/20";
-            } else if (isToday) {
+              "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)] font-bold shadow-md shadow-orange-500/20";
+              } else if (isToday) {
               circleClass =
-                "border-orange-400/80 bg-orange-500/10 text-orange-400 font-bold animate-pulse";
+                "border-orange-400/80 bg-orange-500/10 text-[var(--color-status-warning)] font-bold animate-pulse";
             }
 
             return (

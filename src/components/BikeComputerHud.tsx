@@ -50,6 +50,7 @@ import {
   formatStepCadenceRange,
 } from "@/lib/structured-workout";
 import { DEFAULT_FTP_WATTS } from "@/lib/power-zones";
+import { colorTokens } from "@/lib/color-tokens";
 import {
   formatDistance,
   formatDuration,
@@ -137,7 +138,7 @@ export function BikeComputerHud({
   onManualLap,
   onClose,
 }: BikeComputerHudProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const effectiveCadence = cadenceRpm ?? stats.currentCadenceRpm ?? null;
   const effectiveClimbProg = climbProgress ?? stats.climbProgress ?? null;
   const [profileZoomMode, setProfileZoomMode] = useState<"full" | "climb">("full");
@@ -235,6 +236,37 @@ export function BikeComputerHud({
     setUnlockProgress(0);
   }, []);
 
+  const handleKeyboardUnlock = useCallback(() => {
+    if (!isLocked) return;
+    if (unlockTimerRef.current) {
+      clearInterval(unlockTimerRef.current);
+      unlockTimerRef.current = null;
+    }
+    unlockStartTimeRef.current = null;
+    setUnlockProgress(0);
+    setIsLocked(false);
+    haptics.heavy();
+  }, [isLocked]);
+
+  const getHeartRateZoneBackground = (zone: number) => {
+    if (theme === "sun") {
+      return {
+        1: "#475569",
+        2: "#0369a1",
+        3: "#15803d",
+        4: "#a16207",
+        5: "#be123c",
+      }[zone] ?? "#334155";
+    }
+    return {
+      1: "#334155",
+      2: "#075985",
+      3: "#166534",
+      4: "#a16207",
+      5: "#be123c",
+    }[zone] ?? "#1f2937";
+  };
+
   // Theme Styling Configurations
   const themeStyles = useMemo(() => {
     if (theme === "sun") {
@@ -260,17 +292,17 @@ export function BikeComputerHud({
       return {
         bg: "bg-[var(--color-surface-bike-neo)]",
         textPrimary: "text-white",
-        textSecondary: "text-cyan-300/70 font-semibold",
+        textSecondary: "text-[var(--color-status-info)]/70 font-semibold",
         cardBg: "bg-[var(--color-surface-bike-card)]/80 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_20px_var(--color-effect-cyan-soft)]",
-        accent: "text-cyan-400",
+        accent: "text-[var(--color-status-info)]",
         speedText: "text-white drop-shadow-[0_0_15px_var(--color-effect-inverse-soft-glow)]",
-        powerText: "text-amber-400 drop-shadow-[0_0_15px_var(--color-effect-power-glow)]",
-        gradeText: "text-emerald-400 drop-shadow-[0_0_15px_var(--color-effect-grade-glow)]",
-        hrText: "text-rose-400 drop-shadow-[0_0_15px_var(--color-effect-hr-glow)]",
+        powerText: "text-[var(--color-status-warning)] drop-shadow-[0_0_15px_var(--color-effect-power-glow)]",
+        gradeText: "text-[var(--color-status-positive)] drop-shadow-[0_0_15px_var(--color-effect-grade-glow)]",
+        hrText: "text-[var(--color-status-danger)] drop-shadow-[0_0_15px_var(--color-effect-hr-glow)]",
         topBarBg: "bg-[var(--color-surface-bike-header)]/90 border-b border-cyan-500/20 backdrop-blur-md",
         bottomBarBg: "bg-[var(--color-surface-bike-header)]/90 border-t border-cyan-500/20 backdrop-blur-md",
         btnPrimary: "bg-cyan-500 text-black hover:bg-cyan-400 active:bg-cyan-600 font-black shadow-[0_0_25px_var(--color-effect-cyan-glow)]",
-        btnSecondary: "bg-[var(--color-surface-control)] text-cyan-300 hover:bg-[var(--color-surface-control-hover)] border border-cyan-500/40",
+        btnSecondary: "bg-[var(--color-surface-control)] text-[var(--color-status-info)] hover:bg-[var(--color-surface-control-hover)] border border-cyan-500/40",
         btnDanger: "bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/40",
       };
     }
@@ -283,9 +315,9 @@ export function BikeComputerHud({
       cardBg: "bg-[var(--color-surface-bike-dark)] border border-neutral-800 shadow-lg",
       accent: "text-[var(--accent)]",
       speedText: "text-[var(--color-palette-neutral-100)]",
-      powerText: "text-amber-400",
-      gradeText: "text-emerald-400",
-      hrText: "text-rose-400",
+      powerText: "text-[var(--color-status-warning)]",
+      gradeText: "text-[var(--color-status-positive)]",
+      hrText: "text-[var(--color-status-danger)]",
       topBarBg: "bg-[var(--color-surface-hud)] border-b border-neutral-800",
       bottomBarBg: "bg-[var(--color-surface-hud)] border-t border-neutral-800",
       btnPrimary: "bg-[var(--accent)] text-black hover:opacity-90 active:scale-[0.98] font-bold shadow-lg shadow-[var(--accent)]/20",
@@ -300,7 +332,25 @@ export function BikeComputerHud({
   return (
     <div
       className={`fixed inset-0 z-[99999] flex flex-col select-none overflow-hidden ${themeStyles.bg}`}
-      style={{ touchAction: "manipulation" }}
+      style={
+        {
+          touchAction: "manipulation",
+          "--muted": theme === "sun" ? "#404040" : "rgba(255, 255, 255, 0.72)",
+          "--text": theme === "sun" ? "#000000" : "#ffffff",
+          "--accent": theme === "sun" ? "#000000" : "#ff7b49",
+          "--border": theme === "sun" ? "#000000" : "rgba(255, 255, 255, 0.18)",
+          "--color-workout-warmup": theme === "sun" ? "#92400e" : "#fbbf24",
+          "--color-workout-work": theme === "sun" ? "#be123c" : "#fb7185",
+          "--color-workout-recovery": theme === "sun" ? "#047857" : "#34d399",
+          "--color-workout-cooldown": theme === "sun" ? "#0369a1" : "#38bdf8",
+          "--color-status-warning": theme === "sun" ? "#92400e" : "#fbbf24",
+          "--color-status-positive": theme === "sun" ? "#047857" : "#34d399",
+          "--color-status-danger": theme === "sun" ? "#b91c1c" : "#fb7185",
+          "--color-status-info": theme === "sun" ? "#0369a1" : "#38bdf8",
+          "--color-status-purple": theme === "sun" ? "#7e22ce" : "#c084fc",
+          "--color-surface-panel-deep": theme === "sun" ? "#f8fafc" : colorTokens.surface.panelDeep,
+        } as React.CSSProperties
+      }
     >
       {/* 1. TOP STATUS & CONTROL BAR */}
       <div
@@ -310,12 +360,12 @@ export function BikeComputerHud({
         <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/20 border border-white/10 text-xs font-bold">
             <BikeIcon size={14} className={themeStyles.accent} />
-            <span className="max-w-[140px] truncate text-white">
+            <span className={`max-w-[140px] truncate ${themeStyles.textPrimary}`}>
               {selectedBike ? selectedBike.name : t("bike_hud.title")}
             </span>
           </div>
 
-          <div className="px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-black tabular-nums">
+          <div className="px-2 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-[var(--color-status-warning)] text-xs font-black tabular-nums">
             {t("bike_hud.lap_current", { num: currentLapNumber })}
           </div>
         </div>
@@ -324,14 +374,14 @@ export function BikeComputerHud({
         {isAutoPaused && (
           <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 text-black text-xs font-black animate-pulse">
             <PauseCircle size={14} />
-            <span>PAUSADO AUTO</span>
+            <span>{t("bike_hud.auto_paused")}</span>
           </div>
         )}
 
         {isPaused && !isAutoPaused && (
-          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold animate-pulse">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500/20 text-[var(--color-status-warning)] border border-amber-500/40 text-xs font-bold animate-pulse">
             <Pause size={13} />
-            <span>PAUSADO</span>
+            <span>{t("bike_hud.paused")}</span>
           </div>
         )}
 
@@ -347,15 +397,16 @@ export function BikeComputerHud({
               else setOrientationMode("auto");
             }}
             className={`p-2 rounded-lg text-xs font-bold flex items-center gap-1 ${themeStyles.btnSecondary}`}
-            title="Alternar Orientação"
+            title={t("bike_hud.action_orientation")}
+            aria-label={t("bike_hud.action_orientation")}
           >
             <RotateCw size={14} />
             <span className="hidden sm:inline">
               {orientationMode === "auto"
-                ? "Auto"
+                ? t("bike_hud.orientation_auto")
                 : orientationMode === "landscape"
-                ? "Paisagem"
-                : "Retrato"}
+                ? t("bike_hud.orientation_landscape")
+                : t("bike_hud.orientation_portrait")}
             </span>
           </button>
 
@@ -369,14 +420,15 @@ export function BikeComputerHud({
               else setTheme("dark");
             }}
             className={`p-2 rounded-lg text-xs font-bold flex items-center gap-1 ${themeStyles.btnSecondary}`}
-            title="Tema do Ciclocomputador"
+            title={t("bike_hud.action_theme")}
+            aria-label={t("bike_hud.action_theme")}
           >
             {theme === "sun" ? (
-              <Sun size={15} className="text-amber-500" />
+              <Sun size={15} className="text-[var(--color-status-warning)]" />
             ) : theme === "neo" ? (
-              <Zap size={15} className="text-cyan-400" />
+              <Zap size={15} className="text-[var(--color-status-info)]" />
             ) : (
-              <Moon size={15} className="text-indigo-400" />
+              <Moon size={15} className="text-[var(--accent)]" />
             )}
           </button>
 
@@ -389,7 +441,8 @@ export function BikeComputerHud({
                 setLayoutMode((prev) => (prev === "split_map" ? "data_only" : "split_map"));
               }}
               className={`p-2 rounded-lg text-xs font-bold flex items-center gap-1 ${themeStyles.btnSecondary}`}
-              title="Alternar Mapa"
+              title={t("bike_hud.action_map")}
+              aria-label={t("bike_hud.action_map")}
             >
               {layoutMode === "split_map" ? <LayoutGrid size={15} /> : <MapIcon size={15} />}
             </button>
@@ -416,7 +469,8 @@ export function BikeComputerHud({
               onClose();
             }}
             className={`p-2 rounded-lg text-xs font-bold flex items-center gap-1 ${themeStyles.btnSecondary}`}
-            title="Sair do HUD"
+            title={t("bike_hud.action_exit")}
+            aria-label={t("bike_hud.action_exit")}
           >
             <Minimize2 size={15} />
           </button>
@@ -442,22 +496,26 @@ export function BikeComputerHud({
 
       {/* 2.5 STRUCTURED WORKOUT ACTIVE STEP BANNER */}
       {currentWorkoutStep && (
-        <div className="mx-4 mt-2 p-3 rounded-2xl bg-[var(--color-surface-chart)]/95 border border-orange-500/40 shadow-2xl backdrop-blur-md space-y-2">
+        <div
+          className={`mx-4 mt-2 p-3 rounded-2xl border border-orange-500/40 shadow-2xl backdrop-blur-md space-y-2 ${themeStyles.cardBg}`}
+        >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span
                 className={`px-2 py-0.5 rounded-lg text-xs font-bold border ${getStepTypeBadgeStyle(currentWorkoutStep.step.type).bg} ${getStepTypeBadgeStyle(currentWorkoutStep.step.type).text} ${getStepTypeBadgeStyle(currentWorkoutStep.step.type).border}`}
               >
                 {currentWorkoutStep.repeatIndex && currentWorkoutStep.totalRepeats
-                  ? `${currentWorkoutStep.step.type === "work" ? "Tiro" : "Recup."} ${currentWorkoutStep.repeatIndex}/${currentWorkoutStep.totalRepeats}`
-                  : currentWorkoutStep.step.name || getStepTypeBadgeStyle(currentWorkoutStep.step.type).namePt}
+                  ? `${currentWorkoutStep.step.type === "work" ? t("bike_hud.step_work") : t("bike_hud.step_recovery")} ${currentWorkoutStep.repeatIndex}/${currentWorkoutStep.totalRepeats}`
+                  : currentWorkoutStep.step.name || (language === "en"
+                    ? getStepTypeBadgeStyle(currentWorkoutStep.step.type).nameEn
+                    : getStepTypeBadgeStyle(currentWorkoutStep.step.type).namePt)}
               </span>
-              <span className="text-xs font-bold text-white font-mono">
+              <span className={`text-xs font-bold ${themeStyles.textPrimary} font-mono`}>
                 {currentWorkoutStep.step.targetType === "time"
                   ? formatDuration(Math.max(0, currentWorkoutStep.step.targetValue - stepElapsedSec))
                   : currentWorkoutStep.step.targetType === "distance"
                   ? formatDistance(Math.max(0, currentWorkoutStep.step.targetValue - stepDistanceM))
-                  : "Livre"}
+                  : t("bike_hud.step_free")}
               </span>
             </div>
 
@@ -471,14 +529,14 @@ export function BikeComputerHud({
                 return (
                   <div className="flex items-center gap-1 text-[11px] font-mono">
                     <span className="text-[var(--muted)]">Alvo:</span>
-                    <span className="font-bold text-amber-300">{resPower.label}</span>
+                    <span className="font-bold text-[var(--color-status-warning)]">{resPower.label}</span>
                     {stats.currentWatts > 0 && (
                       <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
                         isPowerOnTarget
-                          ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                          ? "bg-emerald-500/20 text-[var(--color-status-positive)] border-emerald-500/30"
                           : stats.currentWatts < resPower.minWatts
-                          ? "bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse"
-                          : "bg-rose-500/20 text-rose-400 border-rose-500/30 animate-pulse"
+                          ? "bg-amber-500/20 text-[var(--color-status-warning)] border-amber-500/30 animate-pulse"
+                          : "bg-rose-500/20 text-[var(--color-status-danger)] border-rose-500/30 animate-pulse"
                       }`}>
                         {isPowerOnTarget ? "✓" : stats.currentWatts < resPower.minWatts ? "▲" : "▼"}
                       </span>
@@ -490,7 +548,7 @@ export function BikeComputerHud({
                 return (
                   <div className="flex items-center gap-1 text-[11px] font-mono">
                     <span className="text-[var(--muted)]">RPM:</span>
-                    <span className="font-bold text-cyan-300">
+                    <span className="font-bold text-[var(--color-status-info)]">
                       {formatStepCadenceRange(currentWorkoutStep.step.cadenceTarget)}
                     </span>
                   </div>
@@ -507,10 +565,14 @@ export function BikeComputerHud({
                   haptics.light();
                   onSkipWorkoutStep();
                 }}
-                className="btn-ghost text-[11px] px-2.5 py-1 border-white/20 hover:border-white/40 flex items-center gap-1 bg-white/5 active:scale-95 transition-all shrink-0"
+                className={`btn-ghost text-[11px] px-2.5 py-1 flex items-center gap-1 active:scale-95 transition-all shrink-0 ${
+                  theme === "sun"
+                    ? "text-black border-black/30 bg-black/5 hover:border-black/60 hover:bg-black/10"
+                    : "text-white border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10"
+                }`}
               >
                 <SkipForward size={13} />
-                <span>Pular</span>
+                <span>{t("workout.skip_step_btn")}</span>
               </button>
             )}
           </div>
@@ -555,10 +617,10 @@ export function BikeComputerHud({
                     {t("bike_hud.speed_current")} (km/h)
                   </span>
                   <div className="flex items-center gap-1 text-xs font-bold">
-                    {speedTrend === "up" && <span className="text-emerald-500 font-black">▲</span>}
-                    {speedTrend === "down" && <span className="text-rose-500 font-black">▼</span>}
+                    {speedTrend === "up" && <span className="text-[var(--color-status-positive)] font-black">▲</span>}
+                    {speedTrend === "down" && <span className="text-[var(--color-status-danger)] font-black">▼</span>}
                     <span className="text-xs text-[var(--muted)]">
-                      Méd: {formatSpeed(stats.avgSpeedKmh).replace(" km/h", "")}
+                      {t("bike_hud.average_value", { value: formatSpeed(stats.avgSpeedKmh).replace(" km/h", "") })}
                     </span>
                   </div>
                 </div>
@@ -579,12 +641,12 @@ export function BikeComputerHud({
               >
                 <div className="w-full flex items-center justify-between px-1">
                   <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
-                    <Zap size={12} className="fill-amber-400 text-amber-400" />
+                    <Zap size={12} className="fill-[var(--color-status-warning)] text-[var(--color-status-warning)]" />
                     <span>{t("bike_hud.power_watts")}</span>
                   </span>
                   <span className={`text-[9px] px-1.5 py-0.5 rounded font-black tracking-wider ${
                     powerSource === "sensor"
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                      ? "bg-emerald-500/20 text-[var(--color-status-positive)] border border-emerald-500/30"
                       : "bg-white/5 text-[var(--muted)] border border-white/10"
                   }`}>
                     {powerSource === "sensor" ? `⚡ ${t("record.power_source_sensor")}` : `📐 ${t("record.power_source_estimated")}`}
@@ -598,7 +660,7 @@ export function BikeComputerHud({
                   <span className="text-xs font-normal ml-1">W</span>
                 </p>
                 <span className="text-[10px] text-[var(--muted)] font-mono">
-                  Méd: {formatWatts(stats.avgWatts)}
+                  {t("bike_hud.average_value", { value: formatWatts(stats.avgWatts) })}
                 </span>
               </div>
 
@@ -616,7 +678,9 @@ export function BikeComputerHud({
                   {formatDistance(stats.distanceM)}
                 </p>
                 <span className="text-[10px] text-[var(--muted)]">
-                  {stats.maxSpeedKmh > 0 ? `Máx: ${stats.maxSpeedKmh.toFixed(1)} km/h` : "GPS Ativo"}
+                  {stats.maxSpeedKmh > 0
+                    ? t("bike_hud.max_speed_value", { value: stats.maxSpeedKmh.toFixed(1) })
+                    : t("bike_hud.gps_active")}
                 </span>
               </div>
 
@@ -634,7 +698,7 @@ export function BikeComputerHud({
                   {formatDuration(stats.movingSec || stats.elapsedSec)}
                 </p>
                 <span className="text-[10px] text-[var(--muted)] font-mono">
-                  Total: {formatDuration(stats.elapsedSec)}
+                  {t("bike_hud.total", { value: formatDuration(stats.elapsedSec) })}
                 </span>
               </div>
 
@@ -653,7 +717,7 @@ export function BikeComputerHud({
                   {formatGrade(stats.currentGradePercent)}
                 </p>
                 <span className="text-[10px] text-[var(--muted)] font-mono">
-                  {stats.currentVamMh > 0 ? formatVam(stats.currentVamMh) : "Plano"}
+                  {stats.currentVamMh > 0 ? formatVam(stats.currentVamMh) : t("bike_hud.flat")}
                 </span>
               </div>
 
@@ -665,18 +729,20 @@ export function BikeComputerHud({
                     className={`${themeStyles.cardBg} rounded-2xl p-3 flex flex-col justify-between items-center text-center`}
                   >
                     <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
-                      <RefreshCw size={12} className="text-cyan-400" />
+                      <RefreshCw size={12} className="text-[var(--color-status-info)]" />
                       <span>{t("bike_hud.cadence_label")}</span>
                     </span>
                     <p
-                      className="font-black tabular-nums leading-none text-cyan-400"
+                      className="font-black tabular-nums leading-none text-[var(--color-status-info)]"
                       style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
                     >
                       {effectiveCadence !== null ? `${effectiveCadence}` : "—"}
                       <span className="text-xs font-normal ml-1">RPM</span>
                     </p>
                     <span className="text-[10px] text-[var(--muted)] font-mono">
-                      {stats.avgCadenceRpm > 0 ? `Méd: ${stats.avgCadenceRpm} RPM` : (effectiveCadence !== null ? "Sensor Conectado" : "Sem sensor")}
+                      {stats.avgCadenceRpm > 0
+                        ? t("bike_hud.average_value", { value: `${stats.avgCadenceRpm} RPM` })
+                        : (effectiveCadence !== null ? t("bike_hud.sensor_connected") : t("bike_hud.no_sensor"))}
                     </span>
                   </div>
 
@@ -685,8 +751,8 @@ export function BikeComputerHud({
                     className={`${themeStyles.cardBg} rounded-2xl p-3 flex flex-col justify-between items-center text-center`}
                   >
                     <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
-                      <Heart size={12} className="text-rose-500 fill-rose-500" />
-                      <span>FC</span>
+                      <Heart size={12} className="text-[var(--color-status-danger)] fill-[var(--color-status-danger)]" />
+                      <span>{t("bike_hud.heart_rate_short")}</span>
                     </span>
                     <p
                       className={`font-black tabular-nums leading-none ${themeStyles.hrText}`}
@@ -698,15 +764,15 @@ export function BikeComputerHud({
                     {currentZone ? (
                       <span
                         style={{
-                          backgroundColor: currentZone.bgRgba,
-                          color: currentZone.color,
+                          backgroundColor: getHeartRateZoneBackground(currentZone.zone),
+                          color: currentZone.zone === 4 ? "var(--color-content-on-accent)" : "var(--color-content-inverse)",
                         }}
                         className="px-2 py-0.5 rounded-full text-[10px] font-black"
                       >
                         Z{currentZone.zone} • {t(currentZone.nameKey)}
                       </span>
                     ) : (
-                      <span className="text-[10px] text-[var(--muted)]">Sem sensor</span>
+                      <span className="text-[10px] text-[var(--muted)]">{t("bike_hud.no_sensor")}</span>
                     )}
                   </div>
 
@@ -715,15 +781,15 @@ export function BikeComputerHud({
                     className={`${themeStyles.cardBg} rounded-2xl p-3 flex flex-col justify-between items-center text-center`}
                   >
                     <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary}`}>
-                      Calorias
+                      {t("bike_hud.calories")}
                     </span>
                     <p
-                      className="font-black tabular-nums leading-none text-orange-400"
+                      className="font-black tabular-nums leading-none text-[var(--accent)]"
                       style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
                     >
                       {liveCalories != null ? formatCalories(liveCalories) : "—"}
                     </p>
-                    <span className="text-[10px] text-[var(--muted)]">kcal estimadas</span>
+                    <span className="text-[10px] text-[var(--muted)]">{t("bike_hud.estimated_kcal")}</span>
                   </div>
                 </>
               )}
@@ -755,7 +821,7 @@ export function BikeComputerHud({
                   <div className="w-full h-full relative">
                     <LiveMapTrack points={points} follow={isRecording} />
                     <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/70 backdrop-blur text-[10px] font-bold text-white z-[1000]">
-                      GPS AO VIVO
+                      {t("bike_hud.gps_live")}
                     </div>
                   </div>
                 )}
@@ -787,10 +853,10 @@ export function BikeComputerHud({
                   {t("bike_hud.speed_current")} (km/h)
                 </span>
                 <div className="flex items-center gap-1.5 text-xs font-bold">
-                  {speedTrend === "up" && <span className="text-emerald-500 font-black text-base">▲</span>}
-                  {speedTrend === "down" && <span className="text-rose-500 font-black text-base">▼</span>}
+                  {speedTrend === "up" && <span className="text-[var(--color-status-positive)] font-black text-base">▲</span>}
+                  {speedTrend === "down" && <span className="text-[var(--color-status-danger)] font-black text-base">▼</span>}
                   <span className="text-xs text-[var(--muted)] font-mono">
-                    Méd: {formatSpeed(stats.avgSpeedKmh).replace(" km/h", "")}
+                    {t("bike_hud.average_value", { value: formatSpeed(stats.avgSpeedKmh).replace(" km/h", "") })}
                   </span>
                 </div>
               </div>
@@ -805,8 +871,8 @@ export function BikeComputerHud({
               </div>
 
               <div className="w-full flex items-center justify-between px-3 pt-2 border-t border-white/5 text-xs text-[var(--muted)]">
-                <span>Máx: {formatSpeed(stats.maxSpeedKmh)}</span>
-                <span>{points.length} pts GPS</span>
+                <span>{t("bike_hud.max_value", { value: formatSpeed(stats.maxSpeedKmh) })}</span>
+                <span>{t("bike_hud.gps_points", { count: points.length })}</span>
               </div>
             </div>
 
@@ -842,12 +908,12 @@ export function BikeComputerHud({
               <div className={`${themeStyles.cardBg} rounded-2xl p-3.5 text-center flex flex-col justify-between relative`}>
                 <div className="w-full flex items-center justify-between">
                   <span className={`text-[10px] uppercase tracking-wider ${themeStyles.textSecondary} flex items-center gap-1`}>
-                    <Zap size={12} className="fill-amber-400 text-amber-400" />
+                    <Zap size={12} className="fill-[var(--color-status-warning)] text-[var(--color-status-warning)]" />
                     <span>{t("bike_hud.power_watts")}</span>
                   </span>
                   <span className={`text-[8px] px-1 py-0.5 rounded font-black tracking-wider ${
                     powerSource === "sensor"
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                      ? "bg-emerald-500/20 text-[var(--color-status-positive)] border border-emerald-500/30"
                       : "bg-white/5 text-[var(--muted)] border border-white/10"
                   }`}>
                     {powerSource === "sensor" ? `⚡ ${t("record.power_source_sensor")}` : `📐 ${t("record.power_source_estimated")}`}
@@ -860,7 +926,7 @@ export function BikeComputerHud({
                   {formatWatts(stats.currentWatts)}
                 </p>
                 <span className="text-[10px] text-[var(--muted)] font-mono">
-                  Méd: {formatWatts(stats.avgWatts)}
+                  {t("bike_hud.average_value", { value: formatWatts(stats.avgWatts) })}
                 </span>
               </div>
 
@@ -876,7 +942,7 @@ export function BikeComputerHud({
                   {formatGrade(stats.currentGradePercent)}
                 </p>
                 <span className="text-[10px] text-[var(--muted)] font-mono">
-                  {stats.currentVamMh > 0 ? formatVam(stats.currentVamMh) : "Plano"}
+                  {stats.currentVamMh > 0 ? formatVam(stats.currentVamMh) : t("bike_hud.flat")}
                 </span>
               </div>
             </div>
@@ -888,21 +954,21 @@ export function BikeComputerHud({
                 {effectiveCadence !== null ? (
                   <div className={`${themeStyles.cardBg} rounded-xl px-3.5 py-2.5 flex items-center justify-between`}>
                     <div className="flex items-center gap-2">
-                      <RefreshCw size={16} className="text-cyan-400 animate-spin" style={{ animationDuration: "3s" }} />
+                      <RefreshCw size={16} className="text-[var(--color-status-info)] animate-spin" style={{ animationDuration: "3s" }} />
                       <div>
-                        <p className="text-xs font-black text-cyan-400 leading-tight">{effectiveCadence} RPM</p>
+                        <p className="text-xs font-black text-[var(--color-status-info)] leading-tight">{effectiveCadence} RPM</p>
                         <p className="text-[9px] text-[var(--muted)]">{t("bike_hud.cadence_label")}</p>
                       </div>
                     </div>
                     {stats.avgCadenceRpm > 0 && (
                       <span className="text-[10px] text-[var(--muted)] font-mono">
-                        Méd: {stats.avgCadenceRpm}
+                        {t("bike_hud.average_value", { value: stats.avgCadenceRpm })}
                       </span>
                     )}
                   </div>
                 ) : (
                   <div className={`${themeStyles.cardBg} rounded-xl px-3.5 py-2.5 flex items-center justify-center text-xs text-[var(--muted)]`}>
-                    <span className="text-[11px]">Sem Cadência</span>
+                    <span className="text-[11px]">{t("bike_hud.no_cadence")}</span>
                   </div>
                 )}
 
@@ -910,17 +976,17 @@ export function BikeComputerHud({
                 {hrBpm !== null ? (
                   <div className={`${themeStyles.cardBg} rounded-xl px-3.5 py-2.5 flex items-center justify-between`}>
                     <div className="flex items-center gap-2">
-                      <Heart size={16} className="text-rose-500 fill-rose-500 animate-pulse" />
+                      <Heart size={16} className="text-[var(--color-status-danger)] fill-[var(--color-status-danger)] animate-pulse" />
                       <div>
-                        <p className="text-xs font-black text-white leading-tight">{hrBpm} BPM</p>
-                        <p className="text-[9px] text-[var(--muted)]">FC</p>
+                        <p className={`text-xs font-black ${themeStyles.textPrimary} leading-tight`}>{hrBpm} BPM</p>
+                        <p className="text-[9px] text-[var(--muted)]">{t("bike_hud.heart_rate_short")}</p>
                       </div>
                     </div>
                     {currentZone && (
                       <span
                         style={{
-                          backgroundColor: currentZone.bgRgba,
-                          color: currentZone.color,
+                          backgroundColor: getHeartRateZoneBackground(currentZone.zone),
+                          color: currentZone.zone === 4 ? "var(--color-content-on-accent)" : "var(--color-content-inverse)",
                         }}
                         className="px-2 py-0.5 rounded-full text-[10px] font-black"
                       >
@@ -930,7 +996,7 @@ export function BikeComputerHud({
                   </div>
                 ) : (
                   <div className={`${themeStyles.cardBg} rounded-xl px-3.5 py-2.5 flex items-center justify-center text-xs text-[var(--muted)]`}>
-                    <span className="text-[11px]">Sem Cinta FC</span>
+                    <span className="text-[11px]">{t("bike_hud.no_hr_strap")}</span>
                   </div>
                 )}
               </div>
@@ -968,7 +1034,7 @@ export function BikeComputerHud({
           disabled={status !== "recording" && status !== "paused"}
           className={`flex-1 h-16 rounded-2xl flex flex-col items-center justify-center gap-0.5 text-xs font-black uppercase tracking-wider transition-transform active:scale-95 ${themeStyles.btnSecondary}`}
         >
-          <Flag size={20} className="text-amber-400" />
+          <Flag size={20} className="text-[var(--color-status-warning)]" />
           <span>{t("bike_hud.lap_btn")}</span>
         </button>
 
@@ -1030,13 +1096,22 @@ export function BikeComputerHud({
               className="absolute bottom-0 left-0 right-0 bg-amber-500 transition-all"
               style={{ height: `${unlockProgress}%`, opacity: 0.3 }}
             />
-            <Lock size={40} className="text-amber-400 z-10 animate-pulse" />
+            <Lock size={40} className="text-[var(--color-status-warning)] z-10 animate-pulse" />
           </div>
 
           <h2 className="text-xl font-black text-white mb-2">{t("bike_hud.locked_badge")}</h2>
           <p className="text-sm text-neutral-400 max-w-xs mb-8">
             {t("bike_hud.unlock_prompt")}
           </p>
+
+          <button
+            type="button"
+            onClick={handleKeyboardUnlock}
+            className="mb-6 inline-flex items-center gap-2 rounded-xl border border-neutral-600 bg-neutral-800 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
+          >
+            <Unlock size={16} />
+            {t("bike_hud.unlock_button")}
+          </button>
 
           {/* Touch Unlock Progress Bar */}
           <div className="w-64 h-3 bg-neutral-800 rounded-full overflow-hidden border border-neutral-700">
@@ -1047,7 +1122,7 @@ export function BikeComputerHud({
           </div>
 
           <p className="text-[11px] text-neutral-500 mt-4 uppercase tracking-widest font-mono">
-            Proteção contra suor e chuva
+            {t("bike_hud.sweat_rain_protection")}
           </p>
         </div>
       )}

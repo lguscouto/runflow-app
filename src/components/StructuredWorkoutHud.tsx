@@ -123,7 +123,20 @@ export function StructuredWorkoutHud({
   const cadenceRangeStr = formatStepCadenceRange(step.cadenceTarget);
 
   return (
-    <div className="w-full rounded-2xl bg-[var(--color-surface-chart)]/95 border border-[var(--border)] p-3.5 sm:p-4 space-y-3 shadow-xl backdrop-blur-md">
+    <div
+      className="w-full rounded-2xl bg-[var(--color-surface-hud)]/95 border border-[var(--border)] p-3.5 sm:p-4 space-y-3 shadow-xl backdrop-blur-md"
+      style={
+        {
+          "--muted": "rgba(255, 255, 255, 0.72)",
+          "--text": "#ffffff",
+          "--border": "rgba(255, 255, 255, 0.18)",
+          "--color-workout-warmup": "#fbbf24",
+          "--color-workout-work": "#fb7185",
+          "--color-workout-recovery": "#34d399",
+          "--color-workout-cooldown": "#38bdf8",
+        } as React.CSSProperties
+      }
+    >
       {/* Top Header Badge */}
       <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] pb-2.5">
         <div className="flex items-center gap-2">
@@ -138,7 +151,7 @@ export function StructuredWorkoutHud({
         </div>
 
         {/* Step Index Counter */}
-        <div className="text-xs font-bold text-[var(--muted)]">
+        <div className="text-xs font-bold text-white/70">
           {stepIndex + 1} / {totalSteps}
         </div>
       </div>
@@ -151,7 +164,7 @@ export function StructuredWorkoutHud({
               className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${badge.bg} ${badge.text} ${badge.border}`}
             >
               {repeatIndex && totalRepeats
-                ? `${step.type === "work" ? "Tiro" : "Recuperação"} ${repeatIndex}/${totalRepeats}`
+                ? `${language === "en" ? (step.type === "work" ? "Work" : "Recovery") : step.type === "work" ? "Tiro" : "Recuperação"} ${repeatIndex}/${totalRepeats}`
                 : step.name || (language === "en" ? badge.nameEn : badge.namePt)}
             </span>
           </div>
@@ -167,7 +180,7 @@ export function StructuredWorkoutHud({
         <button
           type="button"
           onClick={onSkipStep}
-          className="btn-ghost text-xs px-3 py-2 border-white/20 hover:border-white/40 flex items-center gap-1.5 shrink-0 bg-white/5 active:scale-95 transition-all"
+          className="btn-ghost text-xs px-3 py-2 border-white/20 hover:border-white/40 text-white/70 hover:text-white flex items-center gap-1.5 shrink-0 bg-white/5 active:scale-95 transition-all"
         >
           <SkipForward size={15} />
           <span>{t("workout.skip_step_btn")}</span>
@@ -189,7 +202,7 @@ export function StructuredWorkoutHud({
         <div className="p-2.5 rounded-xl bg-black/30 border border-white/5 flex items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-1.5">
             <Gauge size={14} className="text-orange-400" />
-            <span className="text-[var(--muted)]">{t("workout.target_pace")}:</span>
+            <span className="text-white/70">{t("workout.target_pace")}:</span>
             <span className="font-bold text-white font-mono">{paceRangeStr}</span>
           </div>
 
@@ -223,7 +236,7 @@ export function StructuredWorkoutHud({
         <div className="p-2.5 rounded-xl bg-black/30 border border-amber-500/20 flex items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-1.5 min-w-0">
             <Zap size={14} className="text-amber-400 fill-amber-400 shrink-0" />
-            <span className="text-[var(--muted)]">{t("workout.target_power")}:</span>
+            <span className="text-white/70">{t("workout.target_power")}:</span>
             <span className="font-bold text-amber-300 font-mono truncate">{resolvedPower.label}</span>
           </div>
 
@@ -257,7 +270,7 @@ export function StructuredWorkoutHud({
         <div className="p-2.5 rounded-xl bg-black/30 border border-cyan-500/20 flex items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-1.5">
             <RefreshCw size={14} className="text-cyan-400 shrink-0" />
-            <span className="text-[var(--muted)]">{t("workout.target_cadence")}:</span>
+            <span className="text-white/70">{t("workout.target_cadence")}:</span>
             <span className="font-bold text-cyan-300 font-mono">{cadenceRangeStr}</span>
           </div>
 
@@ -288,14 +301,14 @@ export function StructuredWorkoutHud({
 
       {/* Next Step Preview */}
       {nextStep && (
-        <div className="flex items-center justify-between text-[11px] text-[var(--muted)] pt-1 border-t border-[var(--border)]/40">
+        <div className="flex items-center justify-between text-[11px] text-white/70 pt-1 border-t border-[var(--border)]/40">
           <span className="flex items-center gap-1 font-semibold">
             <ChevronRight size={13} className="text-orange-400" />
             {t("workout.next_step")}:
           </span>
           <span className="font-medium text-white truncate">
             {nextStep.repeatIndex && nextStep.totalRepeats
-              ? `${nextStep.step.type === "work" ? "Tiro" : "Recuperação"} ${nextStep.repeatIndex}/${nextStep.totalRepeats}`
+              ? `${language === "en" ? (nextStep.step.type === "work" ? "Work" : "Recovery") : nextStep.step.type === "work" ? "Tiro" : "Recuperação"} ${nextStep.repeatIndex}/${nextStep.totalRepeats}`
               : nextStep.step.name || (language === "en" ? getStepTypeBadgeStyle(nextStep.step.type).nameEn : getStepTypeBadgeStyle(nextStep.step.type).namePt)}{" "}
             ({formatStepTargetDescription(nextStep.step.targetType, nextStep.step.targetValue, language)})
           </span>

@@ -278,7 +278,7 @@ export function WorkoutBuilderModal({
               <Zap size={20} />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white leading-tight">
+              <h2 className="text-base sm:text-lg font-bold text-[var(--text)] leading-tight">
                 {initialWorkout ? t("workout.edit_workout") : t("workout.builder_title")}
               </h2>
               <p className="text-xs text-[var(--muted)]">{t("workout.subtitle")}</p>
@@ -288,7 +288,7 @@ export function WorkoutBuilderModal({
             type="button"
             onClick={onClose}
             aria-label={language === "en" ? "Close modal" : "Fechar modal"}
-            className="p-1.5 rounded-lg text-[var(--muted)] hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-lg text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-hover)] transition-colors"
           >
             <X size={18} />
           </button>
@@ -297,7 +297,7 @@ export function WorkoutBuilderModal({
         {/* Content Body */}
         <div className="p-4 sm:p-5 overflow-y-auto space-y-5 flex-1">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-semibold">
+            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-[var(--color-status-danger)] text-xs font-semibold">
               {errorMsg}
             </div>
           )}
@@ -305,28 +305,30 @@ export function WorkoutBuilderModal({
           {/* Name & Description */}
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-[var(--muted)] mb-1">
+              <label htmlFor="workout-name" className="block text-xs font-semibold text-[var(--muted)] mb-1">
                 {t("workout.name_label")} *
               </label>
               <input
+                id="workout-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ex: 6 x 400m Tiros @ 4:15"
-                className="w-full bg-[var(--color-surface-github)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
+                placeholder={t("workout.name_placeholder")}
+                className="w-full bg-[var(--color-surface-github)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)] transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[var(--muted)] mb-1">
+              <label htmlFor="workout-description" className="block text-xs font-semibold text-[var(--muted)] mb-1">
                 {t("workout.desc_label")}
               </label>
               <input
+                id="workout-description"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ex: Treino forte de velocidade para VO2 Max"
-                className="w-full bg-[var(--color-surface-github)] border border-[var(--border)] rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-[var(--accent)] transition-colors"
+                placeholder={t("workout.description_placeholder")}
+                className="w-full bg-[var(--color-surface-github)] border border-[var(--border)] rounded-xl px-3.5 py-2 text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)] transition-colors"
               />
             </div>
           </div>
@@ -336,11 +338,11 @@ export function WorkoutBuilderModal({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs text-[var(--muted)]">
                 <span className="font-semibold flex items-center gap-1">
-                  <Sparkles size={13} className="text-amber-400" />
-                  Perfil do Treino ({flattenedPreview.length} etapas totais)
+                  <Sparkles size={13} className="text-[var(--color-status-warning)]" />
+                  {t("workout.profile_summary", { count: flattenedPreview.length })}
                 </span>
               </div>
-              <div className="flex gap-1 h-3 rounded-lg overflow-hidden bg-black/40 p-0.5 border border-white/5">
+              <div className="flex gap-1 h-3 rounded-lg overflow-hidden bg-[var(--surface-hover)] p-0.5 border border-[var(--border)]">
                 {flattenedPreview.map((item, idx) => {
                   const style = getStepTypeBadgeStyle(item.step.type);
                   return (
@@ -357,13 +359,13 @@ export function WorkoutBuilderModal({
 
           {/* Step Items List */}
           <div className="space-y-3">
-            <label className="block text-xs font-bold text-white uppercase tracking-wider">
-              Etapas e Séries Programadas
+            <label className="block text-xs font-bold text-[var(--text)] uppercase tracking-wider">
+              {t("workout.steps_section")}
             </label>
 
             {items.length === 0 ? (
               <div className="p-8 text-center rounded-2xl border border-dashed border-[var(--border)] text-xs text-[var(--muted)]">
-                Nenhuma etapa adicionada. Clique nos botões abaixo para montar seu treino.
+                {t("workout.no_steps")}
               </div>
             ) : (
               items.map((item, index) => {
@@ -376,26 +378,27 @@ export function WorkoutBuilderModal({
                     >
                       <div className="flex items-center justify-between gap-2 border-b border-purple-500/20 pb-2.5">
                         <div className="flex items-center gap-2">
-                          <span className="p-1.5 rounded-lg bg-purple-500/20 text-purple-400">
+                          <span className="p-1.5 rounded-lg bg-purple-500/20 text-[var(--color-workout-repeat)]">
                             <Repeat size={15} />
                           </span>
-                          <span className="text-xs font-bold text-purple-300">
+                          <span className="text-xs font-bold text-[var(--color-workout-repeat)]">
                             {t("workout.repeat_block")}
                           </span>
                           <div className="flex items-center gap-1.5 ml-2">
-                            <span className="text-xs text-[var(--muted)]">Repetir:</span>
+                            <span className="text-xs text-[var(--muted)]">{t("workout.repeat_label")}</span>
                             <select
+                              aria-label={language === "en" ? "Number of repeats" : "Número de repetições"}
                               value={block.repeats}
                               onChange={(e) =>
                                 handleUpdateRepeatBlock(index, {
                                   repeats: parseInt(e.target.value, 10),
                                 })
                               }
-                              className="bg-[var(--color-surface-github)] border border-[var(--border)] rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+                              className="bg-[var(--color-surface-github)] border border-[var(--border)] rounded-lg px-2 py-1 text-xs text-[var(--text)] focus:outline-none"
                             >
                               {[2, 3, 4, 5, 6, 8, 10, 12, 15, 20].map((num) => (
                                 <option key={num} value={num}>
-                                  {num}x vezes
+                                  {t("workout.times", { count: num })}
                                 </option>
                               ))}
                             </select>
@@ -408,7 +411,12 @@ export function WorkoutBuilderModal({
                             type="button"
                             onClick={() => handleMoveItem(index, "up")}
                             disabled={index === 0}
-                            className="p-1 text-[var(--muted)] hover:text-white disabled:opacity-30"
+                            aria-label={language === "en" ? "Move step up" : "Mover etapa para cima"}
+                            className={`p-1 ${
+                            items[index].type === "repeat"
+                              ? "text-[var(--muted)] hover:text-[var(--text)]"
+                              : "text-[var(--muted)] hover:text-[var(--text)]"
+                          } disabled:opacity-30`}
                           >
                             <ArrowUp size={14} />
                           </button>
@@ -416,14 +424,20 @@ export function WorkoutBuilderModal({
                             type="button"
                             onClick={() => handleMoveItem(index, "down")}
                             disabled={index === items.length - 1}
-                            className="p-1 text-[var(--muted)] hover:text-white disabled:opacity-30"
+                            aria-label={language === "en" ? "Move step down" : "Mover etapa para baixo"}
+                            className={`p-1 ${
+                            items[index].type === "repeat"
+                              ? "text-[var(--muted)] hover:text-[var(--text)]"
+                              : "text-[var(--muted)] hover:text-[var(--text)]"
+                          } disabled:opacity-30`}
                           >
                             <ArrowDown size={14} />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleRemoveItem(index)}
-                            className="p-1 text-rose-400 hover:text-rose-300"
+                            aria-label={language === "en" ? "Remove step" : "Remover etapa"}
+                            className="p-1 text-[var(--color-status-danger)] hover:text-[var(--color-status-danger)]"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -438,9 +452,17 @@ export function WorkoutBuilderModal({
                             <div
                               key={subStep.id}
                               className="p-2.5 rounded-lg bg-[var(--color-surface-github)]/90 border border-[var(--border)] flex flex-wrap items-center justify-between gap-2"
+                              style={{
+                                "--color-workout-warmup": "#fbbf24",
+                                "--color-workout-work": "#fb7185",
+                                "--color-workout-recovery": "#34d399",
+                                "--color-workout-cooldown": "#38bdf8",
+                                "--color-workout-repeat": "#c084fc",
+                              } as React.CSSProperties}
                             >
                               <div className="flex flex-wrap items-center gap-2">
                                 <select
+                                  aria-label={language === "en" ? "Step type" : "Tipo de etapa"}
                                   value={subStep.type}
                                   onChange={(e) =>
                                     handleUpdateSubstep(index, subIdx, {
@@ -449,14 +471,15 @@ export function WorkoutBuilderModal({
                                   }
                                   className={`text-xs font-semibold px-2 py-1 rounded-md border ${badge.bg} ${badge.text} ${badge.border} focus:outline-none`}
                                 >
-                                  <option value="work">Tiro / Trabalho</option>
-                                  <option value="recovery">Recuperação</option>
-                                  <option value="warmup">Aquecimento</option>
-                                  <option value="cooldown">Desaquecimento</option>
+                                  <option value="work">{t("workout.type_work")}</option>
+                                  <option value="recovery">{t("workout.type_recovery")}</option>
+                                  <option value="warmup">{t("workout.type_warmup")}</option>
+                                  <option value="cooldown">{t("workout.type_cooldown")}</option>
                                 </select>
 
                                 {/* Target Type & Value */}
                                 <select
+                                  aria-label={language === "en" ? "Step target type" : "Tipo de meta da etapa"}
                                   value={subStep.targetType}
                                   onChange={(e) =>
                                     handleUpdateSubstep(index, subIdx, {
@@ -464,15 +487,16 @@ export function WorkoutBuilderModal({
                                       targetValue: e.target.value === "distance" ? 400 : 90,
                                     })
                                   }
-                                  className="text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-md"
+                                  className="text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-[var(--text)] px-2 py-1 rounded-md"
                                 >
-                                  <option value="distance">Distância (m)</option>
-                                  <option value="time">Tempo (s)</option>
-                                  <option value="open">Livre (Lap)</option>
+                                  <option value="distance">{t("workout.target_distance_m")}</option>
+                                  <option value="time">{t("workout.target_time_s")}</option>
+                                  <option value="open">{t("workout.target_open_lap")}</option>
                                 </select>
 
                                 {subStep.targetType !== "open" && (
                                   <input
+                                    aria-label={language === "en" ? "Step target value" : "Valor da meta da etapa"}
                                     type="number"
                                     value={subStep.targetValue}
                                     onChange={(e) =>
@@ -480,8 +504,8 @@ export function WorkoutBuilderModal({
                                         targetValue: Math.max(1, parseInt(e.target.value, 10) || 0),
                                       })
                                     }
-                                    className="w-20 text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-md"
-                                    placeholder="Valor"
+                                    className="w-20 text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-[var(--text)] px-2 py-1 rounded-md"
+                                    placeholder={t("workout.value_placeholder")}
                                   />
                                 )}
                               </div>
@@ -489,6 +513,7 @@ export function WorkoutBuilderModal({
                               <button
                                 type="button"
                                 onClick={() => handleRemoveSubstep(index, subIdx)}
+                                aria-label={language === "en" ? "Remove repeat step" : "Remover etapa da série"}
                                 className="p-1 text-rose-400 hover:text-rose-300"
                               >
                                 <Trash2 size={13} />
@@ -500,10 +525,10 @@ export function WorkoutBuilderModal({
                         <button
                           type="button"
                           onClick={() => handleAddStepToRepeat(index)}
-                          className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-semibold pt-1"
+                          className="text-xs text-[var(--color-workout-repeat)] hover:opacity-80 flex items-center gap-1 font-semibold pt-1"
                         >
                           <Plus size={13} />
-                          Adicionar etapa dentro da série
+                          {t("workout.add_step_inside_label")}
                         </button>
                       </div>
                     </div>
@@ -517,12 +542,20 @@ export function WorkoutBuilderModal({
                 return (
                   <div
                     key={step.id}
-                    className="p-3 sm:p-3.5 rounded-xl bg-[var(--color-surface-github)]/70 border border-[var(--border)] space-y-2.5"
+                    className="p-3 sm:p-3.5 rounded-xl bg-[var(--color-surface-github)]/70 border border-[var(--border)] space-y-2.5 text-[var(--text)]"
+                    style={{
+                      "--color-workout-warmup": "#fbbf24",
+                      "--color-workout-work": "#fb7185",
+                      "--color-workout-recovery": "#34d399",
+                      "--color-workout-cooldown": "#38bdf8",
+                      "--color-workout-repeat": "#c084fc",
+                    } as React.CSSProperties}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
                         {/* Step Type Selector */}
                         <select
+                          aria-label={language === "en" ? "Step type" : "Tipo de etapa"}
                           value={step.type}
                           onChange={(e) =>
                             handleUpdateSingleStep(index, {
@@ -531,21 +564,22 @@ export function WorkoutBuilderModal({
                           }
                           className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${badge.bg} ${badge.text} ${badge.border} focus:outline-none`}
                         >
-                          <option value="warmup">Aquecimento</option>
-                          <option value="work">Tiro / Trabalho</option>
-                          <option value="recovery">Recuperação</option>
-                          <option value="cooldown">Desaquecimento</option>
+                          <option value="warmup">{t("workout.type_warmup")}</option>
+                          <option value="work">{t("workout.type_work")}</option>
+                          <option value="recovery">{t("workout.type_recovery")}</option>
+                          <option value="cooldown">{t("workout.type_cooldown")}</option>
                         </select>
 
                         {/* Name Input */}
                         <input
+                          aria-label={language === "en" ? "Step name" : "Nome da etapa"}
                           type="text"
                           value={step.name || ""}
                           onChange={(e) =>
                             handleUpdateSingleStep(index, { name: e.target.value })
                           }
-                          placeholder="Nome da etapa"
-                          className="text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-lg w-32 sm:w-40"
+                          placeholder={t("workout.step_name_placeholder")}
+                          className="text-xs bg-[var(--color-surface-chart)] border border-[var(--border)] text-[var(--text)] px-2 py-1 rounded-lg w-32 sm:w-40"
                         />
                       </div>
 
@@ -555,7 +589,12 @@ export function WorkoutBuilderModal({
                           type="button"
                           onClick={() => handleMoveItem(index, "up")}
                           disabled={index === 0}
-                          className="p-1 text-[var(--muted)] hover:text-white disabled:opacity-30"
+                          aria-label={language === "en" ? "Move step up" : "Mover etapa para cima"}
+                          className={`p-1 ${
+                            items[index].type === "repeat"
+                              ? "text-[var(--muted)] hover:text-[var(--text)]"
+                              : "text-[var(--muted)] hover:text-[var(--text)]"
+                          } disabled:opacity-30`}
                         >
                           <ArrowUp size={14} />
                         </button>
@@ -563,13 +602,19 @@ export function WorkoutBuilderModal({
                           type="button"
                           onClick={() => handleMoveItem(index, "down")}
                           disabled={index === items.length - 1}
-                          className="p-1 text-[var(--muted)] hover:text-white disabled:opacity-30"
+                          aria-label={language === "en" ? "Move step down" : "Mover etapa para baixo"}
+                          className={`p-1 ${
+                            items[index].type === "repeat"
+                              ? "text-[var(--muted)] hover:text-[var(--text)]"
+                              : "text-[var(--muted)] hover:text-[var(--text)]"
+                          } disabled:opacity-30`}
                         >
                           <ArrowDown size={14} />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
+                          aria-label={language === "en" ? "Remove step" : "Remover etapa"}
                           className="p-1 text-rose-400 hover:text-rose-300"
                         >
                           <Trash2 size={14} />
@@ -579,8 +624,9 @@ export function WorkoutBuilderModal({
 
                     {/* Target Config Row */}
                     <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="text-[var(--muted)]">Meta:</span>
+                      <span className="text-[var(--muted)]">{t("workout.target_label")}</span>
                       <select
+                        aria-label={language === "en" ? "Target type" : "Tipo de meta"}
                         value={step.targetType}
                         onChange={(e) =>
                           handleUpdateSingleStep(index, {
@@ -588,16 +634,17 @@ export function WorkoutBuilderModal({
                             targetValue: e.target.value === "distance" ? 1000 : 300,
                           })
                         }
-                        className="bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-lg"
+                        className="bg-[var(--color-surface-chart)] border border-[var(--border)] text-[var(--text)] px-2 py-1 rounded-lg"
                       >
-                        <option value="distance">Distância (metros)</option>
-                        <option value="time">Tempo (segundos)</option>
-                        <option value="open">Livre (Lap manual)</option>
+                        <option value="distance">{t("workout.target_distance_meters")}</option>
+                        <option value="time">{t("workout.target_time_seconds")}</option>
+                        <option value="open">{t("workout.target_open_manual_lap")}</option>
                       </select>
 
                       {step.targetType !== "open" && (
                         <div className="flex items-center gap-1">
                           <input
+                            aria-label={language === "en" ? "Target value" : "Valor da meta"}
                             type="number"
                             value={step.targetValue}
                             onChange={(e) =>
@@ -605,10 +652,10 @@ export function WorkoutBuilderModal({
                                 targetValue: Math.max(1, parseInt(e.target.value, 10) || 0),
                               })
                             }
-                            className="w-24 bg-[var(--color-surface-chart)] border border-[var(--border)] text-white px-2 py-1 rounded-lg"
+                            className="w-24 bg-[var(--color-surface-chart)] border border-[var(--border)] text-[var(--text)] px-2 py-1 rounded-lg"
                           />
                           <span className="text-[var(--muted)]">
-                            {step.targetType === "distance" ? "m" : "seg"}
+                            {step.targetType === "distance" ? "m" : t("workout.unit_seconds_short")}
                           </span>
                         </div>
                       )}
@@ -632,7 +679,7 @@ export function WorkoutBuilderModal({
             <button
               type="button"
               onClick={handleAddRepeatBlock}
-              className="btn-ghost text-xs flex items-center gap-1 text-purple-400 border-purple-500/30 hover:border-purple-500"
+              className="btn-ghost text-xs flex items-center gap-1 text-[var(--color-workout-repeat)] border-purple-500/30 hover:border-purple-500"
             >
               <Repeat size={14} />
               {t("workout.add_repeat")}
@@ -642,7 +689,7 @@ export function WorkoutBuilderModal({
 
         {/* Footer Actions */}
         <div className="p-4 sm:p-5 border-t border-[var(--border)] bg-[var(--color-surface-github)]/70 flex items-center justify-end gap-3 shrink-0">
-          <button type="button" onClick={onClose} className="btn-ghost text-xs">
+          <button type="button" onClick={onClose} className="btn-ghost text-xs text-[var(--muted)] hover:text-[var(--text)]">
             {t("common.cancel")}
           </button>
           <button

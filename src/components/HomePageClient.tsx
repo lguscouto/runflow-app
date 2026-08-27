@@ -60,7 +60,7 @@ export function HomePageClient() {
         className="block stat-card border-[var(--accent)]/50 bg-[var(--accent-soft)] hover:border-[var(--accent)] transition-colors"
       >
         <div className="flex items-center gap-4">
-          <span className="w-14 h-14 rounded-full bg-[var(--accent)] flex items-center justify-center text-white shrink-0">
+          <span className="w-14 h-14 rounded-full bg-[var(--accent)] flex items-center justify-center text-[var(--on-accent)] shrink-0">
             <Play size={28} fill="currentColor" className="ml-1" />
           </span>
           <div>
@@ -83,9 +83,9 @@ export function HomePageClient() {
         <Link
           prefetch={false}
           href="/heatmap/"
-          className="btn-ghost text-orange-400 border border-orange-500/30 hover:border-orange-500/60 hover:bg-orange-500/10 transition-all"
+          className="btn-ghost text-[var(--accent)] border border-[var(--accent)]/30 hover:border-[var(--accent)]/60 hover:bg-[var(--accent)]/10 transition-all"
         >
-          <Flame size={18} className="text-orange-400 animate-pulse" />
+          <Flame size={18} className="text-[var(--accent)] animate-pulse" />
           {t("nav.heatmap")}
         </Link>
       </div>

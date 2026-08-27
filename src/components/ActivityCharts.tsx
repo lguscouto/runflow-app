@@ -16,7 +16,7 @@ import {
 import { SimpleLineChart } from "./SimpleLineChart";
 import { useI18n } from "@/lib/i18n";
 import { Gauge, Zap, RefreshCw, Mountain, Heart, Activity } from "lucide-react";
-import { colorTokens } from "@/lib/color-tokens";
+
 
 function paceMinLabel(secPerKm: number): string {
   const m = Math.floor(secPerKm / 60);
@@ -146,7 +146,7 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <span>{t("charts.title")}</span>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-chart-pace)]/10 text-[var(--color-chart-pace)] border border-[var(--color-chart-pace)]/20 uppercase tracking-wider">
-            Sincronizado
+            {t("charts.synced")}
           </span>
         </h2>
 
@@ -197,7 +197,7 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
           </h3>
           <SimpleLineChart
             data={paceSeries}
-            color={colorTokens.chart.pace}
+            color="var(--color-chart-pace)"
             invertY
             formatY={paceMinLabel}
             xLabel={paceByKm.length > 0 ? t("charts.kilometer") : t("charts.distance_km")}
@@ -219,7 +219,7 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
           </h3>
           <SimpleLineChart
             data={speedSeries}
-            color={colorTokens.chart.speed}
+            color="var(--color-chart-speed)"
             formatY={(v) => `${v.toFixed(1)} km/h`}
             xLabel={speedByKm.length > 0 ? t("charts.kilometer") : t("charts.distance_km")}
             hoverX={syncHoverX}
@@ -237,7 +237,7 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
           </h3>
           <SimpleLineChart
             data={powerSeries}
-            color={colorTokens.chart.power}
+            color="var(--color-chart-power)"
             formatY={(v) => `${Math.round(v)} W`}
             xLabel={t("charts.distance_km")}
             hoverX={syncHoverX}
@@ -258,7 +258,7 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
           </h3>
           <SimpleLineChart
             data={cadenceSeries}
-            color={colorTokens.chart.cadence}
+            color="var(--color-chart-cadence)"
             formatY={(v) => `${Math.round(v)} RPM`}
             xLabel={t("charts.distance_km")}
             hoverX={syncHoverX}
@@ -276,7 +276,7 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
           </h3>
           <SimpleLineChart
             data={elevation}
-            color={colorTokens.chart.elevation}
+            color="var(--color-chart-elevation)"
             formatY={(v) => `${Math.round(v)} m`}
             xLabel={t("charts.distance_km")}
             hoverX={syncHoverX}
@@ -294,7 +294,7 @@ export function ActivityCharts({ activity }: { activity: ActivityDetail }) {
           </h3>
           <SimpleLineChart
             data={heartRate}
-            color={colorTokens.chart.heartRate}
+            color="var(--color-chart-heart-rate)"
             formatY={(v) => `${Math.round(v)}`}
             xLabel={t("charts.distance_km")}
             fillArea={false}

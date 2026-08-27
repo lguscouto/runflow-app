@@ -239,7 +239,7 @@ export function OnboardingWizard() {
         {/* Wizard Step Content */}
         <div className="flex-1 min-h-[220px] flex flex-col justify-center py-2 relative">
           {errorMsg && (
-            <div className="mb-4 p-3 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-xs">
+            <div className="mb-4 p-3 rounded-lg border border-[var(--color-status-danger)]/30 bg-[var(--color-status-danger)]/10 text-[var(--color-status-danger)] text-xs">
               {errorMsg}
             </div>
           )}
@@ -248,13 +248,14 @@ export function OnboardingWizard() {
             <div className="space-y-6">
               {/* Language Selector */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-2 flex items-center gap-1.5">
+                <span id="onboarding-language-label" className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-2 flex items-center gap-1.5">
                   <Languages size={14} className="text-[var(--accent)]" />
                   {t("profile.language")}
-                </label>
-                <div className="grid grid-cols-2 gap-3">
+                </span>
+                <div role="group" aria-labelledby="onboarding-language-label" className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
+                    aria-pressed={language === "pt"}
                     onClick={() => changeLanguage("pt")}
                     className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
                       language === "pt"
@@ -266,6 +267,7 @@ export function OnboardingWizard() {
                   </button>
                   <button
                     type="button"
+                    aria-pressed={language === "en"}
                     onClick={() => changeLanguage("en")}
                     className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
                       language === "en"
@@ -280,11 +282,12 @@ export function OnboardingWizard() {
 
               {/* Name Input */}
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-2 flex items-center gap-1.5">
+                <label htmlFor="onboarding-name" className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-2 flex items-center gap-1.5">
                   <User size={14} className="text-[var(--accent)]" />
                   {t("wizard.name_label")}
                 </label>
                 <input
+                  id="onboarding-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -300,10 +303,11 @@ export function OnboardingWizard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5">
+                  <label htmlFor="onboarding-age" className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5">
                     {t("profile.age")}
                   </label>
                   <input
+                    id="onboarding-age"
                     type="number"
                     min={10}
                     max={120}
@@ -314,10 +318,11 @@ export function OnboardingWizard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5">
+                  <label htmlFor="onboarding-height" className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5">
                     {t("profile.height")}
                   </label>
                   <input
+                    id="onboarding-height"
                     type="number"
                     min={100}
                     max={250}
@@ -331,11 +336,12 @@ export function OnboardingWizard() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5 flex items-center gap-1">
+                  <label htmlFor="onboarding-weight" className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5 flex items-center gap-1">
                     <Scale size={13} className="text-[var(--accent)]" />
                     {t("profile.weight")}
                   </label>
                   <input
+                    id="onboarding-weight"
                     type="number"
                     min={30}
                     max={300}
@@ -347,10 +353,11 @@ export function OnboardingWizard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5">
+                  <label htmlFor="onboarding-body-fat" className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5">
                     {t("profile.body_fat")}
                   </label>
                   <input
+                    id="onboarding-body-fat"
                     type="number"
                     min={3}
                     max={70}
@@ -371,11 +378,12 @@ export function OnboardingWizard() {
           {step === 3 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5 flex items-center gap-1.5">
+                <label htmlFor="onboarding-weekly-distance" className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5 flex items-center gap-1.5">
                   <Target size={14} className="text-[var(--accent)]" />
                   {t("profile.weekly_distance")}
                 </label>
                 <input
+                  id="onboarding-weekly-distance"
                   type="number"
                   min={1}
                   max={500}
@@ -388,10 +396,11 @@ export function OnboardingWizard() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5 flex items-center gap-1.5">
+                <label htmlFor="onboarding-weekly-workouts" className="block text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-1.5 flex items-center gap-1.5">
                   {t("profile.weekly_workouts")}
                 </label>
                 <input
+                  id="onboarding-weekly-workouts"
                   type="number"
                   min={1}
                   max={14}
@@ -436,7 +445,7 @@ export function OnboardingWizard() {
             <button
               type="button"
               onClick={handleFinish}
-              className="btn-primary flex items-center gap-1.5 py-2.5 px-5 rounded-xl text-sm shadow-lg shadow-[var(--accent)]/20 bg-emerald-600 hover:bg-emerald-500 border-none text-white font-semibold"
+              className="btn-primary flex items-center gap-1.5 py-2.5 px-5 rounded-xl text-sm shadow-lg shadow-[var(--accent)]/20 bg-emerald-600 hover:bg-emerald-500 border-none text-black font-semibold"
             >
               <Check size={16} />
               {t("wizard.btn_finish")}

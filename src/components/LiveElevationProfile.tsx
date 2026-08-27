@@ -2,10 +2,11 @@
 
 import React, { useMemo } from "react";
 import type { ClimbSegment, RoutePoint } from "@/lib/types";
-import { getGradeColor, getCategoryBadgeStyle } from "@/lib/climb-detection";
+import { getCategoryBadgeStyle } from "@/lib/climb-detection";
 import { formatDistance, formatElevation } from "@/lib/format";
-import { colorTokens } from "@/lib/color-tokens";
+import { getGradeColorVar } from "@/lib/color-tokens";
 import { Mountain, ZoomIn, ZoomOut } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 interface LiveElevationProfileProps {
   points: Array<{ lat: number; lng: number; elevation?: number }>;
@@ -30,6 +31,8 @@ export function LiveElevationProfile({
   onToggleZoom,
   className = "",
 }: LiveElevationProfileProps) {
+  const { t } = useI18n();
+
   // Prepara os dados normalizados do perfil
   const profileData = useMemo(() => {
     if (!points || points.length < 2) return null;
@@ -163,7 +166,7 @@ export function LiveElevationProfile({
     const distDelta = p2.distM - p1.distM;
     const elevDelta = p2.elevM - p1.elevM;
     const grade = distDelta > 0 ? (elevDelta / distDelta) * 100 : 0;
-    const color = getGradeColor(grade);
+    const color = getGradeColorVar(grade);
 
     const path = `M ${x1} ${baseBottom} L ${x1} ${y1} L ${x2} ${y2} L ${x2} ${baseBottom} Z`;
     segmentPolygons.push({ path, color, avgGrade: grade });
@@ -176,18 +179,18 @@ export function LiveElevationProfile({
 
   return (
     <div
-      className={`relative w-full rounded-2xl bg-[var(--color-surface-panel-deep)] border border-white/10 p-3 shadow-xl overflow-hidden ${className}`}
+      className={`relative w-full rounded-2xl bg-[var(--color-surface-panel-deep)] border border-[var(--border)] p-3 shadow-xl overflow-hidden ${className}`}
     >
       {/* Header do Perfil */}
       <div className="flex items-center justify-between mb-1.5 px-1">
         <div className="flex items-center gap-2">
-          <Mountain size={15} className="text-amber-400" />
-          <span className="text-xs font-bold text-white tracking-wide uppercase">
+          <Mountain size={15} className="text-[var(--accent)]" />
+          <span className="text-xs font-bold text-[var(--text)] tracking-wide uppercase">
             {zoomMode === "climb" && activeClimb
               ? `${activeClimb.name} (${activeClimb.category})`
-              : "Perfil Altimétrico"}
+              : t("elevation.profile")}
           </span>
-          <span className="text-[10px] text-[var(--muted)] font-mono">
+          <span className="text-[10px] text-[var(--color-content-muted)] font-mono">
             {Math.round(minElev)}m - {Math.round(maxElev)}m
           </span>
         </div>
@@ -196,17 +199,17 @@ export function LiveElevationProfile({
           <button
             type="button"
             onClick={onToggleZoom}
-            className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition-colors"
+            className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg bg-[var(--surface-hover)] hover:bg-[var(--surface-raised)] text-[var(--text)] border border-[var(--border)] font-medium transition-colors"
           >
             {zoomMode === "full" ? (
               <>
-                <ZoomIn size={12} className="text-amber-400" />
-                <span>Zoom Subida</span>
+                <ZoomIn size={12} className="text-[var(--accent)]" />
+                <span>{t("elevation.zoom_climb")}</span>
               </>
             ) : (
               <>
-                <ZoomOut size={12} className="text-cyan-400" />
-                <span>Rota Toda</span>
+                <ZoomOut size={12} className="text-[var(--accent)]" />
+                <span>{t("elevation.zoom_route")}</span>
               </>
             )}
           </button>
@@ -223,9 +226,9 @@ export function LiveElevationProfile({
           <defs>
             {/* Gradiente de fundo sutil */}
             <linearGradient id="gridLineGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor={colorTokens.effects.gridSubtle} />
-              <stop offset="50%" stopColor={colorTokens.effects.gridSoft} />
-              <stop offset="100%" stopColor={colorTokens.effects.gridSubtle} />
+              <stop offset="0%" stopColor="var(--border)" stopOpacity="0.25" />
+              <stop offset="50%" stopColor="var(--muted)" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="var(--border)" stopOpacity="0.25" />
             </linearGradient>
           </defs>
 
@@ -235,7 +238,7 @@ export function LiveElevationProfile({
             y1={paddingTop}
             x2={svgWidth - paddingX}
             y2={paddingTop}
-            stroke={colorTokens.effects.guideStrong}
+            stroke="var(--border)"
             strokeDasharray="3 3"
           />
           <line
@@ -243,7 +246,7 @@ export function LiveElevationProfile({
             y1={paddingTop + plotHeight / 2}
             x2={svgWidth - paddingX}
             y2={paddingTop + plotHeight / 2}
-            stroke={colorTokens.effects.guideMid}
+            stroke="var(--border)"
             strokeDasharray="3 3"
           />
           <line
@@ -251,7 +254,7 @@ export function LiveElevationProfile({
             y1={baseBottom}
             x2={svgWidth - paddingX}
             y2={baseBottom}
-            stroke={colorTokens.effects.guideBase}
+            stroke="var(--border)"
           />
 
           {/* Polígonos coloridos com as cores de inclinação */}
@@ -269,7 +272,7 @@ export function LiveElevationProfile({
           <path
             d={profileLinePath}
             fill="none"
-            stroke={colorTokens.effects.lineStrong}
+            stroke="var(--text)"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -316,7 +319,7 @@ export function LiveElevationProfile({
                   <text
                     x={Math.max(paddingX, startX - 14) + 14}
                     y={paddingTop - 3}
-                    fill={colorTokens.content.inverse}
+                    fill={badgeStyle.badgeText}
                     fontSize="7.5"
                     fontWeight="bold"
                     textAnchor="middle"
@@ -336,7 +339,7 @@ export function LiveElevationProfile({
                 y1={paddingTop}
                 x2={riderX}
                 y2={baseBottom}
-                stroke={colorTokens.map.elevation}
+                stroke="var(--color-chart-elevation)"
                 strokeWidth="1.5"
                 strokeDasharray="2 2"
               />
@@ -346,7 +349,7 @@ export function LiveElevationProfile({
                 cy={riderY}
                 r={8}
                 fill="none"
-                stroke={colorTokens.map.elevation}
+                stroke="var(--color-chart-elevation)"
                 strokeWidth="2"
                 opacity={0.6}
               />
@@ -355,8 +358,8 @@ export function LiveElevationProfile({
                 cx={riderX}
                 cy={riderY}
                 r={4.5}
-                fill={colorTokens.map.elevation}
-                stroke={colorTokens.content.inverse}
+                fill="var(--color-chart-elevation)"
+                stroke="var(--text)"
                 strokeWidth="1.5"
               />
             </g>
@@ -366,7 +369,7 @@ export function LiveElevationProfile({
           <text
             x={paddingX}
             y={svgHeight - 4}
-            fill={colorTokens.content.inverseMuted}
+            fill="var(--muted)"
             fontSize="8.5"
             fontFamily="monospace"
           >
@@ -375,7 +378,7 @@ export function LiveElevationProfile({
           <text
             x={svgWidth / 2}
             y={svgHeight - 4}
-            fill={colorTokens.content.inverseMuted}
+            fill="var(--muted)"
             fontSize="8.5"
             fontFamily="monospace"
             textAnchor="middle"
@@ -385,7 +388,7 @@ export function LiveElevationProfile({
           <text
             x={svgWidth - paddingX}
             y={svgHeight - 4}
-            fill={colorTokens.content.inverseMuted}
+            fill="var(--muted)"
             fontSize="8.5"
             fontFamily="monospace"
             textAnchor="end"
@@ -396,7 +399,7 @@ export function LiveElevationProfile({
       </div>
 
       {/* Legenda rápida de gradiente */}
-      <div className="flex items-center justify-between text-[10px] text-[var(--muted)] mt-1 px-1">
+      <div className="flex items-center justify-between text-[10px] text-[var(--color-content-muted)] mt-1 px-1">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-[var(--color-palette-emerald-500)]" /> &lt;3%
@@ -414,8 +417,8 @@ export function LiveElevationProfile({
             <span className="w-2 h-2 rounded-full bg-[var(--color-palette-purple-500)]" /> &gt;12%
           </span>
         </div>
-        <div className="font-mono text-white/70">
-          Alt atual: <strong className="text-cyan-300">{Math.round(riderElev)}m</strong>
+        <div className="font-mono text-[var(--color-content-muted)]">
+          {t("elevation.current_altitude")}: <strong className="text-[var(--accent)]">{Math.round(riderElev)}m</strong>
         </div>
       </div>
     </div>

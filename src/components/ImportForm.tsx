@@ -127,7 +127,7 @@ export function ImportForm() {
           className={`flex items-start gap-3 p-4 rounded-xl border ${
             message.type === "ok"
               ? "border-[var(--success)]/40 bg-[var(--success)]/10 text-[var(--success)]"
-              : "border-red-500/40 bg-red-500/10 text-red-300"
+              : "border-red-500/40 bg-red-500/10 text-[var(--color-status-danger)]"
           }`}
         >
           {message.type === "ok" ? (

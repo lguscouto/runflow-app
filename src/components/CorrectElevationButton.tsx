@@ -52,7 +52,7 @@ export function CorrectElevationButton({ activityId }: { activityId: string }) {
           ? t("detail.correct_elevation_loading")
           : t("detail.correct_elevation_btn")}
       </button>
-      {error && <p className="text-xs text-red-400 max-w-[200px] text-right">{error}</p>}
+      {error && <p className="text-xs text-[var(--color-status-danger)] max-w-[200px] text-right">{error}</p>}
     </div>
   );
 }

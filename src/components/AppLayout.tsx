@@ -8,6 +8,7 @@ import { haptics } from "@/lib/haptics";
 import React from "react";
 
 import { OnboardingWizard } from "@/components/OnboardingWizard";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { t, loading } = useI18n();
@@ -35,7 +36,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={handleNavClick}
             className="touch-target flex items-center gap-2 font-bold text-lg shrink-0"
           >
-            <span className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white text-sm shadow-sm font-black tracking-tighter">
+            <span className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-[var(--on-accent)] text-sm shadow-sm font-black tracking-tighter">
               RF
             </span>
             <span>RunFlow</span>
@@ -105,23 +106,29 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
           </nav>
 
-          {/* Mobile Top Header Quick Action (Import GPX/FIT) */}
-          <div className="flex sm:hidden items-center gap-2">
-            <Link
-              prefetch={false}
-              href="/importar/"
-              onClick={handleNavClick}
-              aria-current={isImport ? "page" : undefined}
-              className={`touch-target p-2 rounded-lg text-sm border border-[var(--border)] transition-colors ${
-                isImport
-                  ? "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/40"
-                  : "text-[var(--muted)] hover:text-[var(--text)] bg-[var(--surface)]"
-              }`}
-              title={t("nav.import")}
-              aria-label={t("nav.import")}
-            >
-              <Upload size={18} />
-            </Link>
+          <div className="flex items-center gap-2">
+            {/* Mobile Top Header Quick Action (Import GPX/FIT) */}
+            <div className="flex sm:hidden items-center gap-2">
+              <Link
+                prefetch={false}
+                href="/importar/"
+                onClick={handleNavClick}
+                aria-current={isImport ? "page" : undefined}
+                className={`touch-target p-2 rounded-lg text-sm border border-[var(--border)] transition-colors ${
+                  isImport
+                    ? "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/40"
+                    : "text-[var(--muted)] hover:text-[var(--text)] bg-[var(--surface)]"
+                }`}
+                title={t("nav.import")}
+                aria-label={t("nav.import")}
+              >
+                <Upload size={18} />
+              </Link>
+            </div>
+            <ThemeToggle
+              lightLabel={t("theme.switch_to_light")}
+              darkLabel={t("theme.switch_to_dark")}
+            />
           </div>
         </div>
       </header>
@@ -182,7 +189,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           aria-label={t("nav.record")}
           title={t("nav.record")}
         >
-          <Play size={22} className="fill-white ml-0.5" />
+          <Play size={22} className="fill-[var(--on-accent)] ml-0.5" />
         </Link>
 
         <Link

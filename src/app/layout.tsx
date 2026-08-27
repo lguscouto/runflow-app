@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { CapacitorInit } from "@/components/CapacitorInit";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { colorTokens } from "@/lib/color-tokens";
 import "./globals.css";
 
@@ -36,12 +37,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" data-theme="dark" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <CapacitorInit />
-        <I18nProvider>
-          <AppLayout>{children}</AppLayout>
-        </I18nProvider>
+        <ThemeProvider>
+          <CapacitorInit />
+          <I18nProvider>
+            <AppLayout>{children}</AppLayout>
+          </I18nProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import {
   Volume2,
   VolumeX,
@@ -46,6 +46,12 @@ export function VoiceCoachModal({
   });
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) {
+      setConfig({ ...DEFAULT_VOICE_COACH_CONFIG, ...initialConfig });
+    }
+  }, [initialConfig, isOpen]);
+
   if (!isOpen) return null;
 
   const handleToggle = (key: keyof VoiceCoachConfig) => {
@@ -53,6 +59,16 @@ export function VoiceCoachModal({
       ...prev,
       [key]: !prev[key],
     }));
+  };
+
+  const handleToggleKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+    key: keyof VoiceCoachConfig,
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleToggle(key);
+    }
   };
 
   const handlePreview = () => {
@@ -102,7 +118,7 @@ export function VoiceCoachModal({
             type="button"
             onClick={onClose}
             aria-label={language === "en" ? "Close modal" : "Fechar modal"}
-            className="p-1.5 text-[var(--muted)] hover:text-white rounded-lg transition hover:bg-[var(--surface-hover)]"
+            className="p-1.5 text-[var(--muted)] hover:text-[var(--text)] rounded-lg transition hover:bg-[var(--surface-hover)]"
           >
             <X size={20} />
           </button>
@@ -111,11 +127,15 @@ export function VoiceCoachModal({
         {/* Scrollable Content */}
         <div className="p-5 overflow-y-auto space-y-6 text-sm">
           {/* Master Enable Card */}
-          <div
+          <button
+            type="button"
+            role="switch"
+            aria-checked={config.enabled}
+            aria-label={t("voice_coach.enable")}
             onClick={() => handleToggle("enabled")}
-            className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between ${
+            className={`w-full text-left p-4 rounded-xl border transition cursor-pointer flex items-center justify-between ${
               config.enabled
-                ? "bg-[var(--accent)]/10 border-[var(--accent)] text-white"
+                ? "bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--text)]"
                 : "bg-[var(--surface-hover)] border-[var(--border)] text-[var(--muted)]"
             }`}
           >
@@ -123,14 +143,14 @@ export function VoiceCoachModal({
               <div
                 className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                   config.enabled
-                    ? "bg-[var(--accent)] text-white"
+                    ? "bg-[var(--accent)] text-[var(--on-accent)]"
                     : "bg-[var(--border)] text-[var(--muted)]"
                 }`}
               >
                 {config.enabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
               </div>
               <div>
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-[var(--text)]">
                   {t("voice_coach.enable")}
                 </p>
                 <p className="text-xs text-[var(--muted)]">
@@ -141,13 +161,13 @@ export function VoiceCoachModal({
             <div
               className={`w-6 h-6 rounded-full flex items-center justify-center border ${
                 config.enabled
-                  ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                  ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                   : "border-[var(--border)]"
               }`}
             >
               {config.enabled && <Check size={14} />}
             </div>
-          </div>
+          </button>
 
           {config.enabled && (
             <>
@@ -159,13 +179,14 @@ export function VoiceCoachModal({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
+                    aria-pressed={config.triggerType === "distance"}
                     onClick={() =>
                       setConfig((prev) => ({ ...prev, triggerType: "distance" }))
                     }
                     className={`py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
                       config.triggerType === "distance"
-                        ? "bg-[var(--accent)] text-white border-[var(--accent)] shadow-md"
-                        : "bg-[var(--surface-hover)] border-[var(--border)] text-[var(--muted)] hover:text-white"
+                        ? "bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-md"
+                        : "bg-[var(--surface-hover)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]"
                     }`}
                   >
                     <Footprints size={16} />
@@ -173,13 +194,14 @@ export function VoiceCoachModal({
                   </button>
                   <button
                     type="button"
+                    aria-pressed={config.triggerType === "time"}
                     onClick={() =>
                       setConfig((prev) => ({ ...prev, triggerType: "time" }))
                     }
                     className={`py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
                       config.triggerType === "time"
-                        ? "bg-[var(--accent)] text-white border-[var(--accent)] shadow-md"
-                        : "bg-[var(--surface-hover)] border-[var(--border)] text-[var(--muted)] hover:text-white"
+                        ? "bg-[var(--accent)] text-[var(--on-accent)] border-[var(--accent)] shadow-md"
+                        : "bg-[var(--surface-hover)] border-[var(--border)] text-[var(--muted)] hover:text-[var(--text)]"
                     }`}
                   >
                     <Clock size={16} />
@@ -190,10 +212,11 @@ export function VoiceCoachModal({
                 {/* Interval selection */}
                 {config.triggerType === "distance" ? (
                   <div className="space-y-1.5 mt-2">
-                    <label className="text-xs text-[var(--muted)]">
+                    <label htmlFor="voice-coach-distance-interval" className="text-xs text-[var(--muted)]">
                       {t("voice_coach.interval_distance")}
                     </label>
                     <select
+                      id="voice-coach-distance-interval"
                       value={config.distanceIntervalM}
                       onChange={(e) =>
                         setConfig((prev) => ({
@@ -214,10 +237,11 @@ export function VoiceCoachModal({
                   </div>
                 ) : (
                   <div className="space-y-1.5 mt-2">
-                    <label className="text-xs text-[var(--muted)]">
+                    <label htmlFor="voice-coach-time-interval" className="text-xs text-[var(--muted)]">
                       {t("voice_coach.interval_time")}
                     </label>
                     <select
+                      id="voice-coach-time-interval"
                       value={config.timeIntervalSec}
                       onChange={(e) =>
                         setConfig((prev) => ({
@@ -249,14 +273,19 @@ export function VoiceCoachModal({
                   {/* Distance */}
                   <div
                     onClick={() => handleToggle("speakDistance")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakDistance")}
+                    role="checkbox"
+                    aria-checked={config.speakDistance}
+                    aria-label={t("voice_coach.metric_distance")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       config.speakDistance
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Footprints size={16} className="text-orange-400" />
+                      <Footprints size={16} className="text-[var(--color-status-warning)]" />
                       <span className="text-xs font-medium">
                         {t("voice_coach.metric_distance")}
                       </span>
@@ -264,7 +293,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakDistance
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -275,14 +304,19 @@ export function VoiceCoachModal({
                   {/* Time */}
                   <div
                     onClick={() => handleToggle("speakTime")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakTime")}
+                    role="checkbox"
+                    aria-checked={config.speakTime}
+                    aria-label={t("voice_coach.metric_time")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       config.speakTime
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Clock size={16} className="text-blue-400" />
+                      <Clock size={16} className="text-[var(--color-status-info)]" />
                       <span className="text-xs font-medium">
                         {t("voice_coach.metric_time")}
                       </span>
@@ -290,7 +324,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakTime
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -301,14 +335,19 @@ export function VoiceCoachModal({
                   {/* Avg Pace / Speed */}
                   <div
                     onClick={() => handleToggle("speakAvgPace")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakAvgPace")}
+                    role="checkbox"
+                    aria-checked={config.speakAvgPace}
+                    aria-label={t("voice_coach.metric_avg_pace")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       config.speakAvgPace
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Gauge size={16} className="text-emerald-400" />
+                      <Gauge size={16} className="text-[var(--color-status-positive)]" />
                       <span className="text-xs font-medium">
                         {sport === "cycling"
                           ? t("voice_coach.metric_speed_kmh")
@@ -318,7 +357,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakAvgPace
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -333,14 +372,24 @@ export function VoiceCoachModal({
                         sport === "cycling" ? "speakCurrentSpeedKmh" : "speakCurrentPace"
                       )
                     }
+                    onKeyDown={(event) =>
+                      handleToggleKeyDown(
+                        event,
+                        sport === "cycling" ? "speakCurrentSpeedKmh" : "speakCurrentPace",
+                      )
+                    }
+                    role="checkbox"
+                    aria-checked={sport === "cycling" ? config.speakCurrentSpeedKmh : config.speakCurrentPace}
+                    aria-label={sport === "cycling" ? t("voice_coach.metric_current_speed_kmh") : t("voice_coach.metric_current_pace")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       (sport === "cycling" ? config.speakCurrentSpeedKmh : config.speakCurrentPace)
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Gauge size={16} className="text-cyan-400" />
+                      <Gauge size={16} className="text-[var(--color-status-info)]" />
                       <span className="text-xs font-medium">
                         {sport === "cycling"
                           ? t("voice_coach.metric_current_speed_kmh")
@@ -350,7 +399,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         (sport === "cycling" ? config.speakCurrentSpeedKmh : config.speakCurrentPace)
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -363,14 +412,19 @@ export function VoiceCoachModal({
                   {/* Cadence (RPM) */}
                   <div
                     onClick={() => handleToggle("speakCadence")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakCadence")}
+                    role="checkbox"
+                    aria-checked={config.speakCadence}
+                    aria-label={t("voice_coach.metric_cadence")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       config.speakCadence
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <RefreshCw size={16} className="text-cyan-300" />
+                      <RefreshCw size={16} className="text-[var(--color-status-info)]" />
                       <span className="text-xs font-medium">
                         {t("voice_coach.metric_cadence")}
                       </span>
@@ -378,7 +432,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakCadence
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -389,14 +443,19 @@ export function VoiceCoachModal({
                   {/* Power (Watts) */}
                   <div
                     onClick={() => handleToggle("speakPowerWatts")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakPowerWatts")}
+                    role="checkbox"
+                    aria-checked={config.speakPowerWatts}
+                    aria-label={t("voice_coach.metric_power_watts")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       config.speakPowerWatts
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Zap size={16} className="text-amber-400" />
+                      <Zap size={16} className="text-[var(--color-status-warning)]" />
                       <span className="text-xs font-medium">
                         {t("voice_coach.metric_power_watts")}
                       </span>
@@ -404,7 +463,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakPowerWatts
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -415,14 +474,19 @@ export function VoiceCoachModal({
                   {/* Elevation Gain */}
                   <div
                     onClick={() => handleToggle("speakElevationGain")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakElevationGain")}
+                    role="checkbox"
+                    aria-checked={config.speakElevationGain}
+                    aria-label={t("voice_coach.metric_elevation_gain")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       config.speakElevationGain
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Mountain size={16} className="text-emerald-300" />
+                      <Mountain size={16} className="text-[var(--color-status-positive)]" />
                       <span className="text-xs font-medium">
                         {t("voice_coach.metric_elevation_gain")}
                       </span>
@@ -430,7 +494,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakElevationGain
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -441,14 +505,19 @@ export function VoiceCoachModal({
                   {/* Last Split */}
                   <div
                     onClick={() => handleToggle("speakLastSplit")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakLastSplit")}
+                    role="checkbox"
+                    aria-checked={config.speakLastSplit}
+                    aria-label={t("voice_coach.metric_last_split")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       config.speakLastSplit
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Activity size={16} className="text-purple-400" />
+                      <Activity size={16} className="text-[var(--color-status-purple)]" />
                       <span className="text-xs font-medium">
                         {t("voice_coach.metric_last_split")}
                       </span>
@@ -456,7 +525,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakLastSplit
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -467,14 +536,19 @@ export function VoiceCoachModal({
                   {/* Heart Rate */}
                   <div
                     onClick={() => handleToggle("speakHeartRate")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakHeartRate")}
+                    role="checkbox"
+                    aria-checked={config.speakHeartRate}
+                    aria-label={t("voice_coach.metric_heart_rate")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition ${
                       config.speakHeartRate
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Heart size={16} className="text-rose-400" />
+                      <Heart size={16} className="text-[var(--color-status-danger)]" />
                       <span className="text-xs font-medium">
                         {t("voice_coach.metric_heart_rate")}
                       </span>
@@ -482,7 +556,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakHeartRate
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -493,14 +567,19 @@ export function VoiceCoachModal({
                   {/* Heart Rate Zone */}
                   <div
                     onClick={() => handleToggle("speakHeartRateZone")}
+                    onKeyDown={(event) => handleToggleKeyDown(event, "speakHeartRateZone")}
+                    role="checkbox"
+                    aria-checked={config.speakHeartRateZone}
+                    aria-label={t("voice_coach.metric_heart_rate_zone")}
+                    tabIndex={0}
                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition sm:col-span-2 ${
                       config.speakHeartRateZone
-                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-white"
+                        ? "bg-[var(--surface-hover)] border-[var(--accent)] text-[var(--text)]"
                         : "bg-[var(--surface-hover)]/40 border-[var(--border)] text-[var(--muted)]"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Heart size={16} className="text-amber-400" />
+                      <Heart size={16} className="text-[var(--color-status-warning)]" />
                       <span className="text-xs font-medium">
                         {t("voice_coach.metric_heart_rate_zone")}
                       </span>
@@ -508,7 +587,7 @@ export function VoiceCoachModal({
                     <div
                       className={`w-4 h-4 rounded border flex items-center justify-center ${
                         config.speakHeartRateZone
-                          ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                          ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                           : "border-[var(--border)]"
                       }`}
                     >
@@ -529,11 +608,13 @@ export function VoiceCoachModal({
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs text-[var(--muted)]">
                       <span>{t("voice_coach.speech_rate")}</span>
-                      <span className="font-mono text-white font-bold">
+                      <span className="font-mono text-[var(--text)] font-bold">
                         {config.speechRate.toFixed(1)}x
                       </span>
                     </div>
                     <input
+                      id="voice-coach-speech-rate"
+                      aria-label={t("voice_coach.speech_rate")}
                       type="range"
                       min="0.7"
                       max="1.5"
@@ -553,11 +634,13 @@ export function VoiceCoachModal({
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs text-[var(--muted)]">
                       <span>{t("voice_coach.speech_volume")}</span>
-                      <span className="font-mono text-white font-bold">
+                      <span className="font-mono text-[var(--text)] font-bold">
                         {Math.round(config.speechVolume * 100)}%
                       </span>
                     </div>
                     <input
+                      id="voice-coach-speech-volume"
+                      aria-label={t("voice_coach.speech_volume")}
                       type="range"
                       min="0.2"
                       max="1.0"

@@ -14,6 +14,7 @@ import {
 import type { ActivityDetail, UserProfile } from "@/lib/types";
 import { getUserProfile } from "@/lib/profile";
 import { useI18n } from "@/lib/i18n";
+import { getZoneColorVar } from "@/lib/color-tokens";
 import { analyzeActivityPowerZones } from "@/lib/power-zones";
 import { formatDuration, formatWatts } from "@/lib/format";
 
@@ -44,30 +45,31 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
   }
 
   const getIfBadgeColor = (ifVal?: number) => {
-    if (!ifVal) return "bg-slate-500/15 text-slate-400 border-slate-500/30";
-    if (ifVal < 0.75) return "bg-sky-500/15 text-sky-400 border-sky-500/30";
-    if (ifVal < 0.85) return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
-    if (ifVal < 0.95) return "bg-amber-500/15 text-amber-400 border-amber-500/30";
-    return "bg-rose-500/15 text-rose-400 border-rose-500/30";
+    if (!ifVal) return "bg-slate-500/15 text-[var(--muted)] border-slate-500/30";
+    if (ifVal < 0.75) return "bg-sky-500/15 text-[var(--color-status-info)] border-sky-500/30";
+    if (ifVal < 0.85) return "bg-emerald-500/15 text-[var(--color-status-positive)] border-emerald-500/30";
+    if (ifVal < 0.95) return "bg-amber-500/15 text-[var(--color-status-warning)] border-amber-500/30";
+    return "bg-rose-500/15 text-[var(--color-status-danger)] border-rose-500/30";
   };
+
 
   return (
     <section className="stat-card space-y-6 border-[var(--border)] bg-[var(--surface)]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-[var(--color-status-warning)] flex items-center justify-center shrink-0">
             <Zap size={20} className="fill-amber-400" />
           </div>
           <div>
             <h2 className="text-base font-bold text-[var(--text)] flex items-center gap-2">
               <span>{t("power_zones.title")}</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase tracking-wider">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-[var(--color-status-warning)] border border-amber-500/20 uppercase tracking-wider">
                 Coggan 7 Zonas
               </span>
             </h2>
             <p className="text-xs text-[var(--muted)]">
-              {t("power_zones.subtitle")} • FTP Base: <strong className="text-white font-mono">{analysis.ftpWatts} W</strong>
+              {t("power_zones.subtitle")} • FTP Base: <strong className="text-[var(--text)] font-mono">{analysis.ftpWatts} W</strong>
             </p>
           </div>
         </div>
@@ -76,12 +78,12 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
         <div className="flex items-center gap-2 text-xs font-semibold">
           <div className="px-3 py-1.5 rounded-lg bg-[var(--bg)] border border-[var(--border)] flex items-center gap-1.5">
             <span className="text-[var(--muted)]">{t("power_zones.avg_watts_label")}:</span>
-            <span className="text-amber-400 font-bold font-mono">{formatWatts(analysis.avgWatts)}</span>
+            <span className="text-[var(--color-status-warning)] font-bold font-mono">{formatWatts(analysis.avgWatts)}</span>
           </div>
           {analysis.maxWatts > 0 && (
             <div className="px-3 py-1.5 rounded-lg bg-[var(--bg)] border border-[var(--border)] flex items-center gap-1.5">
               <span className="text-[var(--muted)]">{t("power_zones.max_watts_label")}:</span>
-              <span className="text-rose-400 font-bold font-mono">{formatWatts(analysis.maxWatts)}</span>
+              <span className="text-[var(--color-status-danger)] font-bold font-mono">{formatWatts(analysis.maxWatts)}</span>
             </div>
           )}
         </div>
@@ -98,7 +100,7 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
             </span>
           </span>
           <div className="flex items-baseline gap-1.5">
-            <span className="text-xl font-black text-amber-300 font-mono tracking-tight">
+            <span className="text-xl font-black text-[var(--color-status-warning)] font-mono tracking-tight">
               {analysis.normalizedPowerWatts ? formatWatts(analysis.normalizedPowerWatts).replace(" W", "") : "—"}
             </span>
             <span className="text-xs text-[var(--muted)] font-normal">W</span>
@@ -116,7 +118,7 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-black text-white font-mono tracking-tight">
+            <span className="text-xl font-black text-[var(--text)] font-mono tracking-tight">
               {analysis.intensityFactor !== undefined ? analysis.intensityFactor.toFixed(2) : "—"}
             </span>
             {analysis.intensityFactor !== undefined && (
@@ -136,7 +138,7 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
             </span>
           </span>
           <div className="flex items-baseline gap-1">
-            <span className="text-xl font-black text-emerald-400 font-mono tracking-tight">
+            <span className="text-xl font-black text-[var(--color-status-positive)] font-mono tracking-tight">
               {analysis.trainingStressScore !== undefined ? analysis.trainingStressScore : "—"}
             </span>
             <span className="text-xs text-[var(--muted)]">pts</span>
@@ -146,13 +148,13 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
         {/* Watts por Quilo (W/kg) */}
         <div className="p-3.5 rounded-xl bg-[var(--bg)] border border-[var(--border)] space-y-1">
           <span className="text-xs font-medium uppercase tracking-wider text-[var(--muted)] flex items-center gap-1">
-            <span>Relação W/kg</span>
+            <span>{t("power_zones.wkg_label")}</span>
             <span title={t("power_zones.wkg_tooltip")} className="cursor-help text-[var(--muted)]">
               <Info size={12} />
             </span>
           </span>
           <div className="flex items-baseline gap-1">
-            <span className="text-xl font-black text-cyan-400 font-mono tracking-tight">
+            <span className="text-xl font-black text-[var(--color-status-info)] font-mono tracking-tight">
               {analysis.wattsPerKg !== undefined ? analysis.wattsPerKg.toFixed(2) : "—"}
             </span>
             <span className="text-xs text-[var(--muted)]">W/kg</span>
@@ -165,8 +167,8 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
         <div className="flex items-center justify-between text-xs text-[var(--muted)]">
           <span>{t("power_zones.distribution_label")}</span>
           {analysis.dominantZone && (
-            <span className="font-semibold text-amber-400">
-              Zona Dominante: Z{analysis.dominantZone}
+            <span className="font-semibold text-[var(--color-status-warning)]">
+              {t("power_zones.dominant", { zone: analysis.dominantZone })}
             </span>
           )}
         </div>
@@ -207,9 +209,9 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span
                     style={{
-                      backgroundColor: item.zone.bgRgba,
-                      color: item.zone.color,
-                      borderColor: item.zone.color,
+                      backgroundColor: getZoneColorVar("power", item.zone.zone),
+                      color: "var(--color-zone-badge-foreground)",
+                      borderColor: getZoneColorVar("power", item.zone.zone),
                     }}
                     className="px-2 py-0.5 rounded-lg border text-xs font-black shrink-0 font-mono"
                   >
@@ -219,7 +221,7 @@ export function PowerZonesPanel({ activity }: PowerZonesPanelProps) {
                     <p className="text-xs font-bold text-[var(--text)] truncate flex items-center gap-1.5">
                       <span>{t(item.zone.nameKey)}</span>
                       {isDominant && (
-                        <span className="text-[10px] text-amber-400 font-bold font-mono">
+                        <span className="text-[10px] text-[var(--color-status-warning)] font-bold font-mono">
                           ★ Principal
                         </span>
                       )}

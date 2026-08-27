@@ -1,35 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { installRuntimeGuard } from "../helpers/runtimeGuard";
-
-async function seedOnboardedProfile(page: Page) {
-  await page.goto("/");
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve, reject) => {
-        const request = indexedDB.open("runflow");
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => {
-          const db = request.result;
-          const transaction = db.transaction("profile", "readwrite");
-          transaction.objectStore("profile").put(
-            {
-              name: "E2E Synthetic User",
-              onboarded: true,
-              language: "pt",
-              updatedAt: "2026-01-01T00:00:00.000Z",
-            },
-            "user",
-          );
-          transaction.oncomplete = () => {
-            db.close();
-            resolve();
-          };
-          transaction.onerror = () => reject(transaction.error);
-          transaction.onabort = () => reject(transaction.error);
-        };
-      }),
-  );
-}
+import { seedOnboardedProfile } from "../helpers/seedIndexedDb";
 
 test("inicia, pausa e retoma a gravação sem erro de runtime", async ({ page, context }) => {
   await context.grantPermissions(["geolocation"]);
@@ -51,8 +22,8 @@ test("inicia, pausa e retoma a gravação sem erro de runtime", async ({ page, c
       request.failure()?.errorText === "net::ERR_ABORTED",
   });
 
+  await page.goto("/");
   await seedOnboardedProfile(page);
-  await page.reload();
   await page.goto("/gravar/");
   await expect(page.getByRole("heading", { name: "Iniciar treino" })).toBeVisible();
 

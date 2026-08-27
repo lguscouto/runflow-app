@@ -79,6 +79,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
   text: string;
   border: string;
   badgeBg: string;
+  badgeText: string;
 } {
   switch (category) {
     case "HC":
@@ -88,6 +89,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         text: "text-purple-400",
         border: "border-purple-500/40",
         badgeBg: colorTokens.climbCategories.hc,
+        badgeText: "#ffffff",
       };
     case "Cat 1":
       return {
@@ -96,6 +98,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         text: "text-rose-400",
         border: "border-rose-500/40",
         badgeBg: colorTokens.climbCategories.cat1,
+        badgeText: "#ffffff",
       };
     case "Cat 2":
       return {
@@ -104,6 +107,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         text: "text-orange-400",
         border: "border-orange-500/40",
         badgeBg: colorTokens.climbCategories.cat2,
+        badgeText: "#000000",
       };
     case "Cat 3":
       return {
@@ -112,6 +116,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         text: "text-amber-400",
         border: "border-amber-500/40",
         badgeBg: colorTokens.climbCategories.cat3,
+        badgeText: "#000000",
       };
     case "Cat 4":
       return {
@@ -120,6 +125,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         text: "text-emerald-400",
         border: "border-emerald-500/40",
         badgeBg: colorTokens.climbCategories.cat4,
+        badgeText: "#000000",
       };
     default:
       return {
@@ -128,6 +134,7 @@ export function getCategoryBadgeStyle(category: ClimbCategory): {
         text: "text-blue-400",
         border: "border-blue-500/40",
         badgeBg: colorTokens.climbCategories.uncategorized,
+        badgeText: "#ffffff",
       };
   }
 }

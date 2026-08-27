@@ -64,7 +64,11 @@ describe("SyncPanel lifecycle", () => {
       </StrictMode>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "sync.tab_webdav" }));
+    const webdavTab = screen.getByRole("tab", { name: "sync.tab_webdav" });
+    expect(webdavTab.getAttribute("aria-controls")).toBe("sync-panel-webdav");
+    expect(webdavTab.getAttribute("aria-selected")).toBe("false");
+    fireEvent.click(webdavTab);
+    expect(webdavTab.getAttribute("aria-selected")).toBe("true");
     fireEvent.change(screen.getByPlaceholderText("sync.webdav_server_placeholder"), {
       target: { value: "https://dav.example.test" },
     });

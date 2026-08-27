@@ -62,7 +62,7 @@ import { useI18n } from "@/lib/i18n";
 import { registerAndroidBackHandler } from "@/lib/android-back";
 import type { Sport, UserProfile, ActivitySummary, GhostConfig, SavedRoute, StructuredWorkout } from "@/lib/types";
 import { getAllStoredRoutes } from "@/lib/storage";
-import { colorTokens } from "@/lib/color-tokens";
+import { colorTokens, getZoneColorVar } from "@/lib/color-tokens";
 import { MapSkeleton } from "@/components/LoadingSkeletons";
 
 const LiveMapTrack = dynamic(
@@ -356,11 +356,24 @@ export function RecordWorkoutClient() {
     ? ({
         "--bg": colorTokens.lightMode.background,
         "--surface": colorTokens.lightMode.surface,
+        "--surface-hover": colorTokens.lightMode.surface,
+        "--surface-raised": colorTokens.lightMode.surface,
         "--text": colorTokens.lightMode.text,
         "--muted": colorTokens.lightMode.muted,
         "--border": colorTokens.lightMode.border,
         "--accent": colorTokens.lightMode.accent,
         "--accent-soft": colorTokens.lightMode.accentSoft,
+        "--on-accent": colorTokens.lightMode.onAccent,
+        "--color-surface-panel-deep": colorTokens.lightMode.surface,
+        "--color-status-warning": "#92400e",
+        "--color-status-positive": colorTokens.lightMode.success,
+        "--color-status-danger": colorTokens.lightMode.danger,
+        "--color-status-info": "#0369a1",
+        "--color-zone-hr-1": "#475569",
+        "--color-zone-hr-2": "#0369a1",
+        "--color-zone-hr-3": "#15803d",
+        "--color-zone-hr-4": "#a16207",
+        "--color-zone-hr-5": "#be123c",
       } as React.CSSProperties)
     : undefined;
 
@@ -383,15 +396,15 @@ export function RecordWorkoutClient() {
     
     if (isAhead) {
       statusBg = "bg-emerald-500/10 border-emerald-500/20";
-      statusTextColor = "text-emerald-400";
+      statusTextColor = "text-[var(--color-status-positive)]";
       diffText = `+${Math.round(ghostStats.diffM)} m`;
     } else if (isBehind) {
       statusBg = "bg-rose-500/10 border-rose-500/20";
-      statusTextColor = "text-rose-400";
+      statusTextColor = "text-[var(--color-status-danger)]";
       diffText = `${Math.round(ghostStats.diffM)} m`;
     } else {
       statusBg = "bg-blue-500/10 border-blue-500/20";
-      statusTextColor = "text-blue-400";
+      statusTextColor = "text-[var(--color-status-info)]";
       diffText = t("record.ghost_audio_alert_tied").replace(".", "");
     }
 
@@ -481,7 +494,7 @@ export function RecordWorkoutClient() {
             className="absolute top-0 transform -translate-x-1/2 transition-all duration-500 ease-out flex flex-col items-center group"
             style={{ left: `${ghostPercent}%` }}
           >
-            <div className="bg-white/10 border border-white/20 text-[10px] px-1.5 py-0.5 rounded shadow-lg backdrop-blur-sm scale-90 opacity-75 group-hover:opacity-100 group-hover:scale-100 transition-all text-white">
+            <div className="bg-[var(--surface-hover)] border border-[var(--border)] text-[10px] px-1.5 py-0.5 rounded shadow-lg backdrop-blur-sm scale-90 opacity-75 group-hover:opacity-100 group-hover:scale-100 transition-all text-[var(--text)]">
               👻 {formatDistance(ghostDist)}
             </div>
             <div className="w-2.5 h-2.5 rounded-full bg-white border border-white shadow-md shadow-white/40 mt-1" />
@@ -544,9 +557,28 @@ export function RecordWorkoutClient() {
     return (
       <div
         className={`fixed inset-0 z-50 flex flex-col transition-colors ${
-          isSunMode ? "bg-white text-black font-semibold" : "bg-[var(--color-surface-record-hud)] text-[var(--text)]"
+          isSunMode ? "bg-white text-black font-semibold" : "bg-[var(--color-surface-record-hud)] text-[var(--color-content-inverse)]"
         }`}
-        style={isSunMode ? sunModeStyles : { background: colorTokens.surface.recordHud }}
+        style={
+          isSunMode
+            ? sunModeStyles
+            : ({
+                background: colorTokens.surface.recordHud,
+                "--bg": colorTokens.surface.recordHud,
+                "--surface": colorTokens.surface.panel,
+                "--surface-hover": colorTokens.surface.panelHover,
+                "--text": colorTokens.content.inverse,
+                "--muted": colorTokens.content.inverseSoft,
+                "--border": "rgba(255, 255, 255, 0.16)",
+                "--accent": colorTokens.brand.accent,
+                "--on-accent": colorTokens.content.onAccent,
+                "--color-surface-panel-deep": colorTokens.surface.panelDeep,
+                "--color-status-warning": colorTokens.status.warning,
+                "--color-status-positive": colorTokens.status.positive,
+                "--color-status-danger": colorTokens.status.danger,
+                "--color-status-info": colorTokens.status.info,
+              } as React.CSSProperties)
+        }
       >
         {/* Top status bar */}
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
@@ -571,11 +603,11 @@ export function RecordWorkoutClient() {
               className={`flex items-center gap-1 text-xs transition-all px-2 py-1 rounded-lg border font-bold ${
                 isSunMode
                   ? "border-amber-400 bg-amber-400 text-black shadow"
-                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-white"
+                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-[var(--text)]"
               }`}
               title={t("outdoor_mode.tooltip")}
             >
-              <Sun size={12} className={isSunMode ? "text-black fill-black" : "text-amber-400"} />
+              <Sun size={12} className={isSunMode ? "text-black fill-black" : "text-[var(--color-status-warning)]"} />
               <span>{t("outdoor_mode.toggle_btn")}</span>
             </button>
 
@@ -586,13 +618,13 @@ export function RecordWorkoutClient() {
               }}
               className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1 rounded-lg border ${
                 autoPauseConfig.enabled
-                  ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
-                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-white"
+                  ? "border-amber-500/40 bg-amber-500/10 text-[var(--color-status-warning)]"
+                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-[var(--text)]"
               }`}
               title={t("auto_pause.title")}
             >
               <PauseCircle size={13} />
-              <span>{autoPauseConfig.enabled ? t("auto_pause.quick_btn") : "Auto-Pause Off"}</span>
+              <span>{autoPauseConfig.enabled ? t("auto_pause.quick_btn") : t("auto_pause.disabled_short")}</span>
             </button>
             <button
               onClick={() => {
@@ -601,13 +633,13 @@ export function RecordWorkoutClient() {
               }}
               className={`flex items-center gap-1.5 text-xs transition-colors px-2.5 py-1 rounded-lg border ${
                 voiceCoachConfig.enabled
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-white"
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-[var(--color-status-positive)]"
+                  : "border-[var(--border)] bg-white/5 text-[var(--muted)] hover:text-[var(--text)]"
               }`}
               title={t("voice_coach.title")}
             >
               <Headphones size={13} />
-              <span>{voiceCoachConfig.enabled ? t("voice_coach.quick_btn") : "Voz Off"}</span>
+              <span>{voiceCoachConfig.enabled ? t("voice_coach.quick_btn") : t("voice_coach.disabled_short")}</span>
             </button>
             <button
               onClick={() => {
@@ -624,7 +656,7 @@ export function RecordWorkoutClient() {
 
         {/* Auto-Paused Banner in Training Mode */}
         {stats.isAutoPaused && !isPaused && (
-          <div className="mx-6 mt-1 py-1.5 px-3 rounded-xl border border-amber-500/40 bg-amber-500/15 text-amber-300 font-bold text-xs flex items-center justify-center gap-2 animate-pulse">
+          <div className="mx-6 mt-1 py-1.5 px-3 rounded-xl border border-amber-500/40 bg-amber-500/15 text-[var(--color-status-warning)] font-bold text-xs flex items-center justify-center gap-2 animate-pulse">
             <PauseCircle size={15} />
             <span>{t("auto_pause.badge_paused")} (&lt; {autoPauseConfig.minSpeedKmh} km/h)</span>
           </div>
@@ -641,7 +673,11 @@ export function RecordWorkoutClient() {
               className="font-bold tabular-nums leading-none"
               style={{
                 fontSize: "clamp(3.5rem, 18vw, 6.5rem)",
-                color: isPaused || stats.isAutoPaused ? colorTokens.status.warning : colorTokens.content.inverse,
+                color: isPaused || stats.isAutoPaused
+                  ? colorTokens.status.warning
+                  : isSunMode
+                  ? colorTokens.lightMode.text
+                  : colorTokens.content.inverse,
                 textShadow: isPaused || stats.isAutoPaused
                   ? `0 0 40px ${colorTokens.effects.warningGlow}`
                   : `0 0 60px ${colorTokens.effects.inverseGlow}`,
@@ -681,7 +717,10 @@ export function RecordWorkoutClient() {
               </p>
               <p
                 className="font-bold tabular-nums"
-                style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: colorTokens.content.primary }}
+                style={{
+                  fontSize: "clamp(2rem, 10vw, 3.5rem)",
+                  color: isSunMode ? colorTokens.lightMode.text : colorTokens.content.primary,
+                }}
               >
                 {formatPace(stats.currentPaceSecKm)}
               </p>
@@ -696,7 +735,10 @@ export function RecordWorkoutClient() {
               </p>
               <p
                 className="font-bold tabular-nums"
-                style={{ fontSize: "clamp(2rem, 10vw, 3.5rem)", color: colorTokens.content.muted }}
+                style={{
+                  fontSize: "clamp(2rem, 10vw, 3.5rem)",
+                  color: isSunMode ? colorTokens.lightMode.muted : colorTokens.content.inverseSoft,
+                }}
               >
                 {formatPace(stats.avgPaceSecKm)}
               </p>
@@ -711,8 +753,11 @@ export function RecordWorkoutClient() {
                   {t("detail.calories")}
                 </p>
                 <p
-                  className="font-bold tabular-nums text-orange-400"
-                  style={{ fontSize: "clamp(1.4rem, 6vw, 2rem)" }}
+                  className="font-bold tabular-nums"
+                  style={{
+                    color: isSunMode ? colorTokens.lightMode.accent : colorTokens.chart.pace,
+                    fontSize: "clamp(1.4rem, 6vw, 2rem)",
+                  }}
                 >
                   {formatCalories(liveCalories)}
                 </p>
@@ -739,9 +784,9 @@ export function RecordWorkoutClient() {
                 {currentZone && (
                   <span
                     style={{
-                      backgroundColor: currentZone.bgRgba,
-                      color: currentZone.color,
-                      borderColor: currentZone.color,
+                      backgroundColor: getZoneColorVar("hr", currentZone.zone),
+                      color: "var(--color-zone-badge-foreground)",
+                      borderColor: getZoneColorVar("hr", currentZone.zone),
                     }}
                     className="mt-1 px-2 py-0.5 rounded-full border text-[10px] font-black"
                   >
@@ -807,7 +852,7 @@ export function RecordWorkoutClient() {
               <button
                 type="button"
                 onClick={handleResume}
-                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base bg-[var(--accent)] text-white active:scale-95 transition-transform"
+                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-base bg-[var(--accent)] text-[var(--on-accent)] active:scale-95 transition-transform"
               >
                 <Play size={20} fill="currentColor" />
                 {t("record.resume_btn")}
@@ -917,7 +962,7 @@ export function RecordWorkoutClient() {
             }`}
             title={t("outdoor_mode.tooltip")}
           >
-            <Sun size={14} className={isSunMode ? "text-black fill-black" : "text-amber-400"} />
+            <Sun size={14} className={isSunMode ? "text-black fill-black" : "text-[var(--color-status-warning)]"} />
             <span>{t("outdoor_mode.toggle_btn")}</span>
           </button>
 
@@ -930,13 +975,13 @@ export function RecordWorkoutClient() {
             }}
             className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
               autoPauseConfig.enabled
-                ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                ? "border-amber-500/40 bg-amber-500/10 text-[var(--color-status-warning)]"
                 : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
             }`}
             title={t("auto_pause.title")}
           >
             <PauseCircle size={14} />
-            <span>{autoPauseConfig.enabled ? t("auto_pause.quick_btn") : "Auto-Pause Off"}</span>
+            <span>{autoPauseConfig.enabled ? t("auto_pause.quick_btn") : t("auto_pause.disabled_short")}</span>
           </button>
 
           {/* Voice Coach Button */}
@@ -948,13 +993,13 @@ export function RecordWorkoutClient() {
             }}
             className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
               voiceCoachConfig.enabled
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                ? "border-emerald-500/40 bg-emerald-500/10 text-[var(--color-status-positive)]"
                 : "border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--text)]"
             }`}
             title={t("voice_coach.title")}
           >
             <Headphones size={14} />
-            <span>{voiceCoachConfig.enabled ? t("voice_coach.quick_btn") : "Voz Off"}</span>
+            <span>{voiceCoachConfig.enabled ? t("voice_coach.quick_btn") : t("voice_coach.disabled_short")}</span>
           </button>
 
           {/* Training Mode / Bike Computer HUD toggle button — only when active */}
@@ -966,7 +1011,7 @@ export function RecordWorkoutClient() {
               }}
               className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors ${
                 sport === "cycling"
-                  ? "border-amber-500/40 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 shadow-lg shadow-amber-500/10"
+                  ? "border-amber-500/40 bg-amber-500/15 text-[var(--color-status-warning)] hover:bg-amber-500/25 shadow-lg shadow-amber-500/10"
                   : "border-[var(--accent)]/40 bg-[var(--accent-soft)] text-[var(--accent)] hover:bg-[var(--accent)]/20"
               }`}
               title={sport === "cycling" ? t("bike_hud.title") : t("record.mode_training")}
@@ -979,7 +1024,7 @@ export function RecordWorkoutClient() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 text-sm">
+        <div className="p-4 rounded-xl border border-red-500/40 bg-red-500/10 text-[var(--color-status-danger)] text-sm">
           {error}
           <button
             type="button"
@@ -993,7 +1038,7 @@ export function RecordWorkoutClient() {
 
       {/* Auto-Paused Banner during active recording */}
       {isActive && stats.isAutoPaused && status === "recording" && (
-        <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-amber-500/40 bg-amber-500/15 text-amber-300 font-bold text-sm animate-pulse shadow-lg shadow-amber-500/10">
+        <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-amber-500/40 bg-amber-500/15 text-[var(--color-status-warning)] font-bold text-sm animate-pulse shadow-lg shadow-amber-500/10">
           <PauseCircle size={18} />
           <span>{t("auto_pause.badge_paused")} — Ritmo pausado automaticamente (&lt; {autoPauseConfig.minSpeedKmh} km/h)</span>
         </div>
@@ -1087,11 +1132,11 @@ export function RecordWorkoutClient() {
             {sport === "cycling" && (
               <>
                 <div className="stat-card text-center py-4 border-amber-500/20 bg-amber-500/5">
-                  <p className="text-xs text-amber-400 font-bold flex items-center justify-center gap-1">
+                  <p className="text-xs text-[var(--color-status-warning)] font-bold flex items-center justify-center gap-1">
                     <Zap size={13} className="fill-amber-400" />
                     <span>{t("record.estimated_power")}</span>
                   </p>
-                  <p className="text-xl font-bold mt-1 text-amber-300 tabular-nums">
+                  <p className="text-xl font-bold mt-1 text-[var(--color-status-warning)] tabular-nums">
                     {formatWatts(stats.currentWatts)}
                   </p>
                   <p className="text-[11px] text-[var(--muted)] mt-0.5">
@@ -1099,10 +1144,10 @@ export function RecordWorkoutClient() {
                   </p>
                 </div>
                 <div className="stat-card text-center py-4 border-emerald-500/20 bg-emerald-500/5">
-                  <p className="text-xs text-emerald-400 font-bold flex items-center justify-center gap-1">
+                  <p className="text-xs text-[var(--color-status-positive)] font-bold flex items-center justify-center gap-1">
                     <span>⛰️ {t("record.current_grade")}</span>
                   </p>
-                  <p className="text-xl font-bold mt-1 text-emerald-300 tabular-nums">
+                  <p className="text-xl font-bold mt-1 text-[var(--color-status-positive)] tabular-nums">
                     {formatGrade(stats.currentGradePercent)}
                   </p>
                   <p className="text-[11px] text-[var(--muted)] mt-0.5">
@@ -1116,7 +1161,7 @@ export function RecordWorkoutClient() {
               <p className="text-xs text-[var(--muted)]">
                 {t("detail.calories")} ({t("detail.calories_source_profile").toLowerCase()})
               </p>
-              <p className="text-xl font-semibold mt-1 text-orange-400">
+              <p className="text-xl font-semibold mt-1 text-[var(--accent)]">
                 {liveCalories != null ? formatCalories(liveCalories) : "—"}
               </p>
               {liveCalories == null && (
@@ -1135,7 +1180,7 @@ export function RecordWorkoutClient() {
                   <Heart size={22} className="text-rose-500 fill-rose-500 animate-pulse shrink-0" />
                   <div className="text-left">
                     <p className="text-xs text-[var(--muted)]">{t("record.hr_reading")}</p>
-                    <p className="text-xl font-bold text-rose-500 tabular-nums">
+                    <p className="text-xl font-bold text-[var(--color-status-danger)] tabular-nums">
                       {hrBpm} <span className="text-xs font-semibold text-[var(--muted)]">bpm</span>
                     </p>
                   </div>
@@ -1144,9 +1189,9 @@ export function RecordWorkoutClient() {
                   <div className="text-right">
                     <span
                       style={{
-                        backgroundColor: currentZone.bgRgba,
-                        color: currentZone.color,
-                        borderColor: currentZone.color,
+                        backgroundColor: getZoneColorVar("hr", currentZone.zone),
+                        color: "var(--color-zone-badge-foreground)",
+                        borderColor: getZoneColorVar("hr", currentZone.zone),
                       }}
                       className="px-2.5 py-1 rounded-lg border text-xs font-bold inline-block"
                     >
@@ -1173,7 +1218,7 @@ export function RecordWorkoutClient() {
         <div className="stat-card space-y-3 border border-[var(--border)] bg-[var(--surface)]">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
+              <div className="w-8 h-8 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-[var(--accent)]">
                 <Zap size={18} />
               </div>
               <div>
@@ -1189,7 +1234,7 @@ export function RecordWorkoutClient() {
             <button
               type="button"
               onClick={() => setIsWorkoutLibraryModalOpen(true)}
-              className="btn-ghost text-xs px-3 py-1.5 border-orange-500/30 hover:border-orange-500 text-orange-400 font-semibold flex items-center gap-1"
+              className="btn-ghost text-xs px-3 py-1.5 border-orange-500/30 hover:border-orange-500 text-[var(--accent)] font-semibold flex items-center gap-1"
             >
               <span>{selectedWorkout ? (language === "pt" ? "Alterar" : "Change") : t("workout.library_title")}</span>
             </button>
@@ -1198,7 +1243,7 @@ export function RecordWorkoutClient() {
           {selectedWorkout && (
             <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/25 flex items-center justify-between text-xs">
               <div className="space-y-0.5">
-                <p className="font-bold text-white">{selectedWorkout.name}</p>
+                <p className="font-bold text-[var(--text)]">{selectedWorkout.name}</p>
                 {selectedWorkout.description && (
                   <p className="text-[11px] text-[var(--muted)] line-clamp-1">
                     {selectedWorkout.description}
@@ -1211,7 +1256,7 @@ export function RecordWorkoutClient() {
                   setSelectedWorkout(null);
                   setStructuredWorkout(null);
                 }}
-                className="text-xs text-[var(--muted)] hover:text-rose-400 underline ml-2"
+                className="text-xs text-[var(--muted)] hover:text-[var(--color-status-danger)] underline ml-2"
               >
                 {t("common.cancel")}
               </button>
@@ -1231,7 +1276,7 @@ export function RecordWorkoutClient() {
           </p>
 
           {!hrSupported ? (
-            <p className="text-xs text-amber-500/80 bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg flex items-center gap-2">
+            <p className="text-xs text-[var(--color-status-warning)] bg-amber-500/5 border border-amber-500/10 p-3 rounded-lg flex items-center gap-2">
               ⚠️ {t("record.hr_not_supported")}
             </p>
           ) : (
@@ -1242,7 +1287,7 @@ export function RecordWorkoutClient() {
                   onClick={connectHr}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--text)] hover:bg-white/10 transition-colors"
                 >
-                  <Heart size={14} className="text-red-400 animate-pulse" />
+                  <Heart size={14} className="text-[var(--color-status-danger)] animate-pulse" />
                   {t("record.connect_hr")}
                 </button>
               )}
@@ -1269,7 +1314,7 @@ export function RecordWorkoutClient() {
                       <p className="text-sm font-bold text-[var(--text)] leading-tight">
                         {hrDeviceName}
                       </p>
-                      <p className="text-xs text-red-400 font-semibold flex items-center gap-1 mt-0.5">
+                      <p className="text-xs text-[var(--color-status-danger)] font-semibold flex items-center gap-1 mt-0.5">
                         <Heart size={10} className="fill-red-400 animate-pulse" />
                         {hrBpm !== null ? `${hrBpm} BPM` : "--- BPM"}
                       </p>
@@ -1279,7 +1324,7 @@ export function RecordWorkoutClient() {
                   <button
                     type="button"
                     onClick={disconnectHr}
-                    className="text-xs font-semibold text-red-400 hover:text-red-300 border border-red-500/20 bg-red-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
+                    className="text-xs font-semibold text-[var(--color-status-danger)] hover:text-[var(--color-status-danger)] border border-red-500/20 bg-red-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
                   >
                     {t("record.disconnect_hr")}
                   </button>
@@ -1294,7 +1339,7 @@ export function RecordWorkoutClient() {
       {!isActive && status !== "saving" && sport === "cycling" && hrSupported && (
         <div className="stat-card space-y-4 border border-[var(--border)] bg-[var(--surface)]">
           <div className="flex items-center gap-2">
-            <RefreshCw size={18} className="text-cyan-400" />
+            <RefreshCw size={18} className="text-[var(--color-status-info)]" />
             <h3 className="text-sm font-semibold text-[var(--text)]">{t("record.csc_sensor")}</h3>
           </div>
           <p className="text-xs text-[var(--muted)] -mt-2">
@@ -1308,7 +1353,7 @@ export function RecordWorkoutClient() {
                 onClick={connectCsc}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--text)] hover:bg-white/10 transition-colors"
               >
-                <RefreshCw size={14} className="text-cyan-400" />
+                <RefreshCw size={14} className="text-[var(--color-status-info)]" />
                 {t("record.connect_csc")}
               </button>
             )}
@@ -1335,7 +1380,7 @@ export function RecordWorkoutClient() {
                     <p className="text-sm font-bold text-[var(--text)] leading-tight">
                       {cscDeviceName}
                     </p>
-                    <p className="text-xs text-cyan-400 font-semibold flex items-center gap-1 mt-0.5">
+                    <p className="text-xs text-[var(--color-status-info)] font-semibold flex items-center gap-1 mt-0.5">
                       <RefreshCw size={10} className="animate-spin" style={{ animationDuration: "2s" }} />
                       {cscCadenceRpm !== null ? `${cscCadenceRpm} RPM` : "--- RPM"}
                     </p>
@@ -1345,7 +1390,7 @@ export function RecordWorkoutClient() {
                 <button
                   type="button"
                   onClick={disconnectCsc}
-                  className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
+                  className="text-xs font-semibold text-[var(--color-status-info)] hover:text-[var(--color-status-info)] border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
                 >
                   {t("record.disconnect_csc")}
                 </button>
@@ -1359,7 +1404,7 @@ export function RecordWorkoutClient() {
       {!isActive && status !== "saving" && sport === "cycling" && hrSupported && (
         <div className="stat-card space-y-4 border border-[var(--border)] bg-[var(--surface)]">
           <div className="flex items-center gap-2">
-            <Zap size={18} className="text-amber-400" />
+            <Zap size={18} className="text-[var(--color-status-warning)]" />
             <h3 className="text-sm font-semibold text-[var(--text)]">{t("record.power_sensor")}</h3>
           </div>
           <p className="text-xs text-[var(--muted)] -mt-2">
@@ -1373,7 +1418,7 @@ export function RecordWorkoutClient() {
                 onClick={connectPower}
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-white/5 text-sm font-semibold text-[var(--text)] hover:bg-white/10 transition-colors"
               >
-                <Zap size={14} className="text-amber-400" />
+                <Zap size={14} className="text-[var(--color-status-warning)]" />
                 {t("record.connect_power")}
               </button>
             )}
@@ -1400,7 +1445,7 @@ export function RecordWorkoutClient() {
                     <p className="text-sm font-bold text-[var(--text)] leading-tight">
                       {powerDeviceName}
                     </p>
-                    <p className="text-xs text-amber-400 font-semibold flex items-center gap-1 mt-0.5">
+                    <p className="text-xs text-[var(--color-status-warning)] font-semibold flex items-center gap-1 mt-0.5">
                       <Zap size={10} className="fill-amber-400" />
                       {powerWatts !== null ? `${powerWatts} W` : "--- W"}
                     </p>
@@ -1410,7 +1455,7 @@ export function RecordWorkoutClient() {
                 <button
                   type="button"
                   onClick={disconnectPower}
-                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 border border-amber-500/20 bg-amber-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
+                  className="text-xs font-semibold text-[var(--color-status-warning)] hover:text-[var(--color-status-warning)] border border-amber-500/20 bg-amber-500/5 px-3 py-1.5 rounded-lg transition-colors self-start sm:self-center"
                 >
                   {t("record.disconnect_power")}
                 </button>
@@ -1439,10 +1484,11 @@ export function RecordWorkoutClient() {
           ) : (
             <div className="space-y-3 pt-1">
               <div>
-                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">
+                <label htmlFor="record-route" className="block text-xs font-semibold text-[var(--muted)] mb-1">
                   {t("navigation.select_route")}
                 </label>
                 <select
+                  id="record-route"
                   value={selectedRouteId}
                   onChange={(e) => setSelectedRouteId(e.target.value)}
                   className="w-full text-sm rounded-lg bg-[var(--background)] border border-[var(--border)] text-[var(--text)] px-3 py-2 outline-none focus:border-[var(--accent)] transition-colors font-semibold"
@@ -1459,10 +1505,11 @@ export function RecordWorkoutClient() {
               {selectedRouteId && (
                 <>
                   <div>
-                    <label className="block text-xs font-semibold text-[var(--muted)] mb-1.5">
+                    <label htmlFor="record-route-tolerance" className="block text-xs font-semibold text-[var(--muted)] mb-1.5">
                       {t("navigation.off_route_tolerance")}: {routeTolerance}m
                     </label>
                     <input
+                      id="record-route-tolerance"
                       type="range"
                       min={25}
                       max={200}
@@ -1492,6 +1539,9 @@ export function RecordWorkoutClient() {
                     </div>
                     <button
                       type="button"
+                      role="switch"
+                      aria-checked={routeVoiceAlerts}
+                      aria-label={t("navigation.voice_alerts")}
                       onClick={() => setRouteVoiceAlerts(!routeVoiceAlerts)}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none ${
                         routeVoiceAlerts ? "bg-[var(--accent)]" : "bg-white/10"
@@ -1509,8 +1559,8 @@ export function RecordWorkoutClient() {
                   {detectedClimbs.length > 0 && (
                     <div className="p-3 rounded-xl bg-[var(--color-surface-panel-deep)] border border-white/10 space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-white flex items-center gap-1.5">
-                          <Mountain size={14} className="text-amber-400" />
+                        <span className="font-bold text-[var(--text)] flex items-center gap-1.5">
+                          <Mountain size={14} className="text-[var(--color-status-warning)]" />
                           <span>{t("climb.climbs_count", { count: detectedClimbs.length })}</span>
                         </span>
                       </div>
@@ -1520,11 +1570,11 @@ export function RecordWorkoutClient() {
                           return (
                             <span
                               key={climb.id}
-                              style={{ backgroundColor: `${badge.badgeBg}20`, borderColor: badge.badgeBg, color: colorTokens.content.inverse }}
+                              style={{ backgroundColor: `${badge.badgeBg}20`, borderColor: badge.badgeBg, color: "var(--text)" }}
                               className="px-2 py-0.5 rounded-md border text-[10px] font-bold flex items-center gap-1"
                             >
                               <span style={{ backgroundColor: badge.badgeBg }} className="w-1.5 h-1.5 rounded-full" />
-                              <span>{climb.name}</span>
+                              <span>{t("climb.climb_name", { current: climb.climbIndex })}</span>
                               <span className="text-[9px] text-[var(--muted)]">({formatDistance(climb.distanceM)} @ {climb.avgGradePct.toFixed(1)}%)</span>
                             </span>
                           );
@@ -1553,10 +1603,11 @@ export function RecordWorkoutClient() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
-              <label className="block text-xs font-semibold text-[var(--muted)] mb-1">
+              <label htmlFor="record-ghost-mode" className="block text-xs font-semibold text-[var(--muted)] mb-1">
                 {language === "en" ? "Mode" : "Modo"}
               </label>
               <select
+                id="record-ghost-mode"
                 value={ghostMode}
                 onChange={(e) => setGhostMode(e.target.value as any)}
                 className="w-full text-sm rounded-lg bg-[var(--background)] border border-[var(--border)] text-[var(--text)] px-3 py-2 outline-none focus:border-[var(--accent)] transition-colors font-semibold"
@@ -1569,11 +1620,12 @@ export function RecordWorkoutClient() {
 
             {ghostMode === "pace" && (
               <div>
-                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">
+                <label htmlFor="record-ghost-pace-min" className="block text-xs font-semibold text-[var(--muted)] mb-1">
                   {t("record.ghost_target_pace_label")} (Min:Seg / km)
                 </label>
                 <div className="flex items-center gap-1.5">
                   <input
+                    id="record-ghost-pace-min"
                     type="number"
                     min="1"
                     max="59"
@@ -1583,6 +1635,7 @@ export function RecordWorkoutClient() {
                   />
                   <span className="text-[var(--muted)]">:</span>
                   <input
+                    id="record-ghost-pace-sec"
                     type="number"
                     min="0"
                     max="59"
@@ -1597,17 +1650,18 @@ export function RecordWorkoutClient() {
 
             {ghostMode === "activity" && (
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">
+                <label htmlFor="record-ghost-activity" className="block text-xs font-semibold text-[var(--muted)] mb-1">
                   {t("record.ghost_select_activity")}
                 </label>
                 {pastActivities.length === 0 ? (
-                  <p className="text-xs text-amber-500 bg-amber-500/5 border border-amber-500/10 p-2 rounded-lg">
+                  <p className="text-xs text-[var(--color-status-warning)] bg-amber-500/5 border border-amber-500/10 p-2 rounded-lg">
                     {language === "en"
                       ? `No past ${sportLabel(sport, language).toLowerCase()} activities in history yet.`
                       : `Nenhum treino de ${sportLabel(sport, language).toLowerCase()} no histórico.`}
                   </p>
                 ) : (
                   <select
+                    id="record-ghost-activity"
                     value={selectedActivityId}
                     onChange={(e) => setSelectedActivityId(e.target.value)}
                     className="w-full text-sm rounded-lg bg-[var(--background)] border border-[var(--border)] text-[var(--text)] px-3 py-2 outline-none focus:border-[var(--accent)] transition-colors font-semibold"
@@ -1646,6 +1700,9 @@ export function RecordWorkoutClient() {
                 </div>
                 <button
                   type="button"
+                  role="switch"
+                  aria-checked={audioAlerts}
+                  aria-label={t("record.ghost_audio_alerts")}
                   onClick={() => setAudioAlerts(!audioAlerts)}
                   className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none ${
                     audioAlerts ? "bg-[var(--accent)]" : "bg-white/10"
@@ -1661,10 +1718,10 @@ export function RecordWorkoutClient() {
 
               {audioAlerts && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] uppercase tracking-wider font-semibold text-[var(--muted)]">
+                  <span id="record-ghost-audio-frequency-label" className="text-[10px] uppercase tracking-wider font-semibold text-[var(--muted)]">
                     {t("record.ghost_audio_freq")}
-                  </label>
-                  <div className="flex gap-2">
+                  </span>
+                  <div role="group" aria-labelledby="record-ghost-audio-frequency-label" className="flex gap-2">
                     {(["1km", "2min", "5min"] as const).map((freq) => (
                       <button
                         key={freq}
@@ -1694,7 +1751,7 @@ export function RecordWorkoutClient() {
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                   voiceCoachConfig.enabled
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                    ? "bg-emerald-500/10 text-[var(--color-status-positive)] border border-emerald-500/30"
                     : "bg-[var(--surface-hover)] text-[var(--muted)]"
                 }`}
               >
@@ -1737,7 +1794,7 @@ export function RecordWorkoutClient() {
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                   autoPauseConfig.enabled
-                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                    ? "bg-amber-500/10 text-[var(--color-status-warning)] border border-amber-500/30"
                     : "bg-[var(--surface-hover)] text-[var(--muted)]"
                 }`}
               >
@@ -1757,9 +1814,9 @@ export function RecordWorkoutClient() {
             <button
               type="button"
               onClick={() => setIsAutoPauseModalOpen(true)}
-              className="btn-ghost text-xs py-1.5 px-3 border border-[var(--border)] hover:border-amber-500 text-amber-400 font-semibold"
+              className="btn-ghost text-xs py-1.5 px-3 border border-[var(--border)] hover:border-amber-500 text-[var(--color-status-warning)] font-semibold"
             >
-              ⚙️ Ajustes Auto-Pause
+              ⚙️ {t("auto_pause.settings")}
             </button>
           </div>
         </div>
@@ -1769,9 +1826,9 @@ export function RecordWorkoutClient() {
         <div className="stat-card border-amber-500/40 bg-[var(--surface)] p-4 space-y-3 shadow-md animate-in fade-in duration-300">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bike className="text-amber-400" size={20} />
+              <Bike className="text-[var(--color-status-warning)]" size={20} />
               <div>
-                <h4 className="text-xs font-bold text-white">Bicicleta do Pedal</h4>
+                <h4 className="text-xs font-bold text-[var(--text)]">Bicicleta do Pedal</h4>
                 <p className="text-[11px] text-[var(--muted)]">
                   Quilometragem e desgaste mecânico serão registrados nesta bike
                 </p>
@@ -1779,14 +1836,14 @@ export function RecordWorkoutClient() {
             </div>
             <Link
               href="/perfil/"
-              className="text-xs text-amber-400 hover:underline font-semibold flex items-center gap-1"
+              className="text-xs text-[var(--color-status-warning)] hover:underline font-semibold flex items-center gap-1"
             >
               Garagem ➔
             </Link>
           </div>
 
           {bikes.length === 0 ? (
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-[var(--color-status-warning)] flex items-center justify-between">
               <span>Nenhuma bike na Garagem.</span>
               <Link href="/perfil/" className="font-bold underline">
                 Cadastrar Bike
@@ -1799,7 +1856,7 @@ export function RecordWorkoutClient() {
                 haptics.light();
                 setSelectedBikeId(e.target.value);
               }}
-              className="profile-input text-xs bg-[var(--surface-hover)] text-white border-amber-500/30 font-semibold"
+              className="profile-input text-xs bg-[var(--surface-hover)] text-[var(--text)] border-amber-500/30 font-semibold"
             >
               {bikes.map((b) => (
                 <option key={b.id} value={b.id}>
@@ -1825,7 +1882,7 @@ export function RecordWorkoutClient() {
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${
                   sport === s
-                    ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                    ? "bg-[var(--accent)] border-[var(--accent)] text-[var(--on-accent)]"
                     : "border-[var(--border)] text-[var(--muted)] hover:border-[var(--muted)]"
                 }`}
               >
@@ -1921,7 +1978,7 @@ export function RecordWorkoutClient() {
         {isActive && status !== "saving" && (
           <button
             type="button"
-            className="text-sm text-[var(--muted)] hover:text-red-400"
+            className="text-sm text-[var(--muted)] hover:text-[var(--color-status-danger)]"
             onClick={handleCancelActive}
           >
             {t("record.discard_btn")}

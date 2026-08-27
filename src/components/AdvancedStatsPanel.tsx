@@ -93,10 +93,11 @@ export function AdvancedStatsPanel({ activities }: AdvancedStatsPanelProps) {
       {/* Filters section */}
       <div className="grid grid-cols-2 gap-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-2">
+          <label htmlFor="advanced-stats-period" className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-2">
             {t("stats.filter_period")}
           </label>
           <select
+            id="advanced-stats-period"
             value={period}
             onChange={(e) => setPeriod(e.target.value as StatsPeriod)}
             className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)] cursor-pointer transition-colors"
@@ -108,10 +109,11 @@ export function AdvancedStatsPanel({ activities }: AdvancedStatsPanelProps) {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-2">
+          <label htmlFor="advanced-stats-sport" className="block text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-2">
             {t("stats.filter_sport")}
           </label>
           <select
+            id="advanced-stats-sport"
             value={sport}
             onChange={(e) => setSport(e.target.value as StatsSportFilter)}
             className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text)] focus:outline-none focus:border-[var(--accent)] cursor-pointer transition-colors"
@@ -133,7 +135,7 @@ export function AdvancedStatsPanel({ activities }: AdvancedStatsPanelProps) {
         </div>
         
         <div className="flex items-start gap-4">
-          <div className="p-3 bg-[var(--accent)] text-white rounded-xl shadow-inner shrink-0 mt-0.5">
+          <div className="p-3 bg-[var(--accent)] text-[var(--on-accent)] rounded-xl shadow-inner shrink-0 mt-0.5">
             <Trophy size={24} />
           </div>
           <div>

@@ -56,6 +56,22 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
   const activeHostSession = useRef<P2PHostSession | null>(null);
   const activeJoinerSession = useRef<P2PJoinerSession | null>(null);
   const mountedRef = useRef(true);
+  const p2pTabRef = useRef<HTMLButtonElement>(null);
+  const webdavTabRef = useRef<HTMLButtonElement>(null);
+
+  const selectSyncMode = (mode: "p2p" | "webdav") => {
+    setSyncMode(mode);
+    if (mode === "p2p") setP2pError(null);
+    else setWebdavError(null);
+  };
+
+  const handleSyncModeKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const nextMode = syncMode === "p2p" ? "webdav" : "p2p";
+    selectSyncMode(nextMode);
+    (nextMode === "p2p" ? p2pTabRef : webdavTabRef).current?.focus();
+  };
 
   // WebDAV State
   const [webdavUrl, setWebdavUrl] = useState("");
@@ -207,13 +223,17 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
   return (
     <div className="space-y-6">
       {/* Sub-Tabs: P2P vs WebDAV */}
-      <div className="flex border-b border-[var(--border)] gap-2">
+      <div role="tablist" aria-label={t("sync.mode_label")} className="flex border-b border-[var(--border)] gap-2">
         <button
+          ref={p2pTabRef}
           type="button"
-          onClick={() => {
-            setSyncMode("p2p");
-            setP2pError(null);
-          }}
+          role="tab"
+          id="sync-tab-p2p"
+          aria-selected={syncMode === "p2p"}
+          aria-controls="sync-panel-p2p"
+          tabIndex={syncMode === "p2p" ? 0 : -1}
+          onKeyDown={handleSyncModeKeyDown}
+          onClick={() => selectSyncMode("p2p")}
           className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
             syncMode === "p2p"
               ? "border-[var(--accent)] text-[var(--accent)]"
@@ -224,11 +244,15 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
           {t("sync.tab_p2p")}
         </button>
         <button
+          ref={webdavTabRef}
           type="button"
-          onClick={() => {
-            setSyncMode("webdav");
-            setWebdavError(null);
-          }}
+          role="tab"
+          id="sync-tab-webdav"
+          aria-selected={syncMode === "webdav"}
+          aria-controls="sync-panel-webdav"
+          tabIndex={syncMode === "webdav" ? 0 : -1}
+          onKeyDown={handleSyncModeKeyDown}
+          onClick={() => selectSyncMode("webdav")}
           className={`pb-3 px-4 font-semibold text-sm border-b-2 transition-all flex items-center gap-2 ${
             syncMode === "webdav"
               ? "border-[var(--accent)] text-[var(--accent)]"
@@ -242,7 +266,7 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
       {/* ── ABA 1: Sincronização P2P Direta ── */}
       {syncMode === "p2p" && (
-        <div className="space-y-6">
+        <div id="sync-panel-p2p" role="tabpanel" aria-labelledby="sync-tab-p2p" tabIndex={0} className="space-y-6">
           <div className="stat-card border-[var(--border)] space-y-2">
             <div className="flex items-center gap-2">
               <ArrowRightLeft className="text-[var(--accent)]" size={18} />
@@ -277,13 +301,14 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
                       type="button"
                       onClick={handleCopyCode}
                       className="btn-ghost py-3 px-3.5 border border-[var(--border)] shrink-0"
-                      title="Copiar código"
+                      title={t("sync.copy_code")}
+                      aria-label={t("sync.copy_code")}
                     >
-                      {copied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
+                      {copied ? <Check size={18} className="text-[var(--color-status-positive)]" /> : <Copy size={18} />}
                     </button>
                   </div>
                   {p2pStatus === "waiting_for_peer" && (
-                    <div className="flex items-center justify-center gap-2 text-xs text-amber-400 animate-pulse pt-1">
+                    <div className="flex items-center justify-center gap-2 text-xs text-[var(--color-status-warning)] animate-pulse pt-1">
                       <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
                       {t("sync.waiting_peer")}
                     </div>
@@ -315,11 +340,13 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
               <form onSubmit={handleStartJoin} className="space-y-3 pt-2">
                 <input
+                  id="sync-p2p-join-code"
                   type="text"
                   maxLength={47}
                   value={joinCodeInput}
                   onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
                   placeholder={t("sync.enter_code")}
+                  aria-label={t("sync.enter_code")}
                   className="profile-input text-center font-mono font-bold tracking-widest text-lg"
                   disabled={p2pStatus === "connecting" || p2pStatus === "exchanging"}
                 />
@@ -340,7 +367,7 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
           {/* Status Message */}
           {statusMessage && (
-            <div className="stat-card py-3 px-4 border-[var(--accent)]/30 bg-[var(--accent-soft)]/20 text-xs flex items-center gap-2">
+            <div role="status" aria-live="polite" className="stat-card py-3 px-4 border-[var(--accent)]/30 bg-[var(--accent-soft)]/20 text-xs flex items-center gap-2">
               <RefreshCw size={14} className="text-[var(--accent)] animate-spin shrink-0" />
               <span>{statusMessage}</span>
             </div>
@@ -348,7 +375,7 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
           {/* P2P Error */}
           {p2pError && (
-            <div className="flex items-start gap-3 p-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 text-sm">
+            <div role="alert" aria-live="assertive" className="flex items-start gap-3 p-4 rounded-xl border border-red-500/40 bg-red-500/10 text-[var(--color-status-danger)] text-sm">
               <AlertCircle size={18} className="shrink-0 mt-0.5" />
               <p>{p2pError}</p>
             </div>
@@ -356,8 +383,8 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
           {/* P2P Report */}
           {p2pReport && (
-            <div className="stat-card border-emerald-500/40 bg-emerald-500/10 space-y-3">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+            <div role="status" aria-live="polite" className="stat-card border-emerald-500/40 bg-emerald-500/10 space-y-3">
+              <div className="flex items-center gap-2 text-[var(--color-status-positive)] font-bold text-sm">
                 <CheckCircle2 size={18} />
                 {t("sync.report_title")}
               </div>
@@ -366,25 +393,25 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
                   <span className="block font-bold text-sm text-[var(--accent)]">
                     +{p2pReport.activitiesReceived}
                   </span>
-                  <span className="text-[var(--muted)]">Recebidos</span>
+                  <span className="text-[var(--muted)]">{t("sync.received")}</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-center">
-                  <span className="block font-bold text-sm text-emerald-400">
+                  <span className="block font-bold text-sm text-[var(--color-status-positive)]">
                     ↑{p2pReport.activitiesSent}
                   </span>
-                  <span className="text-[var(--muted)]">Enviados</span>
+                  <span className="text-[var(--muted)]">{t("sync.sent")}</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-center">
                   <span className="block font-bold text-sm text-[var(--text)]">
                     {p2pReport.gearReceived + p2pReport.gearSent}
                   </span>
-                  <span className="text-[var(--muted)]">Tênis Sync</span>
+                  <span className="text-[var(--muted)]">{t("sync.gear_sync")}</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-center">
                   <span className="block font-bold text-sm text-[var(--text)]">
                     {p2pReport.routesReceived + p2pReport.routesSent}
                   </span>
-                  <span className="text-[var(--muted)]">Rotas Sync</span>
+                  <span className="text-[var(--muted)]">{t("sync.routes_sync")}</span>
                 </div>
               </div>
             </div>
@@ -394,7 +421,7 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
       {/* ── ABA 2: Nuvem Pessoal WebDAV ── */}
       {syncMode === "webdav" && (
-        <div className="space-y-6">
+        <div id="sync-panel-webdav" role="tabpanel" aria-labelledby="sync-tab-webdav" tabIndex={0} className="space-y-6">
           <div className="stat-card border-[var(--border)] space-y-2">
             <div className="flex items-center gap-2">
               <Server className="text-[var(--accent)]" size={18} />
@@ -407,10 +434,11 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
           <form onSubmit={handleWebDavSync} className="stat-card space-y-4 border-[var(--border)]">
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="sync-webdav-url" className="block text-xs text-[var(--muted)] mb-1">
                 {t("sync.webdav_server_url")} *
               </label>
               <input
+                id="sync-webdav-url"
                 type="url"
                 required
                 value={webdavUrl}
@@ -422,10 +450,11 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-[var(--muted)] mb-1">
+                <label htmlFor="sync-webdav-user" className="block text-xs text-[var(--muted)] mb-1">
                   {t("sync.webdav_user")} *
                 </label>
                 <input
+                  id="sync-webdav-user"
                   type="text"
                   required
                   value={webdavUser}
@@ -436,10 +465,11 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
               </div>
 
               <div>
-                <label className="block text-xs text-[var(--muted)] mb-1">
+                <label htmlFor="sync-webdav-pass" className="block text-xs text-[var(--muted)] mb-1">
                   {t("sync.webdav_pass")}
                 </label>
                 <input
+                  id="sync-webdav-pass"
                   type="password"
                   value={webdavPass}
                   onChange={(e) => setWebdavPass(e.target.value)}
@@ -450,10 +480,11 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
             </div>
 
             <div>
-              <label className="block text-xs text-[var(--muted)] mb-1">
+              <label htmlFor="sync-webdav-path" className="block text-xs text-[var(--muted)] mb-1">
                 {t("sync.webdav_path")}
               </label>
               <input
+                id="sync-webdav-path"
                 type="text"
                 value={webdavPath}
                 onChange={(e) => setWebdavPath(e.target.value)}
@@ -483,7 +514,7 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
           {/* WebDAV Error */}
           {webdavError && (
-            <div className="flex items-start gap-3 p-4 rounded-xl border border-red-500/40 bg-red-500/10 text-red-300 text-sm">
+            <div role="alert" aria-live="assertive" className="flex items-start gap-3 p-4 rounded-xl border border-red-500/40 bg-red-500/10 text-[var(--color-status-danger)] text-sm">
               <AlertCircle size={18} className="shrink-0 mt-0.5" />
               <p>{webdavError}</p>
             </div>
@@ -491,8 +522,8 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
 
           {/* WebDAV Report */}
           {webdavReport && (
-            <div className="stat-card border-emerald-500/40 bg-emerald-500/10 space-y-3">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+            <div role="status" aria-live="polite" className="stat-card border-emerald-500/40 bg-emerald-500/10 space-y-3">
+              <div className="flex items-center gap-2 text-[var(--color-status-positive)] font-bold text-sm">
                 <CheckCircle2 size={18} />
                 {t("sync.report_title")}
               </div>
@@ -501,25 +532,25 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
                   <span className="block font-bold text-sm text-[var(--accent)]">
                     +{webdavReport.activitiesReceived}
                   </span>
-                  <span className="text-[var(--muted)]">Recebidos</span>
+                  <span className="text-[var(--muted)]">{t("sync.received")}</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-center">
-                  <span className="block font-bold text-sm text-emerald-400">
+                  <span className="block font-bold text-sm text-[var(--color-status-positive)]">
                     ↑{webdavReport.activitiesSent}
                   </span>
-                  <span className="text-[var(--muted)]">Enviados</span>
+                  <span className="text-[var(--muted)]">{t("sync.sent")}</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-center">
                   <span className="block font-bold text-sm text-[var(--text)]">
                     {webdavReport.gearReceived + webdavReport.gearSent}
                   </span>
-                  <span className="text-[var(--muted)]">Tênis Sync</span>
+                  <span className="text-[var(--muted)]">{t("sync.gear_sync")}</span>
                 </div>
                 <div className="p-2.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-center">
                   <span className="block font-bold text-sm text-[var(--text)]">
                     {webdavReport.routesReceived + webdavReport.routesSent}
                   </span>
-                  <span className="text-[var(--muted)]">Rotas Sync</span>
+                  <span className="text-[var(--muted)]">{t("sync.routes_sync")}</span>
                 </div>
               </div>
             </div>
@@ -530,7 +561,7 @@ export function SyncPanel({ onSyncSuccess }: SyncPanelProps) {
       {/* Info Card sobre Privacidade */}
       <div className="stat-card border-[var(--border)]/60 bg-[var(--surface)]/40 p-4 space-y-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-[var(--muted)]">
-          <ShieldCheck size={16} className="text-emerald-400" />
+          <ShieldCheck size={16} className="text-[var(--color-status-positive)]" />
           {t("sync.how_it_works_title")}
         </div>
         <p className="text-xs text-[var(--muted)] leading-relaxed">
