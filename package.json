@@ -1,6 +1,6 @@
 {
   "name": "runflow",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "private": true,
   "description": "App open source para gerenciar treinos de corrida — importação Amazfit/Zepp via GPX e FIT",
   "scripts": {

@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const EXPECTED_VERSION = "0.9.8";
-const EXPECTED_VERSION_CODE = "4";
+const EXPECTED_VERSION = "0.9.9";
+const EXPECTED_VERSION_CODE = "5";
 
 function readJson(root, relativePath) {
   const filePath = path.join(root, relativePath);

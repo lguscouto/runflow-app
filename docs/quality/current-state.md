@@ -1,9 +1,9 @@
-# Estado verificável do RunFlow 0.9.8
+# Estado verificável do RunFlow 0.9.9
 
 ## Proveniência
 
 - Repositório: `E:\projetos\runflow-app`
-- Versão: `0.9.8`
+- Versão: `0.9.9`
 - Branch: `main`
 - APIs Android 33–36 e hardware físico estão fora do escopo desta entrega.
 

@@ -20,14 +20,14 @@ describe("RunFlow release metadata", () => {
     const root = mkdtempSync(path.join(os.tmpdir(), "runflow-version-gate-"));
     try {
       mkdirSync(path.join(root, "android", "app"), { recursive: true });
-      writeFileSync(path.join(root, "package.json"), JSON.stringify({ version: "0.9.8" }));
+      writeFileSync(path.join(root, "package.json"), JSON.stringify({ version: "0.9.9" }));
       writeFileSync(
         path.join(root, "package-lock.json"),
-        JSON.stringify({ version: "0.9.8", packages: { "": { version: "0.9.8" } } }),
+        JSON.stringify({ version: "0.9.9", packages: { "": { version: "0.9.9" } } }),
       );
       writeFileSync(
         path.join(root, "android", "app", "build.gradle"),
-        'versionCode 4\nversionName "0.9.8"\n',
+        'versionCode 5\nversionName "0.9.9"\n',
       );
       writeFileSync(
         path.join(root, "android", "variables.gradle"),
@@ -43,7 +43,7 @@ describe("RunFlow release metadata", () => {
   it("reports success when invoked as the quality gate", () => {
     const script = path.join(process.cwd(), "scripts", "quality", "version-consistency.mjs");
     const output = execFileSync(process.execPath, [script], { encoding: "utf8" });
-    expect(output).toContain("Version consistency OK: 0.9.8 (code 4)");
+    expect(output).toContain("Version consistency OK: 0.9.9 (code 5)");
   });
 
 });

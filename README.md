@@ -217,7 +217,7 @@ O build mobile validado usa `npm run build:mobile`; os testes Android conectados
 `./gradlew.bat :app:testDebugUnitTest :app:assembleAndroidTest :app:connectedDebugAndroidTest`
 na pasta `android/`, com JDK 21/JBR e SDK Android configurados.
 
-### Estado verificado do checkout 0.9.8
+### Estado verificado do checkout 0.9.9
 
 - `npm test`: **73 arquivos / 291 testes** aprovados.
 - E2E: **26/26** aprovados.
